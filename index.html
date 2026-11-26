@@ -46,7 +46,7 @@ h1{font-size:clamp(2.2rem,8vw,3.6rem);font-weight:700;letter-spacing:.04em;backg
 
 #beast{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:80px 20px 60px;color:var(--bone)}
 .intro{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:32px;align-items:center}
-.art video{display:block;width:100%;max-height:70vh;aspect-ratio:1;object-fit:contain;filter:drop-shadow(0 0 40px rgba(226,116,43,.45))}
+.art video{display:block;width:100%;max-height:70vh;aspect-ratio:1;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 40px rgba(226,116,43,.45))}
 .name{font:700 clamp(2.6rem,9vw,4.6rem)/1 Georgia,"Palatino Linotype",serif;text-shadow:0 0 30px rgba(226,116,43,.6)}
 .tag{color:var(--muted);font-size:1.15rem;margin:12px 0 18px}
 .chips span{display:inline-block;padding:6px 14px;border:1px solid rgba(226,116,43,.6);border-radius:6px;margin:0 6px 6px 0;background:rgba(226,116,43,.12)}
@@ -86,7 +86,6 @@ a.ab:focus-visible{outline:3px solid var(--ember2);outline-offset:4px;border-rad
 .legend .mark{position:static;display:inline-block;width:10px;height:10px;margin-right:6px}
 .card{scroll-margin-top:24px}
 @media(max-width:720px){.abil{justify-content:center}.intro{grid-template-columns:1fr;text-align:center}li{flex-direction:column;gap:4px}}
-@media (prefers-reduced-motion:reduce){.portrait,.portrait::before,h1,.down{animation:none}html{scroll-behavior:auto}}
 </style>
 </head>
 <body>
@@ -227,7 +226,7 @@ a.ab:focus-visible{outline:3px solid var(--ember2);outline-offset:4px;border-rad
 <script>
 (function(){
   var c=document.getElementById('fx'),x=c.getContext('2d'),W,H,bolts=[],embers=[],p=0;
-  var still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+  var still=false;
   function size(){var d=devicePixelRatio||1;W=c.width=innerWidth*d;H=c.height=innerHeight*d;x.setTransform(d,0,0,d,0,0);W/=d;H/=d}
   size();addEventListener('resize',size);
 
@@ -279,7 +278,18 @@ a.ab:focus-visible{outline:3px solid var(--ember2);outline-offset:4px;border-rad
   if(!still)requestAnimationFrame(frame);
 
   var hv=document.getElementById('heroVid');
-  if(still&&hv){hv.removeAttribute('autoplay');hv.pause()}
+  if(hv){
+    hv.muted=true;
+    hv.defaultMuted=true;
+    function playVid(){if(hv.paused)hv.play().catch(function(){});}
+    playVid();
+    if('IntersectionObserver' in window){
+      new IntersectionObserver(function(e){if(e[0].isIntersecting)playVid();},{threshold:0.1}).observe(hv);
+    }
+    ['touchstart','scroll','click'].forEach(function(ev){
+      addEventListener(ev,playVid,{once:true,passive:true});
+    });
+  }
   var pt=document.getElementById('portrait');
   if(!still&&matchMedia('(hover:hover)').matches){
     addEventListener('mousemove',function(e){
