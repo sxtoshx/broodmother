@@ -127,6 +127,9 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
 @keyframes tick{to{transform:translateX(-100%)}}
 .gg{position:fixed;inset:0;z-index:55;display:grid;place-items:center;pointer-events:none;font:900 clamp(4rem,18vw,11rem) Georgia,serif;color:var(--pink);text-shadow:0 0 40px var(--pink);animation:gg 1.8s ease-out forwards}
 @keyframes gg{from{scale:.3;opacity:0}20%{scale:1.1;opacity:1}70%{opacity:1}to{scale:1.5;opacity:0}}
+.portrait img{cursor:pointer}
+.portrait img.spin{animation:spin .9s cubic-bezier(.3,1.5,.5,1)}
+@keyframes spin{to{rotate:1turn}}
 </style>
 </head>
 <body>
@@ -665,6 +668,15 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
     typed=(typed+e.code.slice(3).toLowerCase()).slice(-5);
     for(var word in cheats)if(typed.slice(-word.length)===word){typed='';cheats[word]()}
   });
+
+  var pokes=0,pokeLines=['не тыкай','ну хватит','я всё маме расскажу','+25 MMR за настойчивость','репорт за флуд'];
+  var portraitImg=document.querySelector('#portrait img');
+  portraitImg.addEventListener('click',function(){
+    if(++pokes%5)return;
+    portraitImg.classList.add('spin');
+    toast(pokeLines[(pokes/5-1)%pokeLines.length]);
+  });
+  portraitImg.addEventListener('animationend',function(){portraitImg.classList.remove('spin')});
 })();
 </script>
 </body>
