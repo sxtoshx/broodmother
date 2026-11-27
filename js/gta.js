@@ -398,11 +398,11 @@ function create() {
   document.head.append(style);
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" aria-hidden="true"></canvas><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" aria-hidden="true"></canvas><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
-  const raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
+  const speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
 
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, 1, .5, 1000);
   scene.fog = new THREE.Fog('#c9527f', 70, 320);
@@ -644,7 +644,7 @@ function create() {
       const c = k === myslot ? rc : car(specs.cop), row = Math.floor(k / 2), i = (TR.NS - 6 - row * 4) % TR.NS, n = tn[i], side = k % 2 ? -3.4 : 3.4;
       c.pos.set(tp[i].x + n.x * side, 0, tp[i].z + n.z * side);
       c.heading = Math.atan2(tp[(i + 1) % TR.NS].x - tp[i].x, tp[(i + 1) % TR.NS].z - tp[i].z);
-      c.speed = 0; c.vel.set(0, 0, 0); c.y = 0; c.lap = -1; c.half = true; c.ti = i; c.lane = rand(-4, 4); c.raceTop = rand(36, 43); c.ram = k % 4 === 1;
+      c.speed = 0; c.vel.set(0, 0, 0); c.y = 0; c.lap = -1; c.half = true; c.ti = i; c.lane = rand(-4, 4); c.raceTop = rand(40, 46);
       if (c !== rc) scene.add(c.mesh); else scene.add(rc.mesh);
       race.cars.push(c); place(c, 1);
     });
@@ -652,16 +652,16 @@ function create() {
     player = rc; zone = 'race'; chase(0, true);
   }
   function endRace(rank) {
-    const rc = race.car;
+    const rc = race.car, took = clockStr(Math.max(0, run.time - race.start));
     for (const c of race.cars) if (c !== rc) scene.remove(c.mesh);
     zone = 'city';
     rc.pos.set(raceGate.x - 6, 0, raceGate.z); rc.heading = -Math.PI / 2; rc.speed = 0; rc.vel.set(0, 0, 0); rc.y = 0; rc.lap = 0;
-    if (rank === 1) { cars.push(rc); player = rc; place(rc, 1); run.gold += 3000; ann('ПОБЕДА', 'gold'); hint('+3000 и спорткар «Бруда GT» твой', 3); }
+    if (rank === 1) { cars.push(rc); player = rc; place(rc, 1); run.gold += 3000; ann('ПОБЕДА', 'gold'); hint(`Время ${took}. +3000 и спорткар «Бруда GT» твой`, 4); }
     else {
       scene.remove(rc.mesh);
       hero.pos.set(raceGate.x - 6, 0, raceGate.z); hero.heading = -Math.PI / 2; hero.y = 0; hero.mesh.visible = true; player = hero; place(hero, 1);
-      if (rank && rank <= 3) { run.gold += 1000; ann(`${rank} МЕСТО`, 'gold'); hint('+1000 за подиум. Спорткар МВД забрало обратно', 3); }
-      else hint(rank ? `${rank} место из 11. Спорткар МВД забрало обратно` : 'Сдался. МВД забрало спорткар', 3);
+      if (rank && rank <= 3) { run.gold += 1000; ann(`${rank} МЕСТО`, 'gold'); hint(`Время ${took}. +1000 за подиум. Спорткар МВД забрало обратно`, 4); }
+      else hint(rank ? `${rank} место из 11, время ${took}. Спорткар МВД забрало обратно` : 'Сдался. МВД забрало спорткар', 4);
     }
     raceGate.inside = true; race = null; chase(0, true);
   }
@@ -673,13 +673,18 @@ function create() {
       if (c !== player) {
         if (!go) { c.speed = 0; c.vel.set(0, 0, 0); }
         else {
-          const ahead = tp[(c.ti + 12) % TR.NS], n = tn[(c.ti + 12) % TR.NS];
-          let tx = ahead.x + n.x * c.lane, tz = ahead.z + n.z * c.lane;
-          if (c.ram && c.pos.distanceTo(player.pos) < 16) { tx = player.pos.x; tz = player.pos.z; }
+          const ahead = tp[(c.ti + 12) % TR.NS], n = tn[(c.ti + 12) % TR.NS], dx = player.pos.x - c.pos.x, dz = player.pos.z - c.pos.z;
+          let lane = c.lane;
+          if (Math.hypot(dx, dz) < 12 && dx * Math.sin(c.heading) + dz * Math.cos(c.heading) > 0) lane = (player.pos.x - ahead.x) * n.x + (player.pos.z - ahead.z) * n.z > 0 ? -5.5 : 5.5;
+          const tx = ahead.x + n.x * lane, tz = ahead.z + n.z * lane;
           const diff = wrap(Math.atan2(tx - c.pos.x, tz - c.pos.z) - c.heading);
-          drive(c, Math.abs(diff) > .35 && c.speed > 24 ? -.4 : 1, clamp(diff * 2.6, -1, 1), false, dt, c.raceTop);
+          drive(c, Math.abs(diff) > .5 && c.speed > 26 ? -.4 : 1, clamp(diff * 2.6, -1, 1), false, dt, c.raceTop);
         }
       } else if (!go) { c.speed = 0; c.vel.set(0, 0, 0); }
+      else {
+        const a = tp[c.ti], b = tp[(c.ti + 1) % TR.NS];
+        if (Math.abs(wrap(Math.atan2(b.x - a.x, b.z - a.z) - c.heading)) > 2.2 && Math.abs(c.speed) > 3) hint('НЕ ТУДА! РАЗВЕРНИСЬ', .3);
+      }
       trackKeep(c);
     }
     for (let a = 0; a < race.cars.length; a++) for (let b = a + 1; b < race.cars.length; b++) bump(race.cars[a], race.cars[b]);
@@ -687,6 +692,8 @@ function create() {
     for (const c of race.cars) { if (c.lights.length) { c.lights[0].visible = flash; c.lights[1].visible = !flash; } if (c !== player) place(c, dt); }
     if (race.finish.includes(race.car)) endRace(race.finish.indexOf(race.car) + 1);
   }
+  const trackLen = trackCurve.getLength(), segLen = trackLen / TR.NS, raceProg = c => c.lap * TR.NS + c.ti;
+  const dist = m => m >= 1000 ? (m / 1000).toFixed(1).replace('.', ',') + ' км' : Math.round(m / 10) * 10 + ' м';
   const racePlace = () => 1 + race.cars.filter(c => c !== race.car && c.lap * TR.NS + c.ti > race.car.lap * TR.NS + race.car.ti).length;
   let zone = 'city', room = null, stripHype = 0, beatAt = 0, spinning = false;
   function enterRoom(d) {
@@ -1285,7 +1292,16 @@ function create() {
     const crew = state === 'play' ? nearCrew() : null;
     show(zone === 'race' ? 'СДАТЬСЯ' : crew ? 'БАЗАР' : player.foot ? (near ? 'СЕСТЬ' : run.gun ? 'ОГОНЬ' : '—') : 'ВЫЙТИ', 'act', actEl);
     const j = run.job;
- show(race ? `🏁 Круг ${clamp(race.car.lap + 1, 1, TR.laps)}/${TR.laps} · место ${racePlace()}/11 · ${clockStr(Math.max(0, run.time - race.start))}` : '', 'race', raceEl);
+    if (race && now > (shown.raceAt || 0)) {
+      shown.raceAt = now + .25;
+      const me = race.car, my = raceProg(me), covered = Math.max(0, my) * segLen, total = TR.laps * trackLen;
+      const next = race.cars.filter(c => c !== me && raceProg(c) > my).map(raceProg).sort((a, b) => a - b)[0];
+      const html = `<b>🏁 Круг ${clamp(me.lap + 1, 1, TR.laps)}/${TR.laps} · место ${racePlace()}/11</b><span>⏱ ${clockStr(Math.max(0, run.time - race.start))} · ${next === undefined ? 'ты первый' : 'впереди ' + dist((next - my) * segLen)}</span><i><u style="width:${Math.min(100, covered / total * 100).toFixed(1)}%"></u></i><span>проехал ${dist(covered)} · осталось ${dist(Math.max(0, total - covered))}</span>`;
+      if (shown.raceHtml !== html) { shown.raceHtml = html; raceEl.innerHTML = html; }
+    } else if (!race && shown.raceHtml) { shown.raceHtml = ''; raceEl.innerHTML = ''; }
+    const drivingNow = state === 'play' && !player.foot && zone !== 'inside';
+    speedEl.hidden = !drivingNow;
+    if (drivingNow) show(String(Math.round(Math.abs(player.speed) * 3.6)), 'speed', speedEl.firstChild);
     show(j ? `🎯 ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
     radio.hidden = !(state === 'play' && !player.foot);
     if (!radio.hidden && now > radioAt) { radioAt = now + 7; radio.textContent = '📻 Добрянка FM · ' + pick(RADIO)(); radio.classList.remove('on'); void radio.offsetWidth; radio.classList.add('on'); }
@@ -1623,6 +1639,13 @@ body.gta{overflow:hidden}
 .g-job:empty{display:none}
 .g-race{max-width:calc(100vw - 190px);box-sizing:border-box;text-align:right;font:900 clamp(13px,3.6vw,17px)/1.25 system-ui;color:#fff;background:rgba(0,0,0,.5);padding:4px 10px;border-radius:10px}
 .g-race:empty{display:none}
+.g-race{display:grid;gap:3px;width:min(250px,calc(100vw - 190px))}
+.g-race span{font-size:.8em;font-weight:700;color:#e9dcff}
+.g-race i{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden}
+.g-race u{display:block;height:100%;background:linear-gradient(90deg,#ff2fa8,#ffd24a)}
+.g-speed{position:absolute;left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));text-align:center;line-height:1;text-shadow:0 2px 0 #000,0 0 10px #000}
+.g-speed b{display:block;font:900 34px Georgia,serif;color:#fff}
+.g-speed small{font-size:11px;font-weight:800;color:#cbb8e0;letter-spacing:.08em}
 .g-radio{position:absolute;left:50%;translate:-50% 0;bottom:calc(186px + env(safe-area-inset-bottom,0px));max-width:min(640px,calc(100% - 24px));padding:6px 12px;border-radius:999px;background:rgba(10,5,20,.7);border:1px solid rgba(255,255,255,.18);font-size:13px;font-weight:700;color:#f4e9ff;text-align:center}
 .g-radio.on{animation:gRadio .5s ease-out}
 .g-stam{width:150px;height:5px;background:rgba(0,0,0,.5)}
