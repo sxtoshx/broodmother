@@ -641,6 +641,11 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
     setTimeout(crawl,5000+Math.random()*9000);
   }
   setTimeout(crawl,2500);
+
+  var realTitle=document.title,awayTitles=['вернись 🕷️','паук скучает','ты куда','брудик ждёт','лоу приорити за ливер'];
+  document.addEventListener('visibilitychange',function(){
+    document.title=document.hidden?awayTitles[Math.floor(Math.random()*awayTitles.length)]:realTitle;
+  });
 })();
 </script>
 </body>
