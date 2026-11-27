@@ -176,6 +176,11 @@ body{overflow-x:clip}
 @keyframes boing{to{scale:1.08}}
 .roshan{position:fixed;left:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:57;padding:10px 14px;border-radius:10px;border:1px solid var(--ember2);background:rgba(0,0,0,.6);color:var(--ember2);font:inherit;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer}
 .roshan:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.cookie{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));translate:-50% 0;z-index:61;width:min(440px,calc(100vw - 32px));padding:16px;border-radius:14px;background:rgba(10,5,20,.95);border:1px solid var(--pink);box-shadow:0 0 30px rgba(0,0,0,.6);color:var(--bone);line-height:1.45;animation:toastIn .3s ease-out}
+.cookie div{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.cookie button{flex:1 1 auto;padding:10px 12px;border-radius:10px;border:1px solid var(--pink);background:rgba(255,255,255,.06);color:var(--bone);font:inherit;cursor:pointer}
+.cookie button:first-child{background:var(--pink);color:#000;font-weight:700}
+.cookie button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 </style>
 </head>
 <body>
@@ -913,6 +918,10 @@ body{overflow-x:clip}
 <div id="announcer" aria-hidden="true"></div>
 <button type="button" class="adhd-btn" id="adhdBtn" aria-pressed="false">СДВГ</button>
 <button type="button" class="roshan" id="roshan" aria-label="Убить Рошана">Рош: <span>8:00</span></button>
+<div class="cookie" id="cookie" role="dialog" aria-label="Куки" hidden>
+  <p>🍪 Мы используем куки, пауков и прописку в Добрянке. Отказаться нельзя: Триада уже в курсе.</p>
+  <div><button type="button" data-cookie="ok">Принять</button><button type="button" data-cookie="sad">Принять с грустным лицом</button></div>
+</div>
 <script>
 (function(){
   var toastEl=document.getElementById('toast'),toastTimer;
@@ -1086,6 +1095,15 @@ body{overflow-x:clip}
     respawnRoshan();tickRoshan();
   });
   respawnRoshan();tickRoshan();setInterval(tickRoshan,1000);
+
+  var cookie=document.getElementById('cookie');
+  if(!stored('cookiesAccepted'))setTimeout(function(){cookie.hidden=false},3000);
+  cookie.addEventListener('click',function(e){
+    var choice=e.target.getAttribute('data-cookie');
+    if(!choice)return;
+    if(choice==='sad')toast('Грустное лицо передано в МВД Добрянки');
+    cookie.hidden=true;store('cookiesAccepted',1);
+  });
 })();
 </script>
 </body>
