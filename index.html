@@ -119,7 +119,12 @@ body.slark #bgBeast{background:
   radial-gradient(ellipse at 50% 115%,rgba(60,220,190,.28),transparent 60%),
   radial-gradient(ellipse at 10% 0%,rgba(40,120,160,.35),transparent 55%),
   linear-gradient(180deg,#062029,#0b3341 55%,#04121a)}
-.art img.fish{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:20px;border:2px solid var(--pink);box-shadow:0 0 40px rgba(89,224,197,.45);animation:float 4s ease-in-out infinite}
+.art img.photo{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:20px;border:2px solid var(--pink);box-shadow:0 0 40px color-mix(in srgb,var(--pink) 45%,transparent);animation:float 4s ease-in-out infinite}
+body.pudge{--bg:#140a0a;--bg2:#3a1414;--violet:#8a2a2a;--pink:#9be36b;--glow:#d6ffb8;--bone:#f3e6dc;--muted:#c0a79a;--ember:#7a3b2a;--ember2:#b6f08a}
+body.invoker{--bg:#120a1c;--bg2:#3a1a4a;--violet:#8f4bd6;--pink:#ff9a3c;--glow:#ffe0b0;--bone:#f6ece2;--muted:#c7b0c9;--ember:#e0602a;--ember2:#ffb15e}
+body.monkey{--bg:#160f05;--bg2:#3e2a0b;--violet:#d43b2a;--pink:#ffcc33;--glow:#fff2b0;--bone:#f8eedb;--muted:#c8b48e;--ember:#c4472b;--ember2:#ffd75a}
+body.cm{--bg:#071321;--bg2:#163a5a;--violet:#6fc3ff;--pink:#bfe8ff;--glow:#eaf8ff;--bone:#eef6fb;--muted:#9fb6c8;--ember:#4f97c9;--ember2:#bfe8ff}
+body:is(.pudge,.invoker,.monkey,.cm) #bgBeast{background:radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--ember) 40%,transparent),transparent 60%),radial-gradient(ellipse at 10% 0%,color-mix(in srgb,var(--violet) 35%,transparent),transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2) 55%,var(--bg))}
 @media(max-width:720px){
   .hero-switch{gap:8px;padding:10px}
   .hero-switch button{padding:9px 10px}
@@ -629,7 +634,7 @@ body{overflow-x:clip}
     <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
   </nav>
   <div class="intro">
-    <div class="art"><img loading="lazy" class="fish" src="img/slark_fish.jpg" alt="Slark"></div>
+    <div class="art"><img loading="lazy" class="photo" src="img/slark_fish.jpg" alt="Slark"></div>
     <div>
       <h2 class="name">Slark</h2>
       <p class="tag">Рыба с Камы. Сбежал из Добрянки на кабриолете</p>
@@ -699,6 +704,435 @@ body{overflow-x:clip}
       </ul>
     </div>
   </article>
+</section>
+
+<section id="pudge" class="hero-panel" aria-label="Pudge" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>ПУДЖ</span><span class="switch-count" data-hero-count>5 / 8</span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><img loading="lazy" class="photo" src="img/photo_pudge.jpg" alt="Pudge" style="object-position:50% 30%"></div>
+    <div>
+      <h2 class="name">Pudge</h2>
+      <p class="tag">Мясник с рынка Добрянки. Хук дотягивается до Перми</p>
+      <div class="chips"><span>Сила</span><span>Ближний бой</span><span>Патч 7.42</span><span>Усы: +200 к харизме</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img loading="lazy" class="port" src="img/photo_pudge.jpg" alt="Pudge"><span>Pudge</span></div>
+    <a class="ab" href="#p-hook"><img loading="lazy" src="img/pudge_meat_hook.png" alt=""><i class="mark"></i><span>Meat Hook</span></a>
+    <div class="ab"><img loading="lazy" src="img/pudge_rot.png" alt=""><span>Rot</span></div>
+    <div class="ab"><img loading="lazy" src="img/pudge_flesh_heap.png" alt=""><span>Meat Shield</span></div>
+    <a class="ab" href="#p-dismember"><img loading="lazy" src="img/pudge_dismember.png" alt=""><i class="mark"></i><span>Dismember</span></a>
+    <a class="ab gold" href="#p-heap"><img loading="lazy" src="img/pudge_innate_graft_flesh.png" alt=""><i class="mark"></i><span>Flesh Heap<br>врождённая</span></a>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card" id="p-hook">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pudge_meat_hook.png" alt=""><b>Meat Hook</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Aghanim's Shard больше не возвращает 50% перезарядки при попадании в союзника</span></li>
+        <li><span class="b up">Бафф</span><span>Aghanim's Shard теперь увеличивает дальность на 100</span></li>
+      </ul>
+    </div>
+    <div class="card" id="p-dismember">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pudge_dismember.png" alt=""><b>Dismember</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Множитель силы снижен с 0,3/0,6/0,9 до 0,3/0,5/0,7 <span class="pc">0% −17% −22%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41d <time>· 04.06.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Базовая ловкость увеличена с 11 до 13 <span class="pc">+18%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41b <time>· 07.04.2026</time></h4>
+    <div class="card" id="p-heap">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pudge_innate_graft_flesh.png" alt=""><b>Flesh Heap</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Сила за стак увеличена с 1,6 до 2,0 <span class="pc">+25%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41 <time>· 24.03.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pudge_innate_graft_flesh.png" alt=""><b>Flesh Heap</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Больше не прокачивается вместе с Dismember</span></li>
+        <li><span class="b nw">Изменение</span><span>Постоянная бонусная сила изменена с 1,1/1,4/1,7/2,0 на 1,6</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pudge_rot.png" alt=""><b>Rot</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Больше нет отдельного значения для снижения входящего лечения</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.40c <time>· 21.01.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pudge_flesh_heap.png" alt=""><b>Meat Shield</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Стоимость маны увеличена с 50/60/70/80 до 65/70/75/80 <span class="pc">+30% +17% +7% 0%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.40b <time>· 23.12.2025</time></h4>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pudge_meat_hook.png" alt=""><b>Meat Hook</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Стоимость маны увеличена со 110 до 120 <span class="pc">+9%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+</section>
+
+<section id="invoker" class="hero-panel" aria-label="Invoker" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>ИНВОКЕР</span><span class="switch-count" data-hero-count>6 / 8</span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><img loading="lazy" class="photo" src="img/photo_invoker.jpg" alt="Invoker" style="object-position:50% 100%"></div>
+    <div>
+      <h2 class="name">Invoker</h2>
+      <p class="tag">Грамотей. Знает 10 заклинаний и ни одного правила русского языка</p>
+      <div class="chips"><span>Интеллект</span><span>Дальний бой</span><span>Патч 7.42</span><span>Шляпа: +10 к интеллекту</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img loading="lazy" class="port" src="img/photo_invoker.jpg" alt="Invoker"><span>Invoker</span></div>
+    <div class="ab"><img loading="lazy" src="img/invoker_quas.png" alt=""><span>Quas</span></div>
+    <div class="ab"><img loading="lazy" src="img/invoker_wex.png" alt=""><span>Wex</span></div>
+    <div class="ab"><img loading="lazy" src="img/invoker_exort.png" alt=""><span>Exort</span></div>
+    <a class="ab" href="#i-sun"><img loading="lazy" src="img/invoker_sun_strike.png" alt=""><i class="mark"></i><span>Sun Strike</span></a>
+    <a class="ab" href="#i-meteor"><img loading="lazy" src="img/invoker_chaos_meteor.png" alt=""><i class="mark"></i><span>Chaos Meteor</span></a>
+    <a class="ab" href="#i-ghost"><img loading="lazy" src="img/invoker_ghost_walk.png" alt=""><i class="mark"></i><span>Ghost Walk</span></a>
+    <a class="ab gold" href="#i-invoke"><img loading="lazy" src="img/invoker_invoke.png" alt=""><i class="mark"></i><span>Invoke<br>врождённая</span></a>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card" id="i-sun">
+      <div class="ah"><img loading="lazy" class="ic" src="img/invoker_sun_strike.png" alt=""><b>Sun Strike</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Урон снижен с 175–575 до 175–495 <span class="pc">до −14%</span></span></li>
+      </ul>
+    </div>
+    <div class="card" id="i-meteor">
+      <div class="ah"><img loading="lazy" class="ic" src="img/invoker_chaos_meteor.png" alt=""><b>Chaos Meteor</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Урон горения в секунду изменён с 10/15/20/25/30/35/40/45/50 до 12/16/20/24/28/32/36/40/44</span></li>
+      </ul>
+    </div>
+    <div class="card" id="i-ghost">
+      <div class="ah"><img loading="lazy" class="ic" src="img/invoker_ghost_walk.png" alt=""><b>Ghost Walk</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>С Aghanim's Shard множитель урона Ice Wall в секунду увеличен с 1x до 1,25x</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Deafening Blast</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Обезоруживание теперь можно развеять</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Талант 10 уровня: урон Ice Wall в секунду снижен с +50 до +40 <span class="pc">−20%</span></span></li>
+        <li><span class="b nw">Замена</span><span>Таланты 20 и 25 уровня поменялись местами: +2 Chaos Meteor и двойные бонусы активных сфер Quas/Wex/Exort</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41f <time>· 15.09.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Cold Snap</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Перезарядка увеличена с 18 до 19 сек <span class="pc">+6%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/invoker_ghost_walk.png" alt=""><b>Ghost Walk</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Aghanim's Shard больше не наносит урон не-героям</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41e <time>· 30.07.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/invoker_ghost_walk.png" alt=""><b>Ghost Walk</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Длительность снижена с 60 до 50 сек <span class="pc">−17%</span></span></li>
+        <li><span class="b dn">Нерф</span><span>Aghanim's Shard больше не увеличивает радиус</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41d <time>· 04.06.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/invoker_ghost_walk.png" alt=""><b>Ghost Walk</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Перезарядка увеличена с 32 до 40 сек <span class="pc">+25%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/invoker_chaos_meteor.png" alt=""><b>Chaos Meteor</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Урон при касании снижен с 55/80/105/130/155/180/205/220/235 до 55/75/95/115/135/155/175/195/215</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Ice Wall</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Замедление изменено с 20/40/60/80/100/120/140/160/180% на 30/45/60/75/90/105/120/135/150%</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41 <time>· 24.03.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Quas, Wex, Exort</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Максимальный уровень сфер увеличен с 7 до 8</span></li>
+      </ul>
+    </div>
+    <div class="card" id="i-invoke">
+      <div class="ah"><img loading="lazy" class="ic" src="img/invoker_invoke.png" alt=""><b>Invoke</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Aghanim's Scepter и Shard лежат в инвентаре неактивными, пока Инвокер не активирует их сам, и тогда он выбирает одно из трёх улучшений</span></li>
+        <li><span class="b nw">Изменение</span><span>Aghanim's Scepter больше не даёт +1 ко всем трём сферам — только к одной на выбор</span></li>
+      </ul>
+    </div>
+  </article>
+
+</section>
+
+<section id="monkey" class="hero-panel" aria-label="Monkey King" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>МАНКИ КИНГ</span><span class="switch-count" data-hero-count>7 / 8</span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><img loading="lazy" class="photo" src="img/photo_monkey.jpg" alt="Monkey King"></div>
+    <div>
+      <h2 class="name">Monkey King</h2>
+      <p class="tag">Два брата с Добрянской ГРЭС. Оба считают себя королями</p>
+      <div class="chips"><span>Ловкость</span><span>Ближний бой</span><span>Патч 7.42</span><span>Прописка: дерево</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img loading="lazy" class="port" src="img/photo_monkey.jpg" alt="Monkey King"><span>Monkey King</span></div>
+    <a class="ab" href="#m-strike"><img loading="lazy" src="img/monkey_king_boundless_strike.png" alt=""><i class="mark"></i><span>Boundless Strike</span></a>
+    <a class="ab" href="#m-tree"><img loading="lazy" src="img/monkey_king_tree_dance.png" alt=""><i class="mark"></i><span>Tree Dance</span></a>
+    <div class="ab"><img loading="lazy" src="img/monkey_king_jingu_mastery.png" alt=""><span>Jingu Mastery</span></div>
+    <a class="ab" href="#m-wukong"><img loading="lazy" src="img/monkey_king_wukongs_command.png" alt=""><i class="mark"></i><span>Wukong's Command</span></a>
+    <a class="ab gold" href="#m-mischief"><img loading="lazy" src="img/monkey_king_mischief.png" alt=""><i class="mark"></i><span>Mischief<br>врождённая</span></a>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card" id="m-strike">
+      <div class="ah"><img loading="lazy" class="ic" src="img/monkey_king_boundless_strike.png" alt=""><b>Boundless Strike</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Перезарядка снижена с 24/21/18/15 до 24/20/16/12 сек <span class="pc">0% −5% −11% −20%</span></span></li>
+        <li><span class="b dn">Нерф</span><span>Критический урон снижен с 120/140/160/180% до 120/130/140/150%</span></li>
+        <li><span class="b up">Бафф</span><span>Бонусный урон увеличен с 20/40/60/80 до 25/50/75/100</span></li>
+        <li><span class="b up">Бафф</span><span>Оглушение изменено с 0,7/0,9/1,1/1,3 до 0,75/1/1,25/1,5 сек</span></li>
+        <li><span class="b nw">Изменение</span><span>С Aghanim's Shard Манки Кинг прыгает в точку цели, а не всегда на полную дальность</span></li>
+      </ul>
+    </div>
+    <div class="card" id="m-tree">
+      <div class="ah"><img loading="lazy" class="ic" src="img/monkey_king_tree_dance.png" alt=""><b>Tree Dance</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Дальность и прыжок увеличены с 900 до 1000 <span class="pc">+11%</span></span></li>
+        <li><span class="b up">Бафф</span><span>Крипы, которыми не управляет игрок, больше не отправляют способность на перезарядку</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Талант 10 уровня: оглушение Boundless Strike увеличено с +0,2 до +0,25 сек</span></li>
+        <li><span class="b dn">Нерф</span><span>Талант 10 уровня: дальность Tree Dance снижена с +300 до +200</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41c <time>· 06.05.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Базовая ловкость снижена с 24 до 23<br><span class="pc">Урон на 1 уровне: с 53–57 до 52–56</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41 <time>· 24.03.2026</time></h4>
+    <div class="card" id="m-wukong">
+      <div class="ah"><img loading="lazy" class="ic" src="img/monkey_king_wukongs_command.png" alt=""><b>Wukong's Command</b></div>
+      <ul>
+        <li><span class="b nw">Новое</span><span>Новая подспособность Changing of the Guard: Манки Кинг на 1,5 сек занимает место ближайшего солдата и становится неотличимым от остальных и неуязвимым. Перезарядка 3 сек</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/monkey_king_tree_dance.png" alt=""><b>Tree Dance</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Перезарядка снижена с 1,4/1,2/1,0/0,8 до 0,9/0,6/0,3/0 сек</span></li>
+        <li><span class="b up">Бафф</span><span>Дальность увеличена с 800 до 900</span></li>
+        <li><span class="b dn">Нерф</span><span>Скорость прыжка снижена с 700 до 600</span></li>
+        <li><span class="b dn">Нерф</span><span>Прыжки между деревьями теперь прерываются корнями и привязками</span></li>
+      </ul>
+    </div>
+    <div class="card" id="m-mischief">
+      <div class="ah"><img loading="lazy" class="ic" src="img/monkey_king_mischief.png" alt=""><b>Mischief</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Больше не прокачивается вместе с Wukong's Command, перезарядка изменена с 24/20/16/12 на 24,5 − 0,5 сек за уровень</span></li>
+      </ul>
+    </div>
+  </article>
+
+</section>
+
+<section id="cm" class="hero-panel" aria-label="Crystal Maiden" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>CRYSTAL MAIDEN</span><span class="switch-count" data-hero-count>8 / 8</span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><img loading="lazy" class="photo" src="img/photo_cm.jpg" alt="Crystal Maiden"></div>
+    <div>
+      <h2 class="name">Crystal Maiden</h2>
+      <p class="tag">Так называемая дева. Ледяной взгляд, ресницы наращены в Добрянке</p>
+      <div class="chips"><span>Интеллект</span><span>Дальний бой</span><span>Патч 7.42</span><span>Ресницы: +50 к ауре</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img loading="lazy" class="port" src="img/photo_cm.jpg" alt="Crystal Maiden"><span>Crystal Maiden</span></div>
+    <div class="ab"><img loading="lazy" src="img/crystal_maiden_crystal_nova.png" alt=""><span>Crystal Nova</span></div>
+    <div class="ab"><img loading="lazy" src="img/crystal_maiden_frostbite.png" alt=""><span>Frostbite</span></div>
+    <a class="ab" href="#c-aura"><img loading="lazy" src="img/crystal_maiden_brilliance_aura.png" alt=""><i class="mark"></i><span>Arcane Aura</span></a>
+    <a class="ab" href="#c-field"><img loading="lazy" src="img/crystal_maiden_freezing_field.png" alt=""><i class="mark"></i><span>Freezing Field</span></a>
+    <a class="ab gold" href="#c-guard"><img loading="lazy" src="img/crystal_maiden_glacial_guard.png" alt=""><i class="mark"></i><span>Glacial Guard<br>врождённая</span></a>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card" id="c-field">
+      <div class="ah"><img loading="lazy" class="ic" src="img/crystal_maiden_freezing_field.png" alt=""><b>Freezing Field</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Стоимость маны увеличена с 200/400/600 до 250/425/600 <span class="pc">+25% +6% 0%</span></span></li>
+        <li><span class="b dn">Нерф</span><span>Перезарядка увеличена с 100/95/90 до 110/100/90 сек <span class="pc">+10% +5% 0%</span></span></li>
+        <li><span class="b up">Бафф</span><span>Урон взрыва увеличен с 110/180/250 до 130/190/250 <span class="pc">+18% +6% 0%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Crystal Clone</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Радиус Frostbite снижен с 450 до 425 <span class="pc">−6%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Талант 20 уровня: урон Freezing Field снижен с +50 до +45 <span class="pc">−10%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41b <time>· 07.04.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Crystal Clone</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Перезарядка увеличена с 10 до 12 сек <span class="pc">+20%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41 <time>· 24.03.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Blueheart Floe</b></div>
+      <ul>
+        <li><span class="b rm">Удалено</span><span>Врождённая способность удалена</span></li>
+      </ul>
+    </div>
+    <div class="card" id="c-guard">
+      <div class="ah"><img loading="lazy" class="ic" src="img/crystal_maiden_glacial_guard.png" alt=""><b>Glacial Guard</b></div>
+      <ul>
+        <li><span class="b nw">Новое</span><span>Новая пассивная врождённая способность: часть маны, потраченной на способности, превращается в физический барьер на 8 сек. В барьер идёт 30% + 2% за уровень, барьеры складываются</span></li>
+      </ul>
+    </div>
+    <div class="card" id="c-aura">
+      <div class="ah"><img loading="lazy" class="ic" src="img/crystal_maiden_brilliance_aura.png" alt=""><b>Arcane Aura</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Теперь также даёт самой Crystal Maiden +20/40/60/80% к усилению регенерации маны</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b nw">Замена</span><span>Талант 20 уровня: +225 к скорости атаки заменён на +20% маны в барьер Glacial Guard</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.40 <time>· 15.12.2025</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Базовый интеллект увеличен с 18 до 20</span></li>
+        <li><span class="b nw">Изменение</span><span>Базовый урон снижен на 2, урон на 1 уровне не изменился: 48–54</span></li>
+      </ul>
+    </div>
+  </article>
+
 </section>
 
 <section class="neutrals" aria-label="Нейтральные предметы">
