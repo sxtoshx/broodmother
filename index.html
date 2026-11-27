@@ -125,7 +125,8 @@ body.invoker{--bg:#120a1c;--bg2:#3a1a4a;--violet:#8f4bd6;--pink:#ff9a3c;--glow:#
 body.monkey{--bg:#160f05;--bg2:#3e2a0b;--violet:#d43b2a;--pink:#ffcc33;--glow:#fff2b0;--bone:#f8eedb;--muted:#c8b48e;--ember:#c4472b;--ember2:#ffd75a}
 body.cm{--bg:#071321;--bg2:#163a5a;--violet:#6fc3ff;--pink:#bfe8ff;--glow:#eaf8ff;--bone:#eef6fb;--muted:#9fb6c8;--ember:#4f97c9;--ember2:#bfe8ff}
 body.furion{--bg:#08140c;--bg2:#1d3a22;--violet:#3fa66a;--pink:#b6f04a;--glow:#e6ffc0;--bone:#eef5e6;--muted:#a9bba0;--ember:#4a8f3a;--ember2:#c9f56a}
-body:is(.pudge,.invoker,.monkey,.cm,.furion) #bgBeast{background:radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--ember) 40%,transparent),transparent 60%),radial-gradient(ellipse at 10% 0%,color-mix(in srgb,var(--violet) 35%,transparent),transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2) 55%,var(--bg))}
+body.meepo{--bg:#10100c;--bg2:#2f2b1c;--violet:#8a6d3b;--pink:#7fd0ff;--glow:#d9f1ff;--bone:#f2ede0;--muted:#b9b09a;--ember:#a47b3a;--ember2:#ffd27a}
+body:is(.pudge,.invoker,.monkey,.cm,.furion,.meepo) #bgBeast{background:radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--ember) 40%,transparent),transparent 60%),radial-gradient(ellipse at 10% 0%,color-mix(in srgb,var(--violet) 35%,transparent),transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2) 55%,var(--bg))}
 @media(max-width:720px){
   .hero-switch{gap:8px;padding:10px}
   .hero-switch button{padding:9px 10px}
@@ -1259,6 +1260,126 @@ body{overflow-x:clip}
       <div class="ah"><img loading="lazy" class="ic" src="img/furion_wrath_of_nature.png" alt=""><b>Wrath of Nature</b></div>
       <ul>
         <li><span class="b up">Бафф</span><span>Базовый урон увеличен с 90/130/170 до 100/140/180 <span class="pc">+11% +8% +6%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+</section>
+
+<section id="meepo" class="hero-panel" aria-label="Meepo" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>МИПО</span><span class="switch-count" data-hero-count>10 / 10</span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><img loading="lazy" class="photo" src="img/photo_meepo.jpg" alt="Мипо и два клона" style="aspect-ratio:auto"></div>
+    <div>
+      <h2 class="name">Meepo</h2>
+      <p class="tag">Один герой, три клона. Купаются в Каме всей пачкой, мозг один на троих</p>
+      <div class="chips"><span>Универсальный</span><span>Ближний бой</span><span>Патч 7.42a</span><span>Клонов: 3</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img loading="lazy" class="port" src="img/photo_meepo.jpg" alt="Мипо"><span>Мипо</span></div>
+    <div class="ab"><img loading="lazy" src="img/meepo_earthbind.png" alt=""><span>Earthbind</span></div>
+    <div class="ab"><img loading="lazy" src="img/meepo_poof.png" alt=""><span>Poof</span></div>
+    <a class="ab" href="#e-ransack"><img loading="lazy" src="img/meepo_ransack.png" alt=""><i class="mark"></i><span>Ransack</span></a>
+    <a class="ab" href="#e-divided"><img loading="lazy" src="img/meepo_divided_we_stand.png" alt=""><i class="mark"></i><span>Divided We Stand</span></a>
+    <a class="ab" href="#e-dig"><img loading="lazy" src="img/meepo_petrify.png" alt=""><i class="mark"></i><span>Dig</span></a>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42a <time>· 24.11.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Базовая скорость передвижения снижена с 310 до 305</span></li>
+        <li><span class="b dn">Нерф</span><span>Прирост ловкости снижен с 2,1 до 2,0 <span class="pc">−5%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/meepo_divided_we_stand.png" alt=""><b>Divided We Stand</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Окно штрафа к опыту увеличено с 5 до 10 сек</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Мипо теперь универсальный герой</span></li>
+        <li><span class="b nw">Изменение</span><span>Базовый урон снижен на 9, прирост урона за уровень увеличен с 2,1 до 2,7. Урон на 1 уровне не изменился: 46–52</span></li>
+        <li><span class="b dn">Нерф</span><span>Базовая сила снижена с 24 до 23</span></li>
+        <li><span class="b rm">Удалено</span><span>Способность MegaMeepo удалена</span></li>
+      </ul>
+    </div>
+    <div class="card" id="e-divided">
+      <div class="ah"><img loading="lazy" class="ic" src="img/meepo_divided_we_stand.png" alt=""><b>Divided We Stand</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Штраф к опыту переделан: опыт каждого Мипо делится на число Мипо, получавших опыт за последние 5 сек</span></li>
+        <li><span class="b nw">Новое</span><span>Улучшается Aghanim's Shard: можно подобрать своего Мипо или союзного крипа и кинуть его во врага, в своего Мипо или в точку. Урон 100/150/200/250 и замедление 30/40/50/60% в радиусе 200, дальность броска 600/700/800/900, перезарядка 25/20/15/10 сек</span></li>
+      </ul>
+    </div>
+    <div class="card" id="e-dig">
+      <div class="ah"><img loading="lazy" class="ic" src="img/meepo_petrify.png" alt=""><b>Dig</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Теперь даётся Aghanim's Scepter, а не Shard</span></li>
+        <li><span class="b up">Бафф</span><span>Длительность увеличена с 3 до 4 сек <span class="pc">+33%</span></span></li>
+        <li><span class="b up">Бафф</span><span>Восстановление здоровья увеличено с 25% до 50% <span class="pc">+100%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Талант 10 уровня: сила снижена с +7 до +6 <span class="pc">−14%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41b <time>· 07.04.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Базовая скорость передвижения снижена с 315 до 310</span></li>
+        <li><span class="b dn">Нерф</span><span>Прирост силы снижен с 2,2 до 2,0 <span class="pc">−9%</span></span></li>
+        <li><span class="b dn">Нерф</span><span>MegaMeepo: перезарядка увеличена с 60 до 90 сек, длительность снижена с 25 до 20 сек</span></li>
+      </ul>
+    </div>
+    <div class="card" id="e-ransack">
+      <div class="ah"><img loading="lazy" class="ic" src="img/meepo_ransack.png" alt=""><b>Ransack</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Кража здоровья у героев снижена с 9/12/15/18 до 7/10/13/16</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41 <time>· 24.03.2026</time></h4>
+    <div class="card" id="e-geo">
+      <div class="ah"><b>Geomancy</b></div>
+      <ul>
+        <li><span class="b nw">Новое</span><span>Новая врождённая способность: бонусы от местности, которые каждый Мипо даёт остальным. Рядом дерево — +1 к регенерации здоровья, на земле — +2% к скорости, в воде — атаки замедляют на 2%</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/meepo_divided_we_stand.png" alt=""><b>Divided We Stand</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Способность переработана: клоны копируют все предметы, но с общей перезарядкой, а бонусы предметов делятся поровну между всеми Мипо. Максимальный уровень увеличен с 3 до 4</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b rm">Удалено</span><span>Врождённая способность Sticky Fingers удалена</span></li>
       </ul>
     </div>
   </article>
