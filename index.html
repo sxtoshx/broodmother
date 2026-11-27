@@ -164,6 +164,16 @@ body{overflow-x:clip}
   .ab img{transition:transform .2s,border-color .2s,box-shadow .2s,rotate .2s}
   .ab:hover img{rotate:-8deg}
 }
+.adhd-btn{position:fixed;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:57;padding:10px 14px;border-radius:10px;border:1px solid var(--pink);background:rgba(0,0,0,.6);color:var(--glow);font:inherit;font-weight:700;letter-spacing:.06em;cursor:pointer;box-shadow:0 0 16px rgba(255,79,184,.35)}
+.adhd-btn[aria-pressed=true]{background:var(--pink);color:#000}
+.adhd-btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.adhd .bg{animation:hue 1.5s steps(8) infinite}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+.adhd .card{animation:wiggle .5s ease-in-out infinite alternate}
+.adhd .card:nth-child(even){animation-direction:alternate-reverse}
+@keyframes wiggle{from{rotate:-1deg}to{rotate:1deg}}
+.adhd h1,.adhd .name{animation:boing .6s ease-in-out infinite alternate}
+@keyframes boing{to{scale:1.08}}
 </style>
 </head>
 <body>
@@ -899,6 +909,7 @@ body{overflow-x:clip}
 <div class="toast" id="toast" role="status" hidden></div>
 <canvas id="vfx" aria-hidden="true"></canvas>
 <div id="announcer" aria-hidden="true"></div>
+<button type="button" class="adhd-btn" id="adhdBtn" aria-pressed="false">СДВГ</button>
 <script>
 (function(){
   var toastEl=document.getElementById('toast'),toastTimer;
@@ -1044,6 +1055,20 @@ body{overflow-x:clip}
     setTimeout(glitch,1500+Math.random()*3000);
   }
   glitch();
+
+  var adhdBtn=document.getElementById('adhdBtn'),adhdTimer=0;
+  adhdBtn.addEventListener('click',function(){
+    var on=document.body.classList.toggle('adhd');
+    adhdBtn.setAttribute('aria-pressed',on);
+    clearInterval(adhdTimer);
+    if(!on)return;
+    announce('СДВГ РЕЖИМ');
+    adhdTimer=setInterval(function(){
+      var x=Math.random()*vw,y=Math.random()*vh;
+      burst(x,y,14);damage(x,y);
+      if(Math.random()<.15)spider();
+    },260);
+  });
 })();
 </script>
 </body>
