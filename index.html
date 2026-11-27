@@ -124,7 +124,8 @@ body.pudge{--bg:#140a0a;--bg2:#3a1414;--violet:#8a2a2a;--pink:#9be36b;--glow:#d6
 body.invoker{--bg:#120a1c;--bg2:#3a1a4a;--violet:#8f4bd6;--pink:#ff9a3c;--glow:#ffe0b0;--bone:#f6ece2;--muted:#c7b0c9;--ember:#e0602a;--ember2:#ffb15e}
 body.monkey{--bg:#160f05;--bg2:#3e2a0b;--violet:#d43b2a;--pink:#ffcc33;--glow:#fff2b0;--bone:#f8eedb;--muted:#c8b48e;--ember:#c4472b;--ember2:#ffd75a}
 body.cm{--bg:#071321;--bg2:#163a5a;--violet:#6fc3ff;--pink:#bfe8ff;--glow:#eaf8ff;--bone:#eef6fb;--muted:#9fb6c8;--ember:#4f97c9;--ember2:#bfe8ff}
-body:is(.pudge,.invoker,.monkey,.cm) #bgBeast{background:radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--ember) 40%,transparent),transparent 60%),radial-gradient(ellipse at 10% 0%,color-mix(in srgb,var(--violet) 35%,transparent),transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2) 55%,var(--bg))}
+body.furion{--bg:#08140c;--bg2:#1d3a22;--violet:#3fa66a;--pink:#b6f04a;--glow:#e6ffc0;--bone:#eef5e6;--muted:#a9bba0;--ember:#4a8f3a;--ember2:#c9f56a}
+body:is(.pudge,.invoker,.monkey,.cm,.furion) #bgBeast{background:radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--ember) 40%,transparent),transparent 60%),radial-gradient(ellipse at 10% 0%,color-mix(in srgb,var(--violet) 35%,transparent),transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2) 55%,var(--bg))}
 @media(max-width:720px){
   .hero-switch{gap:8px;padding:10px}
   .hero-switch button{padding:9px 10px}
@@ -1129,6 +1130,135 @@ body{overflow-x:clip}
       <ul>
         <li><span class="b up">Бафф</span><span>Базовый интеллект увеличен с 18 до 20</span></li>
         <li><span class="b nw">Изменение</span><span>Базовый урон снижен на 2, урон на 1 уровне не изменился: 48–54</span></li>
+      </ul>
+    </div>
+  </article>
+
+</section>
+
+<section id="furion" class="hero-panel" aria-label="Nature's Prophet" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>ФУРИОН</span><span class="switch-count" data-hero-count>9 / 9</span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><img loading="lazy" class="photo" src="img/photo_furion.jpg" alt="Nature's Prophet в шапке-мухоморе и Пермский мухоморный завод" style="aspect-ratio:auto"></div>
+    <div>
+      <h2 class="name">Nature's Prophet</h2>
+      <p class="tag">Директор Пермского мухоморного завода. Телепортируется только за мухоморами</p>
+      <div class="chips"><span>Универсальный</span><span>Дальний бой</span><span>Патч 7.42a</span><span>Шапка: мухомор</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img loading="lazy" class="port" src="img/photo_furion.jpg" alt="Фурион"><span>Фурион</span></div>
+    <a class="ab" href="#n-sprout"><img loading="lazy" src="img/furion_sprout.png" alt=""><i class="mark"></i><span>Sprout</span></a>
+    <a class="ab" href="#n-tp"><img loading="lazy" src="img/furion_teleportation.png" alt=""><i class="mark"></i><span>Teleportation</span></a>
+    <a class="ab" href="#n-call"><img loading="lazy" src="img/furion_force_of_nature.png" alt=""><i class="mark"></i><span>Nature's Call</span></a>
+    <a class="ab" href="#n-wrath"><img loading="lazy" src="img/furion_wrath_of_nature.png" alt=""><i class="mark"></i><span>Wrath of Nature</span></a>
+    <a class="ab gold" href="#n-spirit"><img loading="lazy" src="img/furion_spirit_of_the_forest.png" alt=""><i class="mark"></i><span>Spirit of the Forest<br>врождённая</span></a>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42a <time>· 24.11.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Талант 10 уровня: базовый урон Wrath of Nature увеличен с +25 до +30 <span class="pc">+20%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card" id="n-sprout">
+      <div class="ah"><img loading="lazy" class="ic" src="img/furion_sprout.png" alt=""><b>Sprout</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Урон увеличен с 70/130/190/250 до 70/140/210/280 <span class="pc">0% +8% +11% +12%</span></span></li>
+      </ul>
+    </div>
+    <div class="card" id="n-tp">
+      <div class="ah"><img loading="lazy" class="ic" src="img/furion_teleportation.png" alt=""><b>Teleportation</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Перезарядка увеличена с 65/50/35/20 до 80/60/40/20 сек <span class="pc">+23% +20% +14% 0%</span></span></li>
+        <li><span class="b dn">Нерф</span><span>Больше не даёт барьер на 70/130/190/250 здоровья</span></li>
+      </ul>
+    </div>
+    <div class="card" id="n-call">
+      <div class="ah"><img loading="lazy" class="ic" src="img/furion_force_of_nature.png" alt=""><b>Nature's Call</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>У тринтов теперь 1/2/3/4 брони</span></li>
+        <li><span class="b nw">Изменение</span><span>Здоровье тринтов изменено с 450 на 425/450/475/500</span></li>
+        <li><span class="b nw">Изменение</span><span>Урон тринтов изменён с 16/25/34/43 на 15/25/35/45</span></li>
+        <li><span class="b nw">Изменение</span><span>Бонусный урон тринтов по героям изменён с 6/10/14/18 на 5/10/15/20</span></li>
+      </ul>
+    </div>
+    <div class="card" id="n-spirit">
+      <div class="ah"><img loading="lazy" class="ic" src="img/furion_spirit_of_the_forest.png" alt=""><b>Spirit of the Forest</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Бонусный урон теперь считается по деревьям рядом с целью, а не рядом с Фурионом</span></li>
+        <li><span class="b nw">Изменение</span><span>Урон считается в момент выстрела, а не попадания</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/furion_curse_of_the_forest.png" alt=""><b>Curse of the Oldgrowth</b></div>
+      <ul>
+        <li><span class="b nw">Новое</span><span>Способность переработана: пассивная, атаки Фуриона вешают дебафф на 5 сек — 24 магического урона в секунду и −12% скорости передвижения. Тринты вешают слабее: 12 урона и −6%. Каждый стак со своей длительностью</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b nw">Замена</span><span>Талант 15 уровня: +100 к барьеру Teleportation заменён на +300 здоровья</span></li>
+        <li><span class="b nw">Замена</span><span>Талант 20 уровня: +240 урона Sprout заменён на +2 тринта Nature's Call (и +50 к радиусу)</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41d <time>· 04.06.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/furion_spirit_of_the_forest.png" alt=""><b>Spirit of the Forest</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Живые тринты теперь всегда дают бонус к урону, даже вне радиуса</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Талант 20 уровня: урон Sprout увеличен с +220 до +240</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41c <time>· 06.05.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/furion_force_of_nature.png" alt=""><b>Nature's Call</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Стоимость маны снижена со 100 до 85/90/95/100</span></li>
+        <li><span class="b up">Бафф</span><span>Бонусный урон тринтов по героям увеличен с 4/8/12/16 до 6/10/14/18</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Талант 20 уровня: урон Sprout увеличен с +170 до +220</span></li>
+        <li><span class="b up">Бафф</span><span>Талант 20 уровня: снижение перезарядки Wrath of Nature увеличено с 15 до 20 сек</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41b <time>· 07.04.2026</time></h4>
+    <div class="card" id="n-wrath">
+      <div class="ah"><img loading="lazy" class="ic" src="img/furion_wrath_of_nature.png" alt=""><b>Wrath of Nature</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Базовый урон увеличен с 90/130/170 до 100/140/180 <span class="pc">+11% +8% +6%</span></span></li>
       </ul>
     </div>
   </article>
