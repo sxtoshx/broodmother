@@ -23,7 +23,7 @@ body{color:var(--text);font-family:"Trebuchet MS","Segoe UI",system-ui,sans-seri
     radial-gradient(ellipse at 50% 115%,rgba(226,116,43,.38),transparent 60%),
     radial-gradient(ellipse at 10% 0%,rgba(80,100,35,.35),transparent 55%),
     linear-gradient(180deg,#1c1008,#2a170a 55%,#120a05)}
-#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}
+#fx{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;pointer-events:none!important;z-index:2147483647!important}
 
 .hero{position:relative;z-index:1;min-height:100vh;min-height:100svh;display:flex;align-items:center;justify-content:center;padding:env(safe-area-inset-top) 16px env(safe-area-inset-bottom)}
 .hero main{display:flex;flex-direction:column;align-items:center;gap:28px;text-align:center}
@@ -437,8 +437,51 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   }
   function path(a){x.beginPath();x.moveTo(a[0][0],a[0][1]);for(var i=1;i<a.length;i++)x.lineTo(a[i][0],a[i][1]);x.stroke()}
 
+  // Гром: синтезируем раскат без внешних аудиофайлов.
+  var audioCtx=null, thunderNoise=null;
+  function playThunder(){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return;
+      if(!audioCtx){
+        audioCtx=new AC();
+        var length=Math.floor(audioCtx.sampleRate*2.8);
+        var buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
+        var data=buffer.getChannelData(0);
+        for(var n=0;n<length;n++){
+          var fade=1-n/length;
+          data[n]=(Math.random()*2-1)*fade*fade;
+        }
+        thunderNoise=buffer;
+      }
+      if(audioCtx.state==='suspended')audioCtx.resume();
+      var now=audioCtx.currentTime;
+      var noise=audioCtx.createBufferSource();
+      noise.buffer=thunderNoise;
+      var low=audioCtx.createBiquadFilter();
+      low.type='lowpass';low.frequency.setValueAtTime(190,now);
+      low.frequency.exponentialRampToValueAtTime(55,now+2.6);
+      var gain=audioCtx.createGain();
+      gain.gain.setValueAtTime(.0001,now);
+      gain.gain.exponentialRampToValueAtTime(.42,now+.035);
+      gain.gain.exponentialRampToValueAtTime(.0001,now+2.8);
+      noise.connect(low);low.connect(gain);gain.connect(audioCtx.destination);
+      noise.start(now);noise.stop(now+2.85);
+
+      var osc=audioCtx.createOscillator(), og=audioCtx.createGain();
+      osc.type='sine';osc.frequency.setValueAtTime(68,now);
+      osc.frequency.exponentialRampToValueAtTime(34,now+1.9);
+      og.gain.setValueAtTime(.0001,now);
+      og.gain.exponentialRampToValueAtTime(.24,now+.04);
+      og.gain.exponentialRampToValueAtTime(.0001,now+2.1);
+      osc.connect(og);og.connect(audioCtx.destination);
+      osc.start(now);osc.stop(now+2.15);
+    }catch(e){}
+  }
+
   // Молнии по всему экрану при каждом клике
   function clickLightning(){
+    playThunder();
     clickFlash=1;
     for(var q=0;q<4;q++){
       var sx=Math.random()*W, sy=-12;
@@ -475,18 +518,16 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
       x.fillRect(0,0,W,H);
       clickFlash*=.78;
     }else{clickFlash=0;}
-    var lp=1-p;
-    if(lp>.02){
-      if(t>next){bolt();if(Math.random()<.3)bolt();next=t+1400+Math.random()*2600}
-      for(var i=bolts.length-1;i>=0;i--){
-        var b=bolts[i];b.life-=.035;
-        if(b.life<=0){bolts.splice(i,1);continue}
-        var a=Math.min(1,b.life*1.6)*(b.click?1:lp),col=b.pink?'190,220,255':'180,100,255';
-        x.shadowColor='rgba('+col+',1)';x.shadowBlur=b.click?34:22;
-        x.strokeStyle='rgba('+col+','+a+')';x.lineWidth=b.click?6:4;path(b.pts);
-        x.strokeStyle='rgba(255,255,255,'+a+')';x.lineWidth=b.click?2.8:1.5;path(b.pts);
-        x.lineWidth=1;b.br.forEach(path);
-      }
+    // Фоновая гроза работает на любой глубине прокрутки.
+    if(t>next){bolt();if(Math.random()<.45)bolt();next=t+950+Math.random()*1700}
+    for(var i=bolts.length-1;i>=0;i--){
+      var b=bolts[i];b.life-=b.click?.035:.045;
+      if(b.life<=0){bolts.splice(i,1);continue}
+      var a=Math.min(1,b.life*1.6),col=b.pink?'190,220,255':'180,100,255';
+      x.shadowColor='rgba('+col+',1)';x.shadowBlur=b.click?34:26;
+      x.strokeStyle='rgba('+col+','+a+')';x.lineWidth=b.click?6:4;path(b.pts);
+      x.strokeStyle='rgba(255,255,255,'+a+')';x.lineWidth=b.click?2.8:1.7;path(b.pts);
+      x.lineWidth=1.2;x.strokeStyle='rgba(225,235,255,'+(a*.8)+')';b.br.forEach(path);
     }
     x.shadowBlur=0;
     if(p>.02){
