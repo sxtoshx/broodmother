@@ -113,6 +113,13 @@ body.skywrath #bgBeast{background:
   radial-gradient(ellipse at 50% 115%,rgba(255,200,80,.3),transparent 60%),
   radial-gradient(ellipse at 10% 0%,rgba(110,125,255,.35),transparent 55%),
   linear-gradient(180deg,#0e1238,#1b2160 55%,#090b24)}
+body.slark{--bg:#05141b;--bg2:#0c3340;--violet:#2fa3a3;--pink:#59e0c5;--glow:#b8fff0;--bone:#e3f4ef;--muted:#8fb5ad;--ember:#2f8f80;--ember2:#7df0d6}
+body.slark #bgPurple{background:radial-gradient(ellipse at 50% 35%,#0c3340 0%,#05141b 72%)}
+body.slark #bgBeast{background:
+  radial-gradient(ellipse at 50% 115%,rgba(60,220,190,.28),transparent 60%),
+  radial-gradient(ellipse at 10% 0%,rgba(40,120,160,.35),transparent 55%),
+  linear-gradient(180deg,#062029,#0b3341 55%,#04121a)}
+.art img.fish{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:20px;border:2px solid var(--pink);box-shadow:0 0 40px rgba(89,224,197,.45);animation:float 4s ease-in-out infinite}
 @media(max-width:720px){
   .hero-switch{gap:8px;padding:10px}
   .hero-switch button{padding:9px 10px}
@@ -569,6 +576,85 @@ body{overflow-x:clip}
       <ul>
         <li><span class="b dn">Нерф</span><span>Талант 15 уровня: снижение перезарядки Ancient Seal уменьшено с 7 до 6 сек <span class="pc">−14%</span></span></li>
         <li><span class="b up">Бафф</span><span>Талант 15 уровня: замедление Concussive Shot увеличено с +15% до +20%</span></li>
+      </ul>
+    </div>
+  </article>
+</section>
+
+<section id="slark" class="hero-panel" aria-label="Slark" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>СЛАРК</span><span class="switch-count" data-hero-count>4 / 4</span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><img class="fish" src="img/slark_fish.jpg" alt="Slark"></div>
+    <div>
+      <h2 class="name">Slark</h2>
+      <p class="tag">Рыба с Камы. Сбежал из Добрянки на кабриолете</p>
+      <div class="chips"><span>Ловкость</span><span>Ближний бой</span><span>Патч 7.42</span><span>Прописка: Кама</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img class="port" src="img/slark_fish.jpg" alt="Slark"><span>Slark</span></div>
+    <div class="ab"><img src="img/slark_dark_pact.png" alt=""><span>Dark Pact</span></div>
+    <div class="ab"><img src="img/slark_pounce.png" alt=""><span>Pounce</span></div>
+    <a class="ab" href="#k-shiv"><img src="img/slark_saltwater_shiv.png" alt=""><i class="mark"></i><span>Saltwater Shiv</span></a>
+    <a class="ab" href="#k-dance"><img src="img/slark_shadow_dance.png" alt=""><i class="mark"></i><span>Shadow Dance</span></a>
+    <a class="ab gold" href="#k-essence"><img src="img/slark_essence_shift.png" alt=""><i class="mark"></i><span>Essence Shift<br>врождённая</span></a>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul><li><span class="b dn">Нерф</span><span>Базовый урон снижен на 2<br><span class="pc">Урон на 1 уровне: с 58–64 до 56–62</span></span></li></ul>
+    </div>
+    <div class="card" id="k-dance">
+      <div class="ah"><img class="ic" src="img/slark_shadow_dance.png" alt=""><b>Shadow Dance</b></div>
+      <ul><li><span class="b nw">Изменение</span><span>Теперь на экране Сларка есть лёгкий эффект, когда враги его не видят</span></li></ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul><li><span class="b dn">Нерф</span><span>Талант 25 уровня: длительность Shadow Dance снижена с +1,5 до +1,25 сек <span class="pc">−17%</span></span></li></ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41d <time>· 04.06.2026</time></h4>
+    <div class="card" id="k-shiv">
+      <div class="ah"><img class="ic" src="img/slark_saltwater_shiv.png" alt=""><b>Saltwater Shiv</b></div>
+      <ul><li><span class="b up">Бафф</span><span>Перезарядка снижена с 14/12/10/8 до 12/10,5/9/7,5 сек <span class="pc">−14% −13% −10% −6%</span></span></li></ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41b <time>· 07.04.2026</time></h4>
+    <div class="card" id="k-essence">
+      <div class="ah"><img class="ic" src="img/slark_essence_shift.png" alt=""><b>Essence Shift</b></div>
+      <ul><li><span class="b dn">Нерф</span><span>Длительность снижена с 12,5 + 2,5 до 10 + 2,5 сек за уровень</span></li></ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul><li><span class="b dn">Нерф</span><span>Талант 20 уровня: длительность Essence Shift снижена с +25 до +20 сек <span class="pc">−20%</span></span></li></ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41a <time>· 27.03.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img class="ic" src="img/slark_shadow_dance.png" alt=""><b>Shadow Dance</b></div>
+      <ul><li><span class="b dn">Нерф</span><span>Бонус к скорости передвижения снижен с 24/36/48% до 20/30/40% <span class="pc">−17% −17% −17%</span></span></li></ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b nw">Замена</span><span>Талант 20 уровня: +1 к ловкости за стак Essence Shift заменён на +25 сек длительности Essence Shift</span></li>
+        <li><span class="b nw">Замена</span><span>Талант 25 уровня: +35 сек длительности Essence Shift заменён на +1 к ловкости за стак Essence Shift</span></li>
       </ul>
     </div>
   </article>
