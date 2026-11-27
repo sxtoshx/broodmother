@@ -130,6 +130,11 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
 .portrait img{cursor:pointer}
 .portrait img.spin{animation:spin .9s cubic-bezier(.3,1.5,.5,1)}
 @keyframes spin{to{rotate:1turn}}
+.leak{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 20px 40px;color:var(--bone)}
+.leak .sec{margin-top:0}
+.leak button{margin-top:16px;border:1px solid var(--ember2);border-radius:10px;padding:10px 16px;background:rgba(255,255,255,.06);color:var(--bone);font:inherit;cursor:pointer;transition:background .2s,transform .2s}
+.leak button:hover,.leak button:focus-visible{background:rgba(255,255,255,.14);transform:translateY(-2px)}
+.leak button:focus-visible{outline:3px solid var(--ember2);outline-offset:3px}
 </style>
 </head>
 <body>
@@ -432,6 +437,15 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   </article>
 </section>
 
+<section class="leak" aria-label="Слив патча">
+  <h3 class="sec">Слив патча</h3>
+  <article class="patch">
+    <h4>Патч 7.43 <time>· источник: двоюродный брат работает в Valve</time></h4>
+    <div class="card"><ul id="leakList"></ul></div>
+    <button type="button" id="leakBtn">слить ещё</button>
+  </article>
+</section>
+
 <footer>Dota 2 и Beastmaster и Visage принадлежат Valve. Это пиздёж. Они принадлежат нам. Триада Добрянка МВД.</footer>
 
 <script>
@@ -677,6 +691,19 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
     toast(pokeLines[(pokes/5-1)%pokeLines.length]);
   });
   portraitImg.addEventListener('animationend',function(){portraitImg.classList.remove('spin')});
+
+  var leakHeroes=['Broodmother','Beastmaster','Visage','Pudge','Techies','Курьер','Рошан','Ваш керри','Тиммейт на миде'];
+  var leakStats=['урон','броня','харизма','количество ног','шанс зафидить','желание жить','скорость тильта','длина хука','APM в чате'];
+  var leakList=document.getElementById('leakList');
+  function pick(list){return list[Math.floor(Math.random()*list.length)]}
+  function leakLine(){
+    var from=5+Math.floor(Math.random()*95),delta=(1+Math.floor(Math.random()*(from-1)))*(Math.random()<.5?1:-1),up=delta>0;
+    return '<li><span class="b '+(up?'up">Бафф':'dn">Нерф')+'</span><span>'+pick(leakHeroes)+' — '+pick(leakStats)+': '+from+' → '+(from+delta)
+      +' <span class="pc">'+(up?'+':'−')+Math.round(Math.abs(delta)/from*100)+'%</span></span></li>';
+  }
+  function leak(){leakList.innerHTML=leakLine()+leakLine()+leakLine()}
+  document.getElementById('leakBtn').addEventListener('click',leak);
+  leak();
 })();
 </script>
 </body>
