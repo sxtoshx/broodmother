@@ -147,8 +147,9 @@ body.slark #bgBeast{background:
 .portrait img{cursor:pointer}
 .portrait img.spin{animation:spin .9s cubic-bezier(.3,1.5,.5,1)}
 @keyframes spin{to{rotate:1turn}}
-.leak{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 20px 40px;color:var(--bone)}
-.leak .sec{margin-top:0}
+.leak,.neutrals{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 20px 40px;color:var(--bone)}
+.leak .sec,.neutrals .sec{margin-top:0}
+.lore{margin:10px 0 12px;color:var(--muted);font-style:italic;line-height:1.5}
 .leak time{display:block;margin-top:4px;font:400 .95rem "Trebuchet MS","Segoe UI",system-ui,sans-serif}
 .leak button{margin-top:16px;border:1px solid var(--ember2);border-radius:10px;padding:10px 16px;background:rgba(255,255,255,.06);color:var(--bone);font:inherit;cursor:pointer;transition:background .2s,transform .2s}
 .leak button:hover,.leak button:focus-visible{background:rgba(255,255,255,.14);transform:translateY(-2px)}
@@ -157,7 +158,7 @@ body{overflow-x:clip}
 .credits{display:block;margin-top:8px;font-size:.75rem;opacity:.7}
 .credits a{color:inherit}
 #vfx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:56}
-@media(prefers-reduced-motion:no-preference){.shake .hero main,.shake .hero-panel.active,.shake .leak{animation:shake .35s}}
+@media(prefers-reduced-motion:no-preference){.shake .hero main,.shake .hero-panel.active,.shake .leak,.shake .neutrals{animation:shake .35s}}
 @keyframes shake{20%{translate:-7px 3px}40%{translate:6px -4px}60%{translate:-5px -2px}80%{translate:4px 4px}}
 @media(prefers-reduced-motion:no-preference){.glitch{animation:glitch .45s steps(3) 2}}
 @keyframes glitch{0%{text-shadow:3px 0 #ff2a6d,-3px 0 #05d9e8;translate:2px 0}50%{text-shadow:-4px 1px #ff2a6d,4px -1px #05d9e8;translate:-3px 1px}100%{text-shadow:none;translate:0}}
@@ -691,6 +692,46 @@ body{overflow-x:clip}
       </ul>
     </div>
   </article>
+</section>
+
+<section class="neutrals" aria-label="Нейтральные предметы">
+  <h3 class="sec">Нейтралки</h3>
+
+  <div class="card">
+    <div class="ah"><img class="ic" src="img/item_jidi_pollen_bag.png" alt="" loading="lazy"><b>Jidi Pollen Bag · артефакт 2 тира</b></div>
+    <p style="line-height:1.5"><b>Pollinate</b> (активная): распыляет пыльцу на всех врагов в радиусе 900 на 9 секунд. Их восстановление здоровья падает на 65%, и они получают урон, в сумме равный 9% от их максимального здоровья. Урон несмертельный: это потеря здоровья, добить им нельзя.</p>
+    <div class="stats">
+      <div><small>Радиус</small><b>900</b></div>
+      <div><small>Длительность</small><b>9 сек</b></div>
+      <div><small>Снижение восстановления</small><b>65%</b></div>
+      <div><small>Урон</small><b>9% макс. HP</b></div>
+      <div><small>Перезарядка</small><b>25 сек</b></div>
+    </div>
+    <p class="lore">«Очень опасно. Достать ещё — очень сложно». В Добрянке за такой пакетик дают 228.</p>
+    <ul>
+      <li><span class="b nw">7.42</span><span>Тир изменён с 3 на 2</span></li>
+      <li><span class="b up">7.42</span><span>Снижение восстановления здоровья увеличено с 50% до 65% <span class="pc">+30%</span></span></li>
+      <li><span class="b up">7.41b</span><span>Радиус увеличен с 700 до 900 <span class="pc">+29%</span></span></li>
+      <li><span class="b up">7.41</span><span>Снижение восстановления здоровья увеличено с 30% до 50%, теперь режет и входящее лечение</span></li>
+      <li><span class="b dn">7.40</span><span>Длительность снижена с 12 до 9 сек, урон — с 12% до 9% макс. здоровья (с Dormant Curio — с 15,6% до 11,7%) <span class="pc">−25%</span></span></li>
+      <li><span class="b up">7.40</span><span>Перезарядка снижена с 45 до 25 сек <span class="pc">−44%</span></span></li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <div class="ah"><img class="ic" src="img/item_brick.png" alt="" loading="lazy"><b>Brick · артефакт 2 тира</b></div>
+    <p style="line-height:1.5"><b>Brick</b> (активная, на врага): кидает кирпич. Снимает 200 прочности с любых барьеров и наносит 150 физического урона. Урон по барьерам игнорирует любые снижения и идёт по порядку: магический барьер → физический → барьер от всего урона. Если барьеров не осталось, остаток урона по барьерам игроку не наносится.</p>
+    <div class="stats">
+      <div><small>Урон по барьерам</small><b>200</b></div>
+      <div><small>Физический урон</small><b>150</b></div>
+      <div><small>Dormant Curio</small><b>260 / 195</b></div>
+      <div><small>Дальность</small><b>600</b></div>
+      <div><small>Скорость снаряда</small><b>1400</b></div>
+      <div><small>Перезарядка</small><b>30 сек</b></div>
+    </div>
+    <p class="lore">«Простой ответ на безумие». Табельное оружие Триады Добрянки.</p>
+    <ul><li><span class="b nw">7.42</span><span>Новый артефакт 2 тира</span></li></ul>
+  </div>
 </section>
 
 <section class="leak" aria-label="Слив патча">
