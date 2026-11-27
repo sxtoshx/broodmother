@@ -113,7 +113,7 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   .media-placeholder{min-height:220px}
 }
 
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));translate:-50% 0;z-index:60;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:rgba(10,5,20,.9);color:var(--bone);border:1px solid var(--pink);box-shadow:0 0 24px rgba(255,79,184,.35);font-weight:600;text-align:center;animation:toastIn .25s ease-out}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));translate:-50% 0;z-index:60;width:max-content;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:rgba(10,5,20,.9);color:var(--bone);border:1px solid var(--pink);box-shadow:0 0 24px rgba(255,79,184,.35);font-weight:600;text-align:center;animation:toastIn .25s ease-out}
 @keyframes toastIn{from{opacity:0;translate:-50% 12px}}
 .spider{position:fixed;left:0;top:0;z-index:50;padding:8px;border:0;background:none;font-size:44px;line-height:1;cursor:crosshair;-webkit-tap-highlight-color:transparent;filter:drop-shadow(0 0 3px var(--glow)) drop-shadow(0 0 10px var(--pink))}
 .spider span{display:block;animation:skitter .16s steps(2) infinite alternate}
@@ -132,6 +132,7 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
 @keyframes spin{to{rotate:1turn}}
 .leak{position:relative;z-index:1;max-width:980px;margin:0 auto;padding:0 20px 40px;color:var(--bone)}
 .leak .sec{margin-top:0}
+.leak time{display:block;margin-top:4px;font:400 .95rem "Trebuchet MS","Segoe UI",system-ui,sans-serif}
 .leak button{margin-top:16px;border:1px solid var(--ember2);border-radius:10px;padding:10px 16px;background:rgba(255,255,255,.06);color:var(--bone);font:inherit;cursor:pointer;transition:background .2s,transform .2s}
 .leak button:hover,.leak button:focus-visible{background:rgba(255,255,255,.14);transform:translateY(-2px)}
 .leak button:focus-visible{outline:3px solid var(--ember2);outline-offset:3px}
