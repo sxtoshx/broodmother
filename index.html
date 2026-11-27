@@ -155,8 +155,6 @@ body.slark #bgBeast{background:
 .leak button:hover,.leak button:focus-visible{background:rgba(255,255,255,.14);transform:translateY(-2px)}
 .leak button:focus-visible{outline:3px solid var(--ember2);outline-offset:3px}
 body{overflow-x:clip}
-.credits{display:block;margin-top:8px;font-size:.75rem;opacity:.7}
-.credits a{color:inherit}
 #vfx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:56}
 @media(prefers-reduced-motion:no-preference){.shake .hero main,.shake .hero-panel.active,.shake .leak,.shake .neutrals{animation:shake .35s}}
 @keyframes shake{20%{translate:-7px 3px}40%{translate:6px -4px}60%{translate:-5px -2px}80%{translate:4px 4px}}
@@ -752,7 +750,7 @@ body{overflow-x:clip}
   </article>
 </section>
 
-<footer>Dota 2 и Beastmaster и Visage принадлежат Valve. Это пиздёж. Они принадлежат нам. Триада Добрянка МВД.<small class="credits">Гром: <a href="https://commons.wikimedia.org/wiki/File:Rhumphries_-_rbh-thunder-storm.ogg">rbh thunder storm</a> — RHumphries, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>, обрезан и сжат; <a href="https://commons.wikimedia.org/wiki/File:Storm_thunderbolts.ogg">Storm thunderbolts</a> — public domain</small><p class="counter">Вы посетитель № <b id="visitorNo"></b><br>Онлайн: <span id="online"></span></p></footer>
+<footer>Dota 2 и Beastmaster и Visage принадлежат Valve. Это пиздёж. Они принадлежат нам. Триада Добрянка МВД.<p class="counter">Вы посетитель № <b id="visitorNo"></b><br>Онлайн: <span id="online"></span></p></footer>
 
 <script>
 (function(){
@@ -777,7 +775,7 @@ body{overflow-x:clip}
   function path(a){x.beginPath();x.moveTo(a[0][0],a[0][1]);for(var i=1;i<a.length;i++)x.lineTo(a[i][0],a[i][1]);x.stroke()}
 
   var audioCtx=null, thunderNoise=null, thunderBuffers=[], thunderVoices=0;
-  var thunderBytes=['sfx/thunder1.mp3','sfx/thunder2.mp3','sfx/thunder3.mp3'].map(function(src){
+  var thunderBytes=['sfx/thunder1.mp3','sfx/thunder2.mp3'].map(function(src){
     return fetch(src).then(function(r){return r.ok?r.arrayBuffer():null}).catch(function(){return null});
   });
   function decodeThunders(){
