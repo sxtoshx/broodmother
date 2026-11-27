@@ -128,7 +128,8 @@ body.furion{--bg:#08140c;--bg2:#1d3a22;--violet:#3fa66a;--pink:#b6f04a;--glow:#e
 body.meepo{--bg:#10100c;--bg2:#2f2b1c;--violet:#8a6d3b;--pink:#7fd0ff;--glow:#d9f1ff;--bone:#f2ede0;--muted:#b9b09a;--ember:#a47b3a;--ember2:#ffd27a}
 body.qop{--bg:#14071a;--bg2:#3d0f3f;--violet:#9b2fae;--pink:#ff4f7b;--glow:#ffc2d6;--bone:#f8e8f0;--muted:#c4a3b8;--ember:#b3204d;--ember2:#ff7aa0}
 body.brew{--bg:#140d05;--bg2:#3b2408;--violet:#c4471f;--pink:#ffb627;--glow:#ffe7a8;--bone:#f6ecd8;--muted:#c4ae8a;--ember:#a8561f;--ember2:#ffc94d}
-body:is(.pudge,.invoker,.monkey,.cm,.furion,.meepo,.qop,.brew) #bgBeast{background:radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--ember) 40%,transparent),transparent 60%),radial-gradient(ellipse at 10% 0%,color-mix(in srgb,var(--violet) 35%,transparent),transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2) 55%,var(--bg))}
+body.pango{--bg:#160b06;--bg2:#40200f;--violet:#9c3d25;--pink:#ff7a3d;--glow:#ffd6b8;--bone:#f7ebe0;--muted:#c3a892;--ember:#a8462a;--ember2:#ffa15e}
+body:is(.pudge,.invoker,.monkey,.cm,.furion,.meepo,.qop,.brew,.pango) #bgBeast{background:radial-gradient(ellipse at 50% 115%,color-mix(in srgb,var(--ember) 40%,transparent),transparent 60%),radial-gradient(ellipse at 10% 0%,color-mix(in srgb,var(--violet) 35%,transparent),transparent 55%),linear-gradient(180deg,var(--bg),var(--bg2) 55%,var(--bg))}
 @media(max-width:720px){
   .hero-switch{gap:8px;padding:10px}
   .hero-switch button{padding:9px 10px}
@@ -1594,6 +1595,141 @@ body{overflow-x:clip}
       <ul>
         <li><span class="b dn">Нерф</span><span>Талант 10 уровня: базовый урон брюлингов снижен с +14 до +13</span></li>
         <li><span class="b dn">Нерф</span><span>Талант 20 уровня: снижение перезарядки Primal Split уменьшено с 15 до 12 сек</span></li>
+      </ul>
+    </div>
+  </article>
+
+</section>
+
+<section id="pango" class="hero-panel" aria-label="Pangolier" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>ПАНГОЛЬЕР</span><span class="switch-count" data-hero-count></span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><img loading="lazy" class="photo" src="img/photo_pango.jpg" alt="Пангольер" style="object-position:50% 55%"></div>
+    <div>
+      <h2 class="name">Pangolier</h2>
+      <p class="tag">Rolling Thunder после двух сидров. Свернулся у тумбочки и не разворачивается</p>
+      <div class="chips"><span>Универсальный</span><span>Ближний бой</span><span>Патч 7.42</span><span>Кувырок: бесконечный</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img loading="lazy" class="port" src="img/photo_pango.jpg" alt="Пангольер"><span>Пангольер</span></div>
+    <a class="ab" href="#g-swash"><img loading="lazy" src="img/pangolier_swashbuckle.png" alt=""><i class="mark"></i><span>Swashbuckle</span></a>
+    <a class="ab" href="#g-crash"><img loading="lazy" src="img/pangolier_shield_crash.png" alt=""><i class="mark"></i><span>Shield Crash</span></a>
+    <a class="ab" href="#g-lucky"><img loading="lazy" src="img/pangolier_lucky_shot.png" alt=""><i class="mark"></i><span>Lucky Shot</span></a>
+    <div class="ab"><img loading="lazy" src="img/pangolier_rollup.png" alt=""><span>Roll Up</span></div>
+    <a class="ab" href="#g-roll"><img loading="lazy" src="img/pangolier_gyroshell.png" alt=""><i class="mark"></i><span>Rolling Thunder</span></a>
+    <div class="ab gold"><img loading="lazy" src="img/pangolier_fortune_favors_the_bold.png" alt=""><span>Fortune Favors the Bold<br>врождённая</span></div>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card" id="g-swash">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_swashbuckle.png" alt=""><b>Swashbuckle</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Количество ударов увеличено с 3 до 4</span></li>
+        <li><span class="b dn">Нерф</span><span>Урон за удар снижен с 35/65/95/125 до 25/50/75/100</span></li>
+        <li><span class="b nw">Изменение</span><span>Удары теперь применяют эффекты предметов с силой 60%</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41d <time>· 04.06.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Базовая ловкость снижена с 18 до 17<br><span class="pc">Урон на 1 уровне: с 50–56 до 49–55</span></span></li>
+        <li><span class="b dn">Нерф</span><span>Базовая броня снижена на 1</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41c <time>· 06.05.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Базовая регенерация здоровья снижена на 1</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_swashbuckle.png" alt=""><b>Swashbuckle</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Стоимость маны увеличена с 75/80/85/90 до 85/90/95/100</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_rollup.png" alt=""><b>Roll Up</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Стоимость маны увеличена с 50 до 75 <span class="pc">+50%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Талант 10 уровня: снижение брони Lucky Shot уменьшено с +3 до +2</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41b <time>· 07.04.2026</time></h4>
+    <div class="card" id="g-lucky">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_lucky_shot.png" alt=""><b>Lucky Shot</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Снижение скорости атаки уменьшено с 40/80/120/160 до 35/70/105/140</span></li>
+      </ul>
+    </div>
+    <div class="card" id="g-roll">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_gyroshell.png" alt=""><b>Rolling Thunder</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Урон от атаки при ударе снижен со 100% до 80% <span class="pc">−20%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41a <time>· 27.03.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_gyroshell.png" alt=""><b>Rolling Thunder</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Перезарядка увеличена с 90/85/80 до 100/90/80 сек</span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41 <time>· 24.03.2026</time></h4>
+    <div class="card" id="g-crash">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_shield_crash.png" alt=""><b>Shield Crash</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Урон увеличен с 50/100/150/200 до 60/120/180/240 <span class="pc">+20%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_gyroshell.png" alt=""><b>Rolling Thunder</b></div>
+      <ul>
+        <li><span class="b nw">Изменение</span><span>Оглушение изменено с 0,8/1/1,2 на 1,2 сек</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_swashbuckle.png" alt=""><b>Swashbuckle</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Длительность замедления увеличена с 0,4 до 0,6 сек</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img loading="lazy" class="ic" src="img/pangolier_lucky_shot.png" alt=""><b>Lucky Shot</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Снижение брони уменьшено с 3/5/7/9 до 2/4/6/8</span></li>
       </ul>
     </div>
   </article>
