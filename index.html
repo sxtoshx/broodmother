@@ -156,6 +156,14 @@ body{overflow-x:clip}
 #vfx{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:56}
 @media(prefers-reduced-motion:no-preference){.shake .hero main,.shake .hero-panel.active,.shake .leak{animation:shake .35s}}
 @keyframes shake{20%{translate:-7px 3px}40%{translate:6px -4px}60%{translate:-5px -2px}80%{translate:4px 4px}}
+@media(prefers-reduced-motion:no-preference){.glitch{animation:glitch .45s steps(3) 2}}
+@keyframes glitch{0%{text-shadow:3px 0 #ff2a6d,-3px 0 #05d9e8;translate:2px 0}50%{text-shadow:-4px 1px #ff2a6d,4px -1px #05d9e8;translate:-3px 1px}100%{text-shadow:none;translate:0}}
+@media(hover:hover){
+  .card{transition:rotate .25s,scale .25s}
+  .card:hover{rotate:-.6deg;scale:1.012}
+  .ab img{transition:transform .2s,border-color .2s,box-shadow .2s,rotate .2s}
+  .ab:hover img{rotate:-8deg}
+}
 </style>
 </head>
 <body>
@@ -1024,6 +1032,18 @@ body{overflow-x:clip}
     spark(e.clientX,e.clientY,(Math.random()-.5)*1.6,Math.random()*1.2,1+Math.random()*1.6,pick(trailPalette),.045);
     runVfx();
   },{passive:true});
+
+  function glitch(){
+    var visible=[].filter.call(document.querySelectorAll('h1,.name,.sec,.ah b,.switch-name'),function(el){
+      var r=el.getBoundingClientRect();return r.width>0&&r.bottom>0&&r.top<innerHeight;
+    });
+    if(visible.length){
+      var el=pick(visible);el.classList.add('glitch');
+      setTimeout(function(){el.classList.remove('glitch')},900);
+    }
+    setTimeout(glitch,1500+Math.random()*3000);
+  }
+  glitch();
 })();
 </script>
 </body>
