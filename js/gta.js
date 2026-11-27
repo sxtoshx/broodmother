@@ -10,10 +10,10 @@ const inBlock = v => { const o = (v + HALF) % CELL; return o > ROAD / 2 && o < C
 const groundY = (x, z) => inBlock(x) && inBlock(z) ? .3 : 0;
 const fwd = V(0, 0, 0), tmp = V(0, 0, 0), tmp2 = V(0, 0, 0), dummy = new THREE.Object3D();
 const DEATHS = {
-  cop: ['ТЕБЯ ДОБИЛ МВД ДОБРЯНКИ', 'Участковый доволен, премия в кармане'],
-  wall: ['ВЪЕХАЛ В ХРУЩЁВКУ', 'Хрущёвка стоит. Ты нет'],
-  kama: ['УТОНУЛ В КАМЕ', 'Кама забрала ещё одного'],
-  bust: ['ПРИНЯЛИ', 'Оформили на 15 суток. Low priority: 5 игр. Аегис от ментов не спасает']
+  cop: ['ТЕБЯ ДОБИЛ МВД ДОБРЯНКИ', 'Участковый доволен. Очнёшься в Добрянской ЦРБ, врачи возьмут 30% золота за бахилы'],
+  wall: ['ВЪЕХАЛ В ХРУЩЁВКУ', 'Хрущёвка стоит, ты нет. В ЦРБ возьмут 30% золота за бахилы'],
+  kama: ['УТОНУЛ В КАМЕ', 'Выловили рыбаки. 30% золота забрали себе за улов'],
+  bust: ['ПРИНЯЛИ', 'Low priority: 5 игр. МВД конфискует 20% золота и шнурки. Аегис от ментов не спасает']
 };
 const STREAK = { 2: 'DOUBLE KILL', 3: 'TRIPLE KILL', 4: 'ULTRA KILL', 5: 'RAMPAGE' };
 const BEAT_LINES = ['Стоять! МВД Добрянки!', 'Документики!', 'Прописочку покажем?', 'Я тебя запомнил, сука', 'Стой, стрелять буду! Не буду', 'Фуражку верни!', 'Пройдёмте, гражданин', 'Семки есть? Конфискую'];
@@ -425,7 +425,7 @@ function create() {
   let splatNext = 0;
 
   let site, state = 'title', opened = false, paused = [], last = 0, now = 0, hp = 100, heat = 0, bust = 0, invuln = 0, dyingT = 0, cause = '', shakeAmt = 0;
-  let radioAt = 0, lastKill = -99, streak = 0, firstBlood = true, spawnCD = 0, hintUntil = 0, run = {}, doorNear = null, shopDoor = null, winT = 0;
+  let radioAt = 0, lastHurt = 0, lastKill = -99, streak = 0, firstBlood = true, spawnCD = 0, hintUntil = 0, run = {}, doorNear = null, shopDoor = null, winT = 0;
   const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set() }, shown = {};
   const touch = matchMedia('(pointer:coarse)').matches;
   const on = k => keys[k] || (held[k] ? held[k].size > 0 : false);
@@ -693,7 +693,7 @@ function create() {
 
   function hurt(n, why) {
     if (state !== 'play' || invuln > 0) return;
-    hp -= n * player.spec.armor * (run.armor && !player.foot ? .6 : 1); cause = why; shakeAmt = Math.min(1.6, shakeAmt + n * .05);
+    hp -= n * player.spec.armor * (run.armor && !player.foot ? .6 : 1); cause = why; lastHurt = now; shakeAmt = Math.min(1.6, shakeAmt + n * .05);
     if (hp < 30 && hp > 0 && site.loot.cheese > 0) { site.loot.cheese--; site.saveLoot(); hp = 100; ann('СЫР!', 'gold'); hint('Сожрал сыр с Рошана, здоровье полное', 2.5); }
     if (hp <= 0) { hp = 0; die(why); }
   }
@@ -709,6 +709,18 @@ function create() {
     if (record) best.set(run.gold);
     setTimeout(() => { if (state === 'over' && opened) screen(overHtml(record)); }, 1300);
   }
+  function respawn() {
+    const lost = Math.floor(run.gold * (cause === 'bust' ? .2 : .3)), m = doors.find(d => d.kind === 'mvd');
+    run.gold -= lost; run.deaths++;
+    state = 'play'; screen(''); dlg.classList.remove('dying'); dlg.focus();
+    hp = 100; heat = 0; bust = 0; invuln = 2.5; lastHurt = now;
+    while (cops.length) dropCop(0);
+    beat.active = false; beat.mesh.visible = false; beat.cd = 8;
+    if (cause === 'bust') player.pos.set(m.x, 0, m.z + (player.foot ? 3 : 12)); else player.pos.set(0, 0, 0);
+    player.heading = 0; player.speed = 0; player.vel.set(0, 0, 0); player.y = groundY(player.pos.x, player.pos.z); player.mesh.visible = true; place(player, 1);
+    chase(0, true);
+    hint(lost ? `−${lost} золота. Осталось ${run.gold}` : 'Золота и так не было', 3);
+  }
   function revive() {
     state = 'play'; dlg.classList.remove('dying'); hp = 100; invuln = 2.5; bust = 0;
     if (cause === 'kama') { player.pos.set(-EDGE + 3, 0, clamp(player.pos.z, -EDGE + 6, EDGE - 6)); player.heading = Math.PI / 2; player.y = 0; }
@@ -722,7 +734,7 @@ function create() {
     s.dead = true; s.respawn = rand(5, 9);
     run.gold += gold; courier ? run.couriers++ : run.spiders++;
     streak = now - lastKill < 3 ? streak + 1 : 1; lastKill = now;
-    heat = Math.min(5, heat + (courier ? 1.2 : .5));
+    heat = Math.min(5, heat + (courier ? 1 : .35));
     splat(s.pos, s.k.kind); spray(s.pos, courier ? ['#8a6a4a', '#d4b24a', '#5a4330'] : ['#160c18', '#3fbf2a', '#ff4fb8'], 14, 7);
     floatText('+' + gold, s.pos);
     noise(.2, 900, .5, 'bandpass'); noise(.14, 180, .5, 'lowpass');
@@ -743,7 +755,7 @@ function create() {
     for (const b of bubbles.splice(0)) b.el.remove();
     beat.active = false; beat.mesh.visible = false; beat.cd = 0;
     hp = 100; heat = 0; bust = 0; invuln = 0; streak = 0; lastKill = -99; firstBlood = true; spawnCD = 0; shakeAmt = 0;
-    run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0 };
+    run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0, deaths: 0 };
     for (const d of doors) d.inside = false;
     for (const s of crowd) { s.pos.copy(spot(25)); s.dead = false; }
     for (const g of gibs) g.life = 0;
@@ -753,12 +765,13 @@ function create() {
   }
   function update(dt) {
     run.time += dt; invuln = Math.max(0, invuln - dt);
+    if (now - lastHurt > 6 && hp < 100) hp = Math.min(100, hp + 4 * dt);
     const gas = (on('up') ? 1 : 0) - (on('down') ? 1 : 0), steer = (on('left') ? 1 : 0) - (on('right') ? 1 : 0);
     if (player.foot) walk(player, gas, steer, dt);
     else {
       const before = Math.abs(player.speed), imp = drive(player, gas, steer, on('hand'), dt, player.spec.top + run.engine * 4);
       if (imp > 6) { noise(.35, 500, Math.min(.8, imp / 20), 'lowpass'); spray(tmp.copy(player.pos).addScaledVector(fwd, 2), ['#ffb347', '#fff3a0'], 6, 5); }
-      if (imp > 9 && before > 9) hurt((imp - 9) * 2.5, 'wall');
+      if (imp > 14 && before > 14) hurt((imp - 14) * 1.2, 'wall');
       player.mesh.rotation.z = -steer * Math.min(1, Math.abs(player.speed) / 20) * .06;
     }
     player.mesh.visible = invuln <= 0 || now * 10 % 2 < 1.4;
@@ -785,11 +798,11 @@ function create() {
       if ((want === 0 && d > 30) || (cops.length > want && d > 70)) { dropCop(k); continue; }
       copThink(c, dt); near = Math.min(near, d);
       const hit = bump(player, c);
-      if (hit > 3) { hurt((hit - 3) * 2.2 + 4, 'cop'); noise(.3, 600, Math.min(.8, hit / 15), 'lowpass'); }
+      if (hit > 5) { hurt((hit - 5) * 1.1 + 2, 'cop'); noise(.3, 600, Math.min(.8, hit / 15), 'lowpass'); }
     }
     for (let a = 0; a < cops.length; a++) for (let b = a + 1; b < cops.length; b++) bump(cops[a], cops[b]);
     const grabbed = beatStep(dt); jobStep();
-    if (now - lastKill > 8 && near > 35) heat = Math.max(0, heat - (player.spec.chill ? .44 : .22) * dt);
+    if (now - lastKill > 8 && near > 35) heat = Math.max(0, heat - (player.spec.chill ? .6 : .3) * dt);
     if (grabbed || (Math.abs(player.speed) < 2.5 && near < 10 && invuln <= 0)) bust += dt * (grabbed ? 1.4 : 1); else bust = Math.max(0, bust - dt * 2);
     if (bust > 2.2) die('bust');
   }
@@ -1006,7 +1019,7 @@ function create() {
     if (record) bestTime.set(run.time);
     setTimeout(() => { if (state === 'win' && opened) screen(winHtml(record, prev)); }, 3800);
   }
-  const winHtml = (record, prev) => `<p class="g-kicker">Прописка получена</p><h2 class="g-dead g-win">ТРИАДА ПРИНИМАЕТ ТЕБЯ</h2><p>Теперь ты официально житель Добрянки. Участковый жмёт руку, Pis\`master наливает, Азалина подписалась.</p><ul class="g-recap"><li>Время: <b>${clockStr(run.time)}</b>${record ? ' — рекорд!' : ` · рекорд ${clockStr(prev)}`}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Золота осталось: <b>${run.gold}</b></li></ul><div class="g-btns"><button type="button" data-go="play">ЕЩЁ РАЗ</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
+  const winHtml = (record, prev) => `<p class="g-kicker">Прописка получена</p><h2 class="g-dead g-win">ТРИАДА ПРИНИМАЕТ ТЕБЯ</h2><p>Теперь ты официально житель Добрянки. Участковый жмёт руку, Pis\`master наливает, Азалина подписалась.</p><ul class="g-recap"><li>Время: <b>${clockStr(run.time)}</b>${record ? ' — рекорд!' : ` · рекорд ${clockStr(prev)}`}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Золота осталось: <b>${run.gold}</b></li><li>Смертей по дороге: <b>${run.deaths}</b></li></ul><div class="g-btns"><button type="button" data-go="play">ЕЩЁ РАЗ</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
   const mapC = $('.g-map'), mx = mapC.getContext('2d'), MS = mapC.width, MR = RIVER + 8, msc = MS / (2 * MR);
   const toMap = (x, z) => [(MR - x) * msc, (MR - z) * msc];
   const mapBase = canvas(MS, MS), mb = mapBase.getContext('2d');
@@ -1038,7 +1051,7 @@ function create() {
   const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль, справа газ и тормоз, круглая кнопка сверху — выйти из тачки или угнать чужую.' : 'WASD или стрелки, пробел — ручник, F — выйти из тачки или угнать чужую, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 📈 🚗 на карте, заходить пешком. Триада 🗣️ даёт работу.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
-    return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b>${record && run.gold ? ' — рекорд!' : ` · рекорд ${best.get()}`}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${'🚨'.repeat(run.stars) || 'не было'}</li><li>Продержался: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="play">ЕЩЁ РАЗ</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
+    return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b> / ${GOAL}${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${'🚨'.repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
   };
   function screen(html, focus) {
     scr.hidden = !html;
@@ -1067,6 +1080,7 @@ function create() {
     if (b.dataset.buy) buy(+b.dataset.buy);
     else if (b.dataset.go === 'play') start();
     else if (b.dataset.go === 'leave') leaveShop();
+    else if (b.dataset.go === 'respawn') respawn();
     else hide();
   });
   dlg.addEventListener('cancel', e => { if (state === 'shop') { e.preventDefault(); leaveShop(); } });
