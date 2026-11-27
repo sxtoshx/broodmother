@@ -16,6 +16,8 @@ const DEATHS = {
   bust: ['ПРИНЯЛИ', 'Оформили на 15 суток. Low priority: 5 игр. Аегис от ментов не спасает']
 };
 const STREAK = { 2: 'DOUBLE KILL', 3: 'TRIPLE KILL', 4: 'ULTRA KILL', 5: 'RAMPAGE' };
+const BEAT_LINES = ['Стоять! МВД Добрянки!', 'Документики!', 'Прописочку покажем?', 'Я тебя запомнил, сука', 'Стой, стрелять буду! Не буду', 'Фуражку верни!', 'Пройдёмте, гражданин', 'Семки есть? Конфискую'];
+const BEAT_CAR_LINES = ['Куда, сука?!', 'Номера запомнил!', 'Я бегу, я бегу…', 'Стой, у меня одышка!'];
 const WANTED = [['photo_pudge', 'Pudge'], ['photo_invoker', 'Invoker'], ['photo_monkey', 'Monkey King'], ['photo_brew', 'Брюмастер'], ['photo_pango', 'Пангольер'], ['photo_qop', 'Квопа'], ['photo_bat', 'Батрайдер'], ['photo_cm', 'Crystal Maiden']];
 const SHOPS = ['РАЗЛИВНОЕ', 'ЦВЕТЫ 24', 'СЕМЕЧКИ', 'АПТЕКА', 'ОПТИКА «ТРИАДА»', 'ВСЁ ПО 228'];
 const GOAL = 13370;
@@ -182,6 +184,17 @@ function uazGeo() {
   }
   return b.geometry();
 }
+function gopnik(b, x, z, suit) {
+  b.add(BOX, suit, M(x, 1.2, z + .05, -.25, 0, 0, .7, .8, .42));
+  b.add(BOX, '#e3b08c', M(x, 1.78, z - .12, 0, 0, 0, .42, .42, .42));
+  b.add(BOX, '#0d0d0d', M(x, 2.04, z - .12, 0, 0, 0, .48, .12, .5));
+  b.add(BOX, '#0d0d0d', M(x, 2, z - .42, 0, 0, 0, .42, .05, .22));
+  for (const s of [-1, 1]) {
+    const hip = V(x + s * .18, .78, z), knee = V(x + s * .22, .98, z - .6), foot = V(x + s * .22, .14, z - .52);
+    b.limb(suit, hip, knee, .3).limb(suit, knee, foot, .26).limb(suit, V(x + s * .42, 1.5, z), V(x + s * .3, 1.05, z - .62), .2);
+    b.add(BOX, '#f2f2f2', M(x + s * .22, .1, z - .62, 0, 0, 0, .3, .16, .42));
+  }
+}
 function courierGeo() {
   const b = new Batch();
   b.add(BOX, '#8a6a4a', M(0, 1.2, 0, 0, 0, 0, .9, .8, 1.7));
@@ -279,6 +292,14 @@ function city(scene) {
     const side = Math.random(), far = rand(EDGE + 12, EDGE + 70), along = rand(-EDGE - 70, EDGE + 70);
     if (side < .4) tree(far, along); else if (side < .7) tree(clamp(along, -RIVER + 4, EDGE + 70), far); else tree(clamp(along, -RIVER + 4, EDGE + 70), -far);
   }
+  const crews = [];
+  for (const b of blocks.filter(b => !b.type).sort(() => Math.random() - .5).slice(0, 3)) {
+    const x = b.cx + rand(-6, 6), z = b.cz - 16.3;
+    for (const k of [-1, 0, 1]) gopnik(solid, x + k * 1.5, z, k ? '#1a1a24' : '#1e2f7a');
+    solid.add(CYL, '#5a3a12', M(x + 2.4, .35, z - .3, 0, 0, 0, .18, .6, .18));
+    box(x - 2.6, x + 2.6, z - .9, z + .5, 2.4);
+    crews.push({ x, z: z - 1.6 });
+  }
   solid.add(BOX, '#b9b2a2', M(-(EDGE + RIVER) / 2, .1, 0, 0, 0, 0, RIVER - EDGE, .2, EDGE * 2 + 160));
   solid.add(ICO, '#3c5a33', M(0, -8, EDGE + 95, 0, 0, 0, 190, 46, 70));
   box(EDGE, EDGE + 80, -EDGE - 80, EDGE + 80);
@@ -302,7 +323,7 @@ function city(scene) {
   scene.add(dash);
   const puffMat = new THREE.MeshLambertMaterial({ color: '#d9cfe0', transparent: true, opacity: .4, depthWrite: false });
   for (const p of smoke) { p.mesh = new THREE.Mesh(ICO, puffMat); scene.add(p.mesh); }
-  return { boxes, smoke, parked, doors, blocks, solidMat };
+  return { boxes, smoke, parked, doors, blocks, crews, solidMat };
 }
 
 let game;
@@ -316,11 +337,11 @@ function create() {
   document.head.append(style);
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-loot"></div></div><canvas class="g-map" width="208" height="208" aria-hidden="true"></canvas><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-loot"></div><div class="g-job"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="208" height="208" aria-hidden="true"></canvas><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
-  const actEl = $('.g-act'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
+  const actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
 
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, 1, .5, 1000);
   scene.fog = new THREE.Fog('#c9527f', 70, 320);
@@ -370,15 +391,21 @@ function create() {
   for (const [x, z] of world.parked) park(specs.cop, x, z, 0);
   for (let k = 0; k < 7; k++) { const side = pick([-1, 1]); park(pick(specs.civ), line(Math.floor(rand(0, N + 1))) + side * 4.6, line(Math.floor(rand(0, N))) + CELL / 2 + rand(-12, 12), side > 0 ? 0 : Math.PI); }
   const hero = Object.assign(person(mat, { top: '#ff4fb8', stripe: '#ffffff', skin: '#e8b894', hat: '#151515', legs: '#22222e' }), { spec: { name: 'ты', armor: 1 }, foot: true, r: .6, m: .15, t: 0, pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0 });
-  const doors = world.doors, ringGeo = new THREE.CylinderGeometry(1.7, 1.7, 1, 28, 1, true);
-  for (const d of doors) {
-    const def = SHOPDEF[d.kind], c = canvas(128, 128), x = c.getContext('2d');
-    x.font = '96px system-ui,"Apple Color Emoji","Segoe UI Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(def.icon, 64, 70);
-    d.ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: def.color, transparent: true, opacity: .5, side: THREE.DoubleSide, depthWrite: false }));
-    d.icon = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture(c), depthWrite: false }));
-    d.icon.scale.set(2.4, 2.4, 1); d.y = groundY(d.x, d.z);
-    d.ring.position.set(d.x, d.y + .5, d.z); scene.add(d.ring, d.icon);
-  }
+  const doors = world.doors, crews = world.crews, ringGeo = new THREE.CylinderGeometry(1.7, 1.7, 1, 28, 1, true);
+  const iconSprite = emoji => {
+    const c = canvas(128, 128), x = c.getContext('2d');
+    x.font = '96px system-ui,"Apple Color Emoji","Segoe UI Emoji",sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(emoji, 64, 70);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture(c), depthWrite: false }));
+    sp.scale.set(2.4, 2.4, 1); scene.add(sp); return sp;
+  };
+  const ring = color => { const r = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .5, side: THREE.DoubleSide, depthWrite: false })); scene.add(r); return r; };
+  for (const d of doors) { d.ring = ring(SHOPDEF[d.kind].color); d.icon = iconSprite(SHOPDEF[d.kind].icon); d.y = groundY(d.x, d.z); d.ring.position.set(d.x, d.y + .5, d.z); }
+  for (const c of crews) { c.icon = iconSprite('🗣️'); c.y = .3; c.pos = V(c.x, .3, c.z); }
+  const gres = world.blocks.find(b => b.type === 'gres'), drop = { x: gres.cx + 22, z: gres.cz, y: 0, ring: ring('#ffd24a'), icon: iconSprite('📦') };
+  drop.ring.position.set(drop.x, .5, drop.z); drop.ring.scale.set(1.8, 1, 1.8);
+  const beat = Object.assign(person(mat, { top: '#2b3f6b', stripe: '#c9a64a', skin: '#e3b08c', hat: '#1e2f5a', legs: '#1e2f5a' }), { foot: true, r: .55, m: .15, t: 0, pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0, active: false, cd: 0, sayAt: 0, wi: -1, wj: -1, pi: -1, pj: -1 });
+  beat.mesh.visible = false; scene.add(beat.mesh);
+  const bubbles = [];
   const heroShadow = new THREE.Mesh(new THREE.CircleGeometry(.7, 12).rotateX(-Math.PI / 2), shadowMat);
   heroShadow.position.y = .05; hero.mesh.add(heroShadow); hero.mesh.visible = false; scene.add(hero.mesh);
   let player = myCar;
@@ -398,7 +425,7 @@ function create() {
   let splatNext = 0;
 
   let site, state = 'title', opened = false, paused = [], last = 0, now = 0, hp = 100, heat = 0, bust = 0, invuln = 0, dyingT = 0, cause = '', shakeAmt = 0;
-  let lastKill = -99, streak = 0, firstBlood = true, spawnCD = 0, hintUntil = 0, run = {}, doorNear = null, shopDoor = null, winT = 0;
+  let radioAt = 0, lastKill = -99, streak = 0, firstBlood = true, spawnCD = 0, hintUntil = 0, run = {}, doorNear = null, shopDoor = null, winT = 0;
   const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set() }, shown = {};
   const touch = matchMedia('(pointer:coarse)').matches;
   const on = k => keys[k] || (held[k] ? held[k].size > 0 : false);
@@ -505,9 +532,9 @@ function create() {
     for (const c of [a, b]) if (!c.foot) c.speed = c.vel.dot(fwd.set(Math.sin(c.heading), 0, Math.cos(c.heading)));
     return -rel;
   }
-  function walk(h, gas, steer, dt) {
+  function walk(h, gas, steer, dt, top = 7) {
     h.heading += steer * 3 * dt;
-    h.speed = gas > 0 ? 7 : gas < 0 ? -3 : 0;
+    h.speed = gas > 0 ? top : gas < 0 ? -3 : 0;
     fwd.set(Math.sin(h.heading), 0, Math.cos(h.heading));
     h.vel.copy(fwd).multiplyScalar(h.speed);
     h.pos.addScaledVector(h.vel, dt);
@@ -521,8 +548,66 @@ function create() {
     for (const c of cars.concat(cops)) { const d = c.pos.distanceTo(hero.pos); if (d < bd) { bd = d; best = c; } }
     return best;
   }
+  const nearCrew = () => player.foot ? crews.find(c => Math.hypot(c.x - player.pos.x, c.z - player.pos.z) < 4.5) : null;
+  function say(owner, text, sec = 2.6) {
+    for (let i = bubbles.length - 1; i >= 0; i--) if (bubbles[i].owner === owner) { bubbles[i].el.remove(); bubbles.splice(i, 1); }
+    const el = document.createElement('div');
+    el.className = 'g-say'; el.textContent = text; hud.append(el);
+    bubbles.push({ owner, el, until: now + sec });
+  }
+  function talk(crew) {
+    if (run.job) { say(crew, 'Ну чё, сделал? Время тикает'); return; }
+    if (!run.seeds && run.gold >= 228 && Math.random() < .35) { run.gold -= 228; floatText('−228', crew.pos); say(crew, 'Слышь, есть 228 на семки? Уже нет. Купи семки — будешь свой', 3.2); return; }
+    const kill = Math.random() < .5;
+    run.job = kill ? { kill: true, base: run.spiders + run.couriers, need: 5, until: run.time + 60, crew } : { kill: false, until: run.time + 50, crew };
+    say(crew, (run.seeds ? 'О, с семками, свой. ' : '') + (kill ? 'Раздави 5 пауков за минуту — дадим 1337' : 'Отвези передачку на ГРЭС за 50 секунд. Не спрашивай, что внутри'), 3.6);
+    if (!kill) hint('Передачка: жёлтое кольцо у ГРЭС, на карте 📦', 3);
+  }
+  function jobStep() {
+    const j = run.job;
+    if (!j) return;
+    const done = j.kill ? run.spiders + run.couriers - j.base >= j.need : Math.hypot(player.pos.x - drop.x, player.pos.z - drop.z) < 4.5;
+    if (done) { run.gold += 1337; run.jobs++; ann('ТРИАДА ДОВОЛЬНА', 'gold'); hint('+1337 от Триады', 2.5); run.job = null; }
+    else if (run.time > j.until) { ann('ТРИАДА РАЗОЧАРОВАНА'); hint('Не успел. Триада запомнила', 2.5); run.job = null; }
+  }
+  function beatStep(dt) {
+    beat.cd -= dt;
+    if (!beat.active) {
+      if (heat > 0 && player.foot && beat.cd <= 0) {
+        const opts = [];
+        for (let i = 0; i <= N; i++) for (let j = 0; j <= N; j++) { const d = Math.hypot(line(i) - player.pos.x, line(j) - player.pos.z); if (d > 18 && d < 45) opts.push([i, j]); }
+        if (opts.length) {
+          const [i, j] = pick(opts);
+          beat.pos.set(line(i), 0, line(j)); beat.wi = i; beat.wj = j; beat.pi = beat.pj = -1;
+          beat.active = true; beat.mesh.visible = true; beat.sayAt = 0; place(beat, 1);
+        }
+      }
+      return;
+    }
+    const dx = player.pos.x - beat.pos.x, dz = player.pos.z - beat.pos.z, d = Math.hypot(dx, dz);
+    if (heat <= 0 || d > 70) { say(beat, 'Ладно, живи', 1.5); beat.active = false; beat.mesh.visible = false; beat.cd = 6; return; }
+    if (!player.foot && d < 2.6 && Math.abs(player.speed) > 6) {
+      beat.active = false; beat.mesh.visible = false; beat.cd = 25;
+      spray(beat.pos, ['#2b3f6b', '#1e2f5a', '#c9a64a'], 16, 8); floatText('+322', beat.pos);
+      run.gold += 322; heat = Math.min(5, heat + 1); lastKill = now; ann('УЧАСТКОВЫЙ В БОЛЬНИЦЕ');
+      noise(.25, 700, .5, 'bandpass'); return;
+    }
+    let tx = player.pos.x, tz = player.pos.z;
+    if (clear(beat.pos, player.pos)) beat.wi = -1;
+    else {
+      if (beat.wi < 0 || Math.hypot(line(beat.wi) - beat.pos.x, line(beat.wj) - beat.pos.z) < 2.5) route(beat);
+      tx = line(beat.wi); tz = line(beat.wj);
+    }
+    walk(beat, player.foot || d > 6 ? 1 : 0, clamp(wrap(Math.atan2(tx - beat.pos.x, tz - beat.pos.z) - beat.heading) * 3, -1, 1), dt, player.foot ? 5.6 : 2.5);
+    if (now > beat.sayAt) { beat.sayAt = now + 2.8; say(beat, pick(player.foot ? BEAT_LINES : BEAT_CAR_LINES)); }
+    const grabbed = player.foot && d < 1.5 && invuln <= 0;
+    if (grabbed) hint('Участковый вцепился! Беги!', .3);
+    return grabbed;
+  }
   function act() {
     if (state !== 'play') return;
+    const crew = nearCrew();
+    if (crew) { talk(crew); return; }
     if (!player.foot) {
       const c = player;
       hero.pos.set(c.pos.x + Math.cos(c.heading) * 2.5, 0, c.pos.z - Math.sin(c.heading) * 2.5);
@@ -655,8 +740,10 @@ function create() {
       cars.push(c); place(c, 1);
     }
     player = myCar; hero.mesh.visible = false;
+    for (const b of bubbles.splice(0)) b.el.remove();
+    beat.active = false; beat.mesh.visible = false; beat.cd = 0;
     hp = 100; heat = 0; bust = 0; invuln = 0; streak = 0; lastKill = -99; firstBlood = true; spawnCD = 0; shakeAmt = 0;
-    run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0 };
+    run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0 };
     for (const d of doors) d.inside = false;
     for (const s of crowd) { s.pos.copy(spot(25)); s.dead = false; }
     for (const g of gibs) g.life = 0;
@@ -701,8 +788,9 @@ function create() {
       if (hit > 3) { hurt((hit - 3) * 2.2 + 4, 'cop'); noise(.3, 600, Math.min(.8, hit / 15), 'lowpass'); }
     }
     for (let a = 0; a < cops.length; a++) for (let b = a + 1; b < cops.length; b++) bump(cops[a], cops[b]);
+    const grabbed = beatStep(dt); jobStep();
     if (now - lastKill > 8 && near > 35) heat = Math.max(0, heat - (player.spec.chill ? .44 : .22) * dt);
-    if (Math.abs(player.speed) < 2.5 && near < 10 && invuln <= 0) bust += dt; else bust = Math.max(0, bust - dt * 2);
+    if (grabbed || (Math.abs(player.speed) < 2.5 && near < 10 && invuln <= 0)) bust += dt * (grabbed ? 1.4 : 1); else bust = Math.max(0, bust - dt * 2);
     if (bust > 2.2) die('bust');
   }
   function crowdStep(dt) {
@@ -751,6 +839,11 @@ function create() {
       spray(tmp2.set(m.x + rand(-14, 14), rand(18, 30), m.z + rand(-16, 4)), ['#ff4fb8', '#ffd24a', '#39ff6a', '#2a6bff', '#fff'], 22, 9);
       noise(.5, 160, .35, 'lowpass');
     }
+    for (const c of crews) c.icon.position.set(c.x, 3.4 + Math.sin(now * 2 + c.x) * .25, c.z + 1.4);
+    const delivering = run.job && !run.job.kill;
+    drop.ring.visible = drop.icon.visible = !!delivering;
+    if (delivering) { drop.ring.material.opacity = .4 + Math.sin(now * 6) * .2; drop.icon.position.set(drop.x, 4 + Math.sin(now * 3) * .4, drop.z); }
+    if (beat.active) place(beat, dt);
     for (const p of world.smoke) {
       p.phase = (p.phase + dt * .05) % 1;
       p.mesh.position.set(p.x + p.phase * 18, 72 + p.phase * 40, p.z + p.phase * 6);
@@ -786,11 +879,24 @@ function create() {
     const w = Math.round(hp) + '%';
     if (shown.hp !== w) { shown.hp = w; hpEl.style.width = w; }
     const near = state === 'play' && player.foot ? nearestCar() : null;
-    show(player.foot ? (near ? 'СЕСТЬ' : '—') : 'ВЫЙТИ', 'act', actEl);
+    const crew = state === 'play' ? nearCrew() : null;
+    show(crew ? 'БАЗАР' : player.foot ? (near ? 'СЕСТЬ' : '—') : 'ВЫЙТИ', 'act', actEl);
+    const j = run.job;
+    show(j ? `🎯 ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
+    radio.hidden = !(state === 'play' && !player.foot);
+    if (!radio.hidden && now > radioAt) { radioAt = now + 7; radio.textContent = '📻 Добрянка FM · ' + pick(RADIO)(); radio.classList.remove('on'); void radio.offsetWidth; radio.classList.add('on'); }
+    for (let i = bubbles.length - 1; i >= 0; i--) {
+      const b = bubbles[i];
+      if (now > b.until || state === 'title') { b.el.remove(); bubbles.splice(i, 1); continue; }
+      const o = b.owner.pos;
+      tmp.set(o.x, (b.owner.y || 0) + 3, o.z).project(camera);
+      b.el.hidden = tmp.z > 1 || Math.abs(tmp.x) > 1.1 || Math.abs(tmp.y) > 1.1;
+      b.el.style.left = (tmp.x * .5 + .5) * 100 + '%'; b.el.style.top = (-tmp.y * .5 + .5) * 100 + '%';
+    }
     if (state === 'play' && bust > .3) show(player.foot ? 'МВД принимает… беги!' : 'МВД принимает… газуй!', 'hint', hintEl);
     else if (now <= hintUntil) shown.hint = hintEl.textContent;
     else if (doorNear && state === 'play') show(`Вылези из тачки (${touch ? 'кнопка сверху' : 'F'}) и зайди в кольцо: ${SHOPDEF[doorNear.kind].title}`, 'hint', hintEl);
-    else show(near && !touch ? `F — ${near === myCar ? 'сесть в свою девятку' : 'угнать ' + near.spec.name}` : '', 'hint', hintEl);
+    else show(crew && !touch ? 'F — побазарить с Триадой' : near && !touch ? `F — ${near === myCar ? 'сесть в свою девятку' : 'угнать ' + near.spec.name}` : '', 'hint', hintEl);
     drawMap();
   }
   function frame(t) {
@@ -818,6 +924,22 @@ function create() {
     get() { try { return +localStorage.getItem('gtaBest') || 0; } catch (e) { return 0; } },
     set(v) { try { localStorage.setItem('gtaBest', v); } catch (e) {} }
   };
+  const RADIO = [
+    () => `Сводка МВД: разыскивается ${player.spec.name === 'девятку' ? 'вишнёвая девятка' : player.spec.name}, водитель — конченый. Граждане, не выходите из подъездов`,
+    () => `Сегодня в Добрянке раздавлено пауков: ${run.spiders}. Брудмама в ахуе, Азалина в депрессии`,
+    () => 'Погода: над ГРЭС облачно, дым идёт на Пермь. Пермь, держитесь',
+    () => 'Реклама. Шаурма 24: мы не знаем, что внутри, и ты не узнаешь',
+    () => 'Реклама. Крипта обмен: курс бирки к рублю 1 к 1337. Вложи всё, Триада одобряет',
+    () => 'Шиномонтаж «У Палыча»: поставим движок от комбайна, без вопросов и без гарантии',
+    () => 'Кама сегодня +4. Купаться можно только с Аегисом',
+    () => 'Новости спорта: Pis`master снова слил Рошана и винит курьера',
+    () => 'Участковый просит вернуть ему фуражку. Сука, верни фуражку',
+    () => `Прописка в Добрянке по-прежнему ${GOAL}. МВД работает без выходных и без совести`,
+    () => 'Хит недели: «Бруда — паучья любовь». Ставим в третий раз, пока не выучишь',
+    () => 'Курьер опять сдох. Кто-то заказал варды прямо в Каму',
+    () => 'Триада на районе напоминает: семки — это валюта',
+    () => heat > 0 ? `Внимание! Розыск ${'🚨'.repeat(Math.ceil(heat))}. Все экипажи МВД выехали, участковый бежит пешком` : 'На дорогах Добрянки спокойно. Подозрительно спокойно'
+  ];
   const bestTime = {
     get() { try { return +localStorage.getItem('gtaBestTime') || 0; } catch (e) { return 0; } },
     set(v) { try { localStorage.setItem('gtaBestTime', v); } catch (e) {} }
@@ -899,10 +1021,13 @@ function create() {
   }
   mb.font = `${Math.round(MS / 9)}px system-ui,"Apple Color Emoji","Segoe UI Emoji",sans-serif`; mb.textAlign = 'center'; mb.textBaseline = 'middle';
   for (const d of doors) { const [x, y] = toMap(d.x, d.z); mb.fillText(SHOPDEF[d.kind].icon, x, y); }
+  for (const c of crews) { const [x, y] = toMap(c.x, c.z); mb.fillText('🗣️', x, y); }
   function drawMap() {
     mx.drawImage(mapBase, 0, 0);
     const blink = now * 4 % 2 < 1;
     for (const c of cops) { const [x, y] = toMap(c.pos.x, c.pos.z); mx.fillStyle = blink ? '#ff2030' : '#2a6bff'; mx.beginPath(); mx.arc(x, y, MS / 45, 0, 7); mx.fill(); }
+    if (run.job && !run.job.kill && blink) { const [x, y] = toMap(drop.x, drop.z); mx.fillStyle = '#ffd24a'; mx.beginPath(); mx.arc(x, y, MS / 22, 0, 7); mx.fill(); }
+    if (beat.active) { const [x, y] = toMap(beat.pos.x, beat.pos.z); mx.fillStyle = '#8fd0ff'; mx.fillRect(x - MS / 60, y - MS / 60, MS / 30, MS / 30); }
     const [px, py] = toMap(player.pos.x, player.pos.z), a = Math.atan2(-Math.cos(player.heading), -Math.sin(player.heading)), r = MS / 22;
     mx.save(); mx.translate(px, py); mx.rotate(a);
     mx.fillStyle = '#fff'; mx.strokeStyle = '#000'; mx.lineWidth = MS / 100;
@@ -910,7 +1035,7 @@ function create() {
     mx.restore();
   }
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль, справа газ и тормоз, круглая кнопка сверху — выйти из тачки или угнать чужую.' : 'WASD или стрелки, пробел — ручник, F — выйти из тачки или угнать чужую, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 📈 🚗 на карте, заходить пешком.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль, справа газ и тормоз, круглая кнопка сверху — выйти из тачки или угнать чужую.' : 'WASD или стрелки, пробел — ручник, F — выйти из тачки или угнать чужую, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 📈 🚗 на карте, заходить пешком. Триада 🗣️ даёт работу.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
     return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b>${record && run.gold ? ' — рекорд!' : ` · рекорд ${best.get()}`}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${'🚨'.repeat(run.stars) || 'не было'}</li><li>Продержался: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="play">ЕЩЁ РАЗ</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
@@ -1000,10 +1125,18 @@ body.gta{overflow:hidden}
 .g-hp{width:150px;height:12px;border:1px solid #000;background:#3b0d0d;box-shadow:0 0 0 1px rgba(255,255,255,.3)}
 .g-hp i{display:block;height:100%;width:100%;background:repeating-linear-gradient(90deg,#3fd14a 0 14px,#1d6b23 14px 15px);transition:width .15s}
 .g-loot{font-size:15px}
+.g-job{font-size:15px;font-weight:800;color:#ffd24a}
+.g-job:empty{display:none}
+.g-radio{position:absolute;left:50%;translate:-50% 0;bottom:calc(186px + env(safe-area-inset-bottom,0px));max-width:min(640px,calc(100% - 24px));padding:6px 12px;border-radius:999px;background:rgba(10,5,20,.7);border:1px solid rgba(255,255,255,.18);font-size:13px;font-weight:700;color:#f4e9ff;text-align:center}
+.g-radio.on{animation:gRadio .5s ease-out}
+.g-say{position:absolute;translate:-50% -100%;max-width:220px;padding:6px 10px;border-radius:12px;background:#fff;color:#111;font:800 13px/1.25 system-ui,sans-serif;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.4)}
+.g-say::after{content:"";position:absolute;left:50%;bottom:-6px;translate:-50% 0;border:6px solid transparent;border-bottom:0;border-top-color:#fff}
+@media (hover:hover) and (pointer:fine){.g-radio{bottom:14px}.g-hint{bottom:56px}}
+@keyframes gRadio{from{opacity:0;translate:-50% 8px}}
 .g-ann{position:absolute;left:12px;right:12px;top:24%;text-align:center;font:900 clamp(1.8rem,7.5vw,4.5rem)/1 Georgia,serif;color:var(--pink,#ff4fb8);text-shadow:0 0 30px var(--pink,#ff4fb8),0 4px 0 #000;opacity:0}
 .g-ann.show{animation:gAnn 1.7s ease-out}
 .g-ann.gold{color:#ffd24a;text-shadow:0 0 30px #ffb000,0 4px 0 #000}
-.g-hint{position:absolute;left:12px;right:12px;bottom:calc(118px + env(safe-area-inset-bottom,0px));text-align:center;font-weight:800;color:#8fd0ff;text-shadow:0 2px 0 #000,0 0 10px #000}
+.g-hint{position:absolute;left:12px;right:12px;bottom:calc(222px + env(safe-area-inset-bottom,0px));text-align:center;font-weight:800;color:#8fd0ff;text-shadow:0 2px 0 #000,0 0 10px #000}
 .g-float{position:absolute;translate:-50% -50%;font:900 22px Georgia,serif;color:#ffd24a;text-shadow:0 2px 0 #000;animation:gFloat .9s ease-out forwards}
 .g-pad{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;padding:12px 12px calc(14px + env(safe-area-inset-bottom,0px))}
 .g-pad div{display:flex;gap:10px;align-items:flex-end}
