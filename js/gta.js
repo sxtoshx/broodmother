@@ -505,7 +505,7 @@ function create() {
     }
     if (weather.rain) rainGeo.attributes.position.needsUpdate = true;
     if (weather.snow) snowGeo.attributes.position.needsUpdate = true;
-    if (weather.storm && now > boltAt) { boltAt = now + rand(5, 12); flash = 1; noise(1.6, 120, .6, 'lowpass'); }
+    if (weather.storm && now > boltAt) { boltAt = now + rand(5, 12); flash = 1; play('thunder', .8, rand(.85, 1.1)) || noise(1.6, 120, .6, 'lowpass'); }
     flash = Math.max(0, flash - dt * 3);
     hemi.intensity = 1.8 * weather.light + flash * 4; sunLight.intensity = 2.6 * weather.light;
   }
@@ -695,7 +695,7 @@ function create() {
     for (const r of room.rings) r.inside = r.act === 'exit';
     for (const k in keys) keys[k] = false;
     mapC.hidden = true; place(hero, 1); chase(0, true);
-    noise(.15, 2200, .25, 'bandpass');
+    if (d.kind === 'strip') play(pick(['freshmeat', 'brood'])); else noise(.15, 2200, .25, 'bandpass');
   }
   function exitRoom() {
     if (zone !== 'inside') return;
@@ -741,6 +741,7 @@ function create() {
     eng.connect(lp).connect(engGain).connect(master); eng.start();
     sir = ac.createOscillator(); sir.type = 'triangle'; sirGain = ac.createGain(); sirGain.gain.value = 0;
     sir.connect(sirGain).connect(master); sir.start();
+    loadSfx();
     noiseBuf = ac.createBuffer(1, ac.sampleRate, ac.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
@@ -751,6 +752,29 @@ function create() {
     g.gain.setValueAtTime(.5, t); g.gain.exponentialRampToValueAtTime(.001, t + .25);
     o.connect(g).connect(master); o.start(t); o.stop(t + .26);
     if (Math.random() < .7) noise(.05, 8000, .12, 'highpass');
+  }
+  const SFX = ['shot', 'shotgun', 'scream1', 'scream2', 'crash', 'boom', 'cash', 'slotspin', 'slotwin', 'splat', 'engine', 'siren', 'rain', 'firstblood', 'doublekill', 'triplekill', 'ultrakill', 'rampage', 'roshan', 'freshmeat', 'getoverhere', 'brood', 'courier', 'coins', 'aegis'];
+  const bufs = {}, loops = {};
+  const ANN_SFX = { 'FIRST BLOOD': 'firstblood', 'DOUBLE KILL': 'doublekill', 'TRIPLE KILL': 'triplekill', 'ULTRA KILL': 'ultrakill', 'RAMPAGE': 'rampage', 'КУРЬЕР УБИТ': 'courier', 'АЕГИС СРАБОТАЛ': 'aegis', 'УЧАСТКОВЫЙ В БОЛЬНИЦЕ': 'scream1', 'ПРОПИСКА ПОЛУЧЕНА': 'roshan', 'УГНАЛ ТАЧКУ МВД': 'getoverhere', 'THE BATTLE BEGINS': 'brood', 'ДЖЕКПОТ': 'slotwin', 'ПОБЕДА': 'rampage', 'МВД В ЯРОСТИ': 'boom', 'ТАЧКА ТВОЯ': 'cash' };
+  function loadSfx() {
+    for (const [k, url] of SFX.map(k => [k, `sfx/g/${k}.mp3`]).concat([['thunder', 'sfx/thunder1.mp3']])) {
+      fetch(url).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => ac.decodeAudioData(b)).then(buf => {
+        bufs[k] = buf;
+        if (k === 'engine' || k === 'siren' || k === 'rain') {
+          const src = ac.createBufferSource(), g = ac.createGain();
+          src.buffer = buf; src.loop = true; src.loopStart = .05; src.loopEnd = buf.duration - .05; g.gain.value = 0;
+          src.connect(g).connect(master); src.start(); loops[k] = { src, g };
+        }
+      }).catch(() => {});
+    }
+  }
+  function play(k, vol = 1, rate = 1) {
+    const b = bufs[k];
+    if (!b || !ac) return false;
+    const s = ac.createBufferSource(), g = ac.createGain();
+    s.buffer = b; s.playbackRate.value = rate; g.gain.value = vol;
+    s.connect(g).connect(master); s.start();
+    return true;
   }
   function noise(dur, freq, vol, type) {
     if (!ac) return;
@@ -764,13 +788,18 @@ function create() {
     const t = ac.currentTime;
     let near = Infinity;
     for (const c of cops) near = Math.min(near, c.pos.distanceTo(player.pos));
+    const driving = state === 'play' && !player.foot, sirenOn = cops.length && state !== 'title' && zone === 'city';
     eng.frequency.setTargetAtTime(38 + Math.abs(player.speed) * 3.2, t, .06);
-    engGain.gain.setTargetAtTime(state === 'play' && !player.foot ? .045 : 0, t, .15);
+    engGain.gain.setTargetAtTime(driving && !loops.engine ? .045 : 0, t, .15);
+    if (loops.engine) { loops.engine.src.playbackRate.setTargetAtTime(.7 + Math.abs(player.speed) / 26, t, .08); loops.engine.g.gain.setTargetAtTime(driving ? .4 : 0, t, .15); }
     sir.frequency.setTargetAtTime(now % 1 < .5 ? 640 : 880, t, .03);
-    sirGain.gain.setTargetAtTime(cops.length && state !== 'title' ? .05 * Math.min(1, 30 / near) : 0, t, .1);
+    sirGain.gain.setTargetAtTime(sirenOn && !loops.siren ? .05 * Math.min(1, 30 / near) : 0, t, .1);
+    if (loops.siren) loops.siren.g.gain.setTargetAtTime(sirenOn ? .45 * Math.min(1, 30 / near) : 0, t, .1);
+    if (loops.rain) loops.rain.g.gain.setTargetAtTime(weather.rain && zone === 'city' && state !== 'title' ? .3 * weather.rain : 0, t, .3);
   }
 
   function ann(text, cls = '') {
+    if (ANN_SFX[text]) play(ANN_SFX[text]);
     annEl.textContent = text; annEl.className = 'g-ann ' + cls; void annEl.offsetWidth; annEl.classList.add('show');
   }
   function hint(text, sec) { hintEl.textContent = text; hintUntil = now + sec; }
@@ -995,7 +1024,7 @@ function create() {
   }
   function die(why) {
     if (state !== 'play') return;
-    cause = why; dlg.classList.add('dying'); noise(.6, 300, .7, 'lowpass');
+    cause = why; dlg.classList.add('dying'); if (why === 'bust' || !play(pick(['scream1', 'scream2']))) noise(.6, 300, .7, 'lowpass');
     if (why !== 'bust' && site.loot.aegis > 0) {
       site.loot.aegis--; site.saveLoot(); state = 'dying'; dyingT = 1.8; ann('АЕГИС СРАБОТАЛ', 'gold');
       return;
@@ -1029,14 +1058,13 @@ function create() {
   function blowCop(c) {
     const k = cops.indexOf(c);
     if (k < 0) return;
-    spray(c.pos, ['#ff8a2a', '#ffd24a', '#333', '#fff'], 40, 13); noise(1.2, 140, .9, 'lowpass');
+    spray(c.pos, ['#ff8a2a', '#ffd24a', '#333', '#fff'], 40, 13); play('scream2', .6) || noise(1.2, 140, .9, 'lowpass');
     dropCop(k); heat = Math.min(5, heat + 1); lastKill = now; shakeAmt = 1.2; ann('МВД В ЯРОСТИ');
   }
   function beatDown() {
     beat.active = false; beat.mesh.visible = false; beat.cd = 25;
     spray(beat.pos, ['#2b3f6b', '#1e2f5a', '#c9a64a'], 16, 8); floatText('+322', beat.pos);
     run.gold += 322; heat = Math.min(5, heat + 1); lastKill = now; ann('УЧАСТКОВЫЙ В БОЛЬНИЦЕ');
-    noise(.25, 700, .5, 'bandpass');
   }
   function fire() {
     const g = GUNS[run.gun];
@@ -1060,7 +1088,7 @@ function create() {
       else if (kind === 'beat') beatDown();
       else { e.hp -= g.dmg; spray(e.pos, ['#ffb347', '#fff3a0'], 5, 5); if (e.hp <= 0) blowCop(e); }
     }
-    noise(run.gun === 'sg' ? .35 : .14, run.gun === 'sg' ? 900 : 1600, run.gun === 'sg' ? .9 : .6, 'bandpass');
+    play(run.gun === 'sg' ? 'shotgun' : 'shot', run.gun === 'ak' ? .55 : .9, run.gun === 'ak' ? 1.2 : rand(.95, 1.05)) || noise(run.gun === 'sg' ? .35 : .14, run.gun === 'sg' ? 900 : 1600, run.gun === 'sg' ? .9 : .6, 'bandpass');
     if (heat < .6) { heat = .6; lastKill = now; }
   }
   function squash(s) {
@@ -1071,7 +1099,8 @@ function create() {
     heat = Math.min(5, heat + (courier ? 1 : .35));
     splat(s.pos, s.k.kind); spray(s.pos, courier ? ['#8a6a4a', '#d4b24a', '#5a4330'] : ['#160c18', '#3fbf2a', '#ff4fb8'], 14, 7);
     floatText('+' + gold, s.pos);
-    noise(.2, 900, .5, 'bandpass'); noise(.14, 180, .5, 'lowpass');
+    if (!play('splat', 1, rand(.8, 1.2))) { noise(.2, 900, .5, 'bandpass'); noise(.14, 180, .5, 'lowpass'); }
+    play('coins', .35);
     if (firstBlood) { firstBlood = false; ann('FIRST BLOOD'); }
     else if (STREAK[Math.min(streak, 5)]) ann(STREAK[Math.min(streak, 5)]);
     else if (courier) ann('КУРЬЕР УБИТ', 'gold');
@@ -1114,7 +1143,7 @@ function create() {
       if (aimT > 0) hero.arms[0].rotation.x = -1.5;
     } else {
       const gas = (on('up') ? 1 : 0) - (on('down') ? 1 : 0), before = Math.abs(player.speed), imp = drive(player, gas, steer, on('hand') || on('sprint'), dt, player.spec.top + run.engine * 4);
-      if (imp > 6) { noise(.35, 500, Math.min(.8, imp / 20), 'lowpass'); spray(tmp.copy(player.pos).addScaledVector(fwd, 2), ['#ffb347', '#fff3a0'], 6, 5); }
+      if (imp > 6) { play('crash', Math.min(1, imp / 18)) || noise(.35, 500, Math.min(.8, imp / 20), 'lowpass'); spray(tmp.copy(player.pos).addScaledVector(fwd, 2), ['#ffb347', '#fff3a0'], 6, 5); }
       if (imp > 14 && before > 14) hurt((imp - 14) * 1.2, 'wall');
       player.mesh.rotation.z = -steer * Math.min(1, Math.abs(player.speed) / 20) * .06;
     }
@@ -1147,7 +1176,7 @@ function create() {
       if ((want === 0 && d > 30) || (cops.length > want && d > 70)) { dropCop(k); continue; }
       copThink(c, dt); near = Math.min(near, d);
       const hit = bump(player, c);
-      if (hit > 5) { hurt((hit - 5) * 1.1 + 2, 'cop'); noise(.3, 600, Math.min(.8, hit / 15), 'lowpass'); }
+      if (hit > 5) { hurt((hit - 5) * 1.1 + 2, 'cop'); play('crash', Math.min(1, hit / 15)) || noise(.3, 600, Math.min(.8, hit / 15), 'lowpass'); }
     }
     for (let a = 0; a < cops.length; a++) for (let b = a + 1; b < cops.length; b++) bump(cops[a], cops[b]);
     if (heat >= 3) for (const c of cops) {
@@ -1156,8 +1185,8 @@ function create() {
       if (c.pos.distanceTo(player.pos) > 40 || !clear(c.pos, player.pos)) continue;
       const hit = Math.random() < .35;
       tracer(tmp2.set(c.pos.x, c.y + 1.6, c.pos.z), tmp.set(player.pos.x + (hit ? 0 : rand(-2, 2)), player.y + 1.2, player.pos.z + (hit ? 0 : rand(-2, 2))), '#ff5a3a');
-      noise(.12, 1400, .35, 'bandpass');
-      if (hit) hurt(player.foot ? 9 : 6, 'cop');
+      play('shot', .3, .85) || noise(.12, 1400, .35, 'bandpass');
+      if (hit) { hurt(player.foot ? 9 : 6, 'cop'); if (player.foot && Math.random() < .4) play(pick(['scream1', 'scream2']), .7); }
     }
     const grabbed = beatStep(dt); jobStep();
     if (now - lastKill > 8 && near > 35) heat = Math.max(0, heat - (player.spec.chill ? .6 : .3) * dt);
@@ -1373,7 +1402,7 @@ function create() {
   function tipDancers(n) {
     stripHype = now + n;
     for (let i = 0; i < n; i++) spray(tmp2.set(room.ox + rand(-3, 3), 4.5, room.oz + 3 + rand(-3, 3)), ['#3fbf2a', '#7ad65a', '#ffd24a'], 6, 3);
-    noise(.3, 2500, .3, 'bandpass');
+    play('coins', .8) || noise(.3, 2500, .3, 'bandpass');
   }
   const SYMS = [['🍒', 30], ['🕷️', 25], ['🧀', 18], ['🛡️', 12], ['💰', 10], ['7️⃣', 5]], PAY = { '🍒': 4, '🕷️': 5, '🧀': 6, '🛡️': 8, '💰': 10, '7️⃣': 20 };
   const sym = () => { let r = rand(0, 100); for (const [s, w] of SYMS) if ((r -= w) < 0) return s; return '🍒'; };
@@ -1398,7 +1427,7 @@ function create() {
     const strips = [...scr.querySelectorAll('.g-reel div')];
     requestAnimationFrame(() => strips.forEach((st, i) => { st.style.transition = `transform ${1 + i * .45}s cubic-bezier(.12,.7,.18,1)`; st.style.transform = `translateY(calc(-100% + var(--cell)))`; }));
     let ticks = 0;
-    const ratchet = setInterval(() => { noise(.03, 2600, .15, 'bandpass'); if (++ticks > 34) clearInterval(ratchet); }, 60);
+    const ratchet = play('slotspin', .7) ? 0 : setInterval(() => { noise(.03, 2600, .15, 'bandpass'); if (++ticks > 34) clearInterval(ratchet); }, 60);
     setTimeout(() => {
       clearInterval(ratchet); spinning = false;
       const [a, b, c] = res;
@@ -1416,7 +1445,7 @@ function create() {
       } else msg = pick(['Мимо. Казино всегда в плюсе', 'Пусто. Триада благодарит за вклад', 'Ничего. Ещё разок?']);
       run.gold += win;
       if (state !== 'shop' || shopDoor.kind !== 'slots') { if (win) hint(msg, 2.5); return; }
-      noise(win ? .4 : .15, win ? 3000 : 400, .35, win ? 'bandpass' : 'lowpass');
+      (win && play(a === b && b === c ? 'slotwin' : 'coins')) || noise(win ? .4 : .15, win ? 3000 : 400, .35, win ? 'bandpass' : 'lowpass');
       screen(slotsHtml(msg, res), `[data-spin="${bet}"]:not(:disabled)`);
     }, 2100);
   }
@@ -1435,7 +1464,7 @@ function create() {
     const it = shopItems(shopDoor.kind)[k];
     if (!it || it.off || run.gold < it.price) return;
     run.gold -= it.price;
-    noise(.12, 3000, .3, 'bandpass');
+    play('cash') || noise(.12, 3000, .3, 'bandpass');
     const msg = it.buy();
     if (state === 'shop') screen(shopHtml(msg), `[data-buy="${k}"]:not(:disabled)`);
   }
