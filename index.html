@@ -181,6 +181,8 @@ body{overflow-x:clip}
 .cookie button{flex:1 1 auto;padding:10px 12px;border-radius:10px;border:1px solid var(--pink);background:rgba(255,255,255,.06);color:var(--bone);font:inherit;cursor:pointer}
 .cookie button:first-child{background:var(--pink);color:#000;font-weight:700}
 .cookie button:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.counter{margin-top:14px;line-height:1.9}
+.counter b span{display:inline-block;min-width:1.3em;margin:0 1px;padding:1px 3px;background:#000;color:#39ff6a;border:1px solid #333;font:700 1rem monospace;text-align:center}
 </style>
 </head>
 <body>
@@ -697,7 +699,7 @@ body{overflow-x:clip}
   </article>
 </section>
 
-<footer>Dota 2 и Beastmaster и Visage принадлежат Valve. Это пиздёж. Они принадлежат нам. Триада Добрянка МВД.<small class="credits">Гром: <a href="https://commons.wikimedia.org/wiki/File:Rhumphries_-_rbh-thunder-storm.ogg">rbh thunder storm</a> — RHumphries, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>, обрезан и сжат; <a href="https://commons.wikimedia.org/wiki/File:Storm_thunderbolts.ogg">Storm thunderbolts</a> — public domain</small></footer>
+<footer>Dota 2 и Beastmaster и Visage принадлежат Valve. Это пиздёж. Они принадлежат нам. Триада Добрянка МВД.<small class="credits">Гром: <a href="https://commons.wikimedia.org/wiki/File:Rhumphries_-_rbh-thunder-storm.ogg">rbh thunder storm</a> — RHumphries, <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>, обрезан и сжат; <a href="https://commons.wikimedia.org/wiki/File:Storm_thunderbolts.ogg">Storm thunderbolts</a> — public domain</small><p class="counter">Вы посетитель № <b id="visitorNo"></b><br>Онлайн: <span id="online"></span></p></footer>
 
 <script>
 (function(){
@@ -1104,6 +1106,15 @@ body{overflow-x:clip}
     if(choice==='sad')toast('Грустное лицо передано в МВД Добрянки');
     cookie.hidden=true;store('cookiesAccepted',1);
   });
+
+  function plural(n,one,few,many){var a=n%10,b=n%100;return a===1&&b!==11?one:a>=2&&a<=4&&(b<10||b>=20)?few:many}
+  var visitorNo=document.getElementById('visitorNo'),online=document.getElementById('online');
+  function tickCounter(){
+    var n=1337228+Math.floor((Date.now()-Date.UTC(2026,10,27))/45000),spiders=document.querySelectorAll('.spider').length;
+    visitorNo.innerHTML=String(n).split('').map(function(d){return '<span>'+d+'</span>'}).join('');
+    online.textContent=spiders+' '+plural(spiders,'паук','паука','пауков')+', 1 Азалина и участковый Добрянки';
+  }
+  tickCounter();setInterval(tickCounter,1000);
 })();
 </script>
 </body>
