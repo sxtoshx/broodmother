@@ -968,7 +968,8 @@ body{overflow-x:clip}
   }
   function gg(){announce('GG WP')}
   var streak=0,lastKill=0,firstBlood=true,streakNames={2:'DOUBLE KILL',3:'TRIPLE KILL',4:'ULTRA KILL',5:'RAMPAGE!',7:'WICKED SICK',9:'GODLIKE',12:'BEYOND GODLIKE'};
-  addEventListener('click',function(){
+  addEventListener('click',function(e){
+    if(e.target.closest&&e.target.closest('#roshan,#adhdBtn'))return;
     var now=Date.now();streak=now-lastKill<1300?streak+1:1;lastKill=now;
     if(firstBlood){firstBlood=false;announce('FIRST BLOOD')}
     else if(streakNames[streak])announce(streakNames[streak]);
