@@ -91,9 +91,9 @@ function texture(c, repeat) {
   return t;
 }
 function fitText(x, text, cx, cy, maxW, size, weight) {
-  x.font = `${weight} ${size}px Georgia,serif`;
+  x.font = `700 ${size}px GPix,monospace`;
   const w = x.measureText(text).width;
-  if (w > maxW) x.font = `${weight} ${size * maxW / w}px Georgia,serif`;
+  if (w > maxW) x.font = `700 ${size * maxW / w}px GPix,monospace`;
   x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(text, cx, cy);
 }
 function windows(wall) {
@@ -388,21 +388,27 @@ function city(scene) {
 }
 
 let game;
-export function open(site) { (game ||= create()).show(site); }
+let styled;
+export async function open(site) {
+  if (!styled) {
+    styled = document.createElement('style');
+    styled.textContent = CSS;
+    document.head.append(styled);
+    await Promise.all(['700 32px GPix', '400 16px GPix', '16px GPress'].map(f => document.fonts.load(f, 'АБВабв ABCabc 0123'))).catch(() => {});
+  }
+  (game ||= create()).show(site);
+}
 
 function create() {
   const renderer = new THREE.WebGLRenderer({ antialias: devicePixelRatio < 2, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
-  const style = document.createElement('style');
-  style.textContent = CSS;
-  document.head.append(style);
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" aria-hidden="true"></canvas><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" aria-hidden="true"></canvas><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
-  const speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
+  const jumpEl = $('.g-jump'), speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
 
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, 1, .5, 1000);
   scene.fog = new THREE.Fog('#c9527f', 70, 320);
@@ -734,7 +740,7 @@ function create() {
 
   let site, state = 'title', opened = false, paused = [], last = 0, now = 0, hp = 100, heat = 0, bust = 0, invuln = 0, dyingT = 0, cause = '', shakeAmt = 0;
   let fireCD = 0, aimT = 0, radioAt = 0, lastHurt = 0, lastKill = -99, streak = 0, firstBlood = true, spawnCD = 0, hintUntil = 0, run = {}, doorNear = null, shopDoor = null, winT = 0;
-  const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set(), fire: new Set() }, shown = {};
+  const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set(), fire: new Set(), hand: new Set() }, shown = {};
   const touch = matchMedia('(pointer:coarse)').matches;
   const on = k => keys[k] || (held[k] ? held[k].size > 0 : false);
 
@@ -886,6 +892,18 @@ function create() {
     h.t += dt * Math.abs(h.speed);
     const swing = Math.sin(h.t * 1.6) * Math.min(1, Math.abs(h.speed) / 4) * .8;
     h.legs[0].rotation.x = swing; h.legs[1].rotation.x = -swing; h.arms[0].rotation.x = -swing; h.arms[1].rotation.x = swing;
+    if (h.vy || h.jy > 0) {
+      h.jy = Math.max(0, (h.jy || 0) + h.vy * dt); h.vy -= 24 * dt;
+      h.legs[0].rotation.x = .8; h.legs[1].rotation.x = -.5; h.arms[0].rotation.x = h.arms[1].rotation.x = -2.6;
+      if (h.jy === 0 && h.vy < 0) {
+        h.vy = 0; shakeAmt = Math.max(shakeAmt, .25); noise(.08, 300, .3, 'lowpass');
+        for (const s of crowd) if (!s.dead && Math.hypot(s.pos.x - h.pos.x, s.pos.z - h.pos.z) < 2.6) { squash(s); ann('С ПРЫЖКА!', 'gold'); }
+      }
+    }
+  }
+  function jump() {
+    if (state !== 'play' || !player.foot || hero.jy > 0 || hero.vy) return;
+    hero.vy = 8.5; noise(.12, 1800, .2, 'highpass');
   }
   function nearestCar() {
     let best = null, bd = 4.4;
@@ -976,7 +994,7 @@ function create() {
   }
   function place(c, dt) {
     c.y += (groundY(c.pos.x, c.pos.z) - c.y) * Math.min(1, dt * 15);
-    c.mesh.position.set(c.pos.x, c.y, c.pos.z); c.mesh.rotation.y = c.heading;
+    c.mesh.position.set(c.pos.x, c.y + (c.jy || 0), c.pos.z); c.mesh.rotation.y = c.heading;
   }
   function hitT(a, b, y0, y1) {
     const ix = 1 / (b.x - a.x), iz = 1 / (b.z - a.z);
@@ -1146,7 +1164,7 @@ function create() {
       walk(player, on('up') || sprint ? 1 : !touch && on('down') ? -1 : 0, steer, dt, sprint ? (run.energy ? 13 : 11) : 7);
       fireCD -= dt; aimT -= dt;
       heroGun.visible = !!run.gun;
-      if (run.gun && (on('hand') || on('fire') || on('mouse')) && fireCD <= 0) fire();
+      if (run.gun && (on('fire') || on('mouse')) && fireCD <= 0) fire();
       if (aimT > 0) hero.arms[0].rotation.x = -1.5;
     } else {
       const gas = (on('up') ? 1 : 0) - (on('down') ? 1 : 0), before = Math.abs(player.speed), imp = drive(player, gas, steer, on('hand') || on('sprint'), dt, player.spec.top + run.engine * 4);
@@ -1307,6 +1325,7 @@ function create() {
     if (!radio.hidden && now > radioAt) { radioAt = now + 7; radio.textContent = '📻 Добрянка FM · ' + pick(RADIO)(); radio.classList.remove('on'); void radio.offsetWidth; radio.classList.add('on'); }
     show(`${weather.icon} ${temp > 0 ? '+' : ''}${temp}° Добрянка`, 'weather', weatherEl);
     show(player.foot ? 'БЕГ' : 'ТОРМОЗ', 'down', downEl);
+    show(player.foot ? 'ПРЫЖОК' : 'РУЧНИК', 'jump', jumpEl);
     stamEl.hidden = !player.foot || state !== 'play';
     const sw = Math.round(stamina * 100) + '%';
     if (shown.stam !== sw) { shown.stam = sw; stamEl.firstChild.style.width = sw; }
@@ -1390,7 +1409,7 @@ function create() {
       { name: 'Приват с Пуджем', note: 'что было в подсобке — остаётся в подсобке', price: 5000, buy: () => { tipDancers(15); site.loot.aegis++; site.saveLoot(); return 'Пудж выдал тебе Аегис. Не спрашивай откуда'; } }
     ];
     if (kind === 'guns') return [
-      ...Object.entries(GUNS).map(([key, g]) => ({ name: g.name, note: run.guns[key] !== undefined ? `уже есть, патронов ${run.guns[key]}` : `${key === 'sg' ? 'косит пачку пауков разом' : key === 'ak' ? 'очередями, как в девяностые' : 'классика участкового'}, ${g.ammo} патронов`, price: g.price, off: run.guns[key] !== undefined, buy: () => { run.guns[key] = g.ammo; run.gun = key; hint(touch ? 'Пешком: круглая кнопка — огонь, тап по стволу — сменить' : 'Пробел или клик — огонь, Q — сменить ствол', 3); return `${g.name} твой. Не свети на районе`; } })),
+      ...Object.entries(GUNS).map(([key, g]) => ({ name: g.name, note: run.guns[key] !== undefined ? `уже есть, патронов ${run.guns[key]}` : `${key === 'sg' ? 'косит пачку пауков разом' : key === 'ak' ? 'очередями, как в девяностые' : 'классика участкового'}, ${g.ammo} патронов`, price: g.price, off: run.guns[key] !== undefined, buy: () => { run.guns[key] = g.ammo; run.gun = key; hint(touch ? 'Пешком: жёлтая кнопка справа — огонь, тап по стволу — сменить' : 'Клик или Ctrl — огонь, Q — сменить ствол', 3); return `${g.name} твой. Не свети на районе`; } })),
       { name: 'Патроны', note: run.gun ? `к стволу «${GUNS[run.gun].name}»` : 'сначала купи ствол', price: 150, off: !run.gun, buy: () => { run.guns[run.gun] += GUNS[run.gun].refill; return 'Насыпали в пакет из Пятёры'; } },
       { name: 'Удочка', note: 'в Каме ничего не ловится, но выглядишь солидно', price: 228, buy: () => 'Удочка в багажнике. Рыба в Каме смеётся' }
     ];
@@ -1534,7 +1553,7 @@ function create() {
     mx.restore();
   }
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль, справа газ и тормоз (пешком — бег), круглая кнопка сверху — выйти из тачки или угнать чужую.' : 'WASD или стрелки, пробел — ручник, Shift — бег, F — выйти из тачки или угнать чужую, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 🚗 💊 🔫, казино 🎰 и стрипуха 💃 на карте — заходи пешком внутрь. Триада 🗣️ даёт работу, на 🏁 — гонка с МВД.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль и прыжок (в тачке — ручник), справа газ, тормоз (пешком — бег) и кнопка действия: выйти, угнать, стрелять.' : 'WASD или стрелки, Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 🚗 💊 🔫, казино 🎰 и стрипуха 💃 на карте — заходи пешком внутрь. Триада 🗣️ даёт работу, на 🏁 — гонка с МВД.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
     return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b> / ${GOAL}${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${'🚨'.repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
@@ -1584,6 +1603,7 @@ function create() {
       if (state === 'play' && player.foot && run.gun && !nearestCar() && !nearCrew()) { held.fire.add(e.pointerId); b.classList.add('held'); } else act();
       return;
     }
+    if (b.dataset.k === 'hand' && player.foot) jump();
     held[b.dataset.k].add(e.pointerId); b.classList.add('held');
   });
   const release = e => { for (const k in held) held[k].delete(e.pointerId); pad.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('held', held[b.dataset.k].size > 0)); actEl.classList.toggle('held', held.fire.size > 0); };
@@ -1593,11 +1613,12 @@ function create() {
   dlg.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') keys.mouse = false; });
   for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEventListener(t, release);
   pad.addEventListener('contextmenu', e => e.preventDefault());
-  const KEYS = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'hand', ShiftLeft: 'sprint', ShiftRight: 'sprint' };
+  const KEYS = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'hand', ShiftLeft: 'sprint', ShiftRight: 'sprint', ControlLeft: 'fire', ControlRight: 'fire', KeyX: 'fire' };
   const driving = () => opened && (state === 'play' || state === 'dying');
   addEventListener('keydown', e => {
     if ((e.code === 'KeyF' || e.code === 'KeyE') && driving()) { e.preventDefault(); if (!e.repeat) act(); return; }
     if (e.code === 'KeyQ' && driving()) { e.preventDefault(); if (!e.repeat) switchGun(); return; }
+    if (e.code === 'Space' && driving() && player.foot && !e.repeat) jump();
     const k = KEYS[e.code];
     if (k && driving()) { keys[k] = true; e.preventDefault(); }
   });
@@ -1619,91 +1640,96 @@ function create() {
 }
 
 const CSS = `
+@font-face{font-family:GPix;src:url(fonts/pixelify-cyrillic.woff2) format("woff2");font-weight:400 700;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:GPix;src:url(fonts/pixelify-latin.woff2) format("woff2");font-weight:400 700;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:GPress;src:url(fonts/pressstart-cyrillic.woff2) format("woff2");font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:GPress;src:url(fonts/pressstart-latin.woff2) format("woff2");font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 body.gta{overflow:hidden}
-#gta{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#120826;color:#fff;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font:600 16px/1.35 system-ui,-apple-system,sans-serif;outline:0}
+#gta{--px:GPix,ui-monospace,monospace;--pp:GPress,GPix,ui-monospace,monospace;--panel:rgba(14,7,30,.9);--pink:#ff4fb8;--gold:#ffd24a;--cyan:#5ff2ff;--green:#39ff6a;--red:#ff3b3b;--o:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,2px 2px 0 #000;--box:3px solid #000;--sh:4px 4px 0 #000;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#120826;color:#fff;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font:500 17px/1.3 var(--px);outline:0;-webkit-font-smoothing:none}
+#gta *{border-radius:0!important}
+#gta li{display:block;line-height:1.3}
 #gta::backdrop{background:#000}
 #gta [hidden]{display:none!important}
+#gta button{font-family:var(--px)}
 #gta>canvas{position:absolute;inset:0;width:100%;height:100%;display:block;transition:filter .4s}
 #gta.dying>canvas{filter:grayscale(1) brightness(.7)}
-.g-hud{position:absolute;inset:0;pointer-events:none}
-.g-x{pointer-events:auto;position:absolute;left:12px;top:calc(10px + env(safe-area-inset-top,0px));width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.45);color:#fff;font:700 20px system-ui;cursor:pointer}
-.g-stats{position:absolute;right:12px;top:calc(10px + env(safe-area-inset-top,0px));display:grid;justify-items:end;gap:5px;text-shadow:0 2px 0 #000,0 0 8px #000}
-.g-wanted span{font-size:20px;opacity:.18;filter:grayscale(1)}
+.g-hud{position:absolute;inset:0;pointer-events:none;text-shadow:var(--o)}
+.g-x{pointer-events:auto;position:absolute;left:12px;top:calc(10px + env(safe-area-inset-top,0px));width:44px;height:44px;border:var(--box);background:var(--red);color:#fff;font:700 22px var(--px);text-shadow:var(--o);box-shadow:var(--sh);cursor:pointer}
+.g-stats{position:absolute;right:12px;top:calc(10px + env(safe-area-inset-top,0px));display:grid;justify-items:end;gap:6px}
+.g-stats>*:not(.g-wanted):not(.g-hp):not(.g-stam){background:var(--panel);border:var(--box);box-shadow:var(--sh);padding:3px 8px}
+.g-wanted span{font-size:18px;opacity:.2;filter:grayscale(1)}
 .g-wanted span.on{opacity:1;filter:none}
 .g-wanted.cool span.on{animation:gBlink .5s steps(2) infinite}
-.g-gold{color:#ffd24a;font:900 24px Georgia,serif}
-.g-hp{width:150px;height:12px;border:1px solid #000;background:#3b0d0d;box-shadow:0 0 0 1px rgba(255,255,255,.3)}
-.g-hp i{display:block;height:100%;width:100%;background:repeating-linear-gradient(90deg,#3fd14a 0 14px,#1d6b23 14px 15px);transition:width .15s}
-.g-loot{font-size:15px}
-.g-job{font-size:15px;font-weight:800;color:#ffd24a}
-.g-job:empty{display:none}
-.g-race{max-width:calc(100vw - 190px);box-sizing:border-box;text-align:right;font:900 clamp(13px,3.6vw,17px)/1.25 system-ui;color:#fff;background:rgba(0,0,0,.5);padding:4px 10px;border-radius:10px}
-.g-race:empty{display:none}
-.g-race{display:grid;gap:3px;width:min(250px,calc(100vw - 190px))}
-.g-race span{font-size:.8em;font-weight:700;color:#e9dcff}
-.g-race i{display:block;height:6px;border-radius:3px;background:rgba(255,255,255,.2);overflow:hidden}
-.g-race u{display:block;height:100%;background:linear-gradient(90deg,#ff2fa8,#ffd24a)}
-.g-speed{position:absolute;left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));text-align:center;line-height:1;text-shadow:0 2px 0 #000,0 0 10px #000}
-.g-speed b{display:block;font:900 34px Georgia,serif;color:#fff}
-.g-speed small{font-size:11px;font-weight:800;color:#cbb8e0;letter-spacing:.08em}
-.g-radio{position:absolute;left:50%;translate:-50% 0;bottom:calc(186px + env(safe-area-inset-bottom,0px));max-width:min(640px,calc(100% - 24px));padding:6px 12px;border-radius:999px;background:rgba(10,5,20,.7);border:1px solid rgba(255,255,255,.18);font-size:13px;font-weight:700;color:#f4e9ff;text-align:center}
-.g-radio.on{animation:gRadio .5s ease-out}
-.g-stam{width:150px;height:5px;background:rgba(0,0,0,.5)}
-.g-stam i{display:block;height:100%;background:#8fd0ff}
-.g-weather{font-size:14px;font-weight:800}
-.g-gun{pointer-events:auto;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.45);color:#fff;font:800 14px system-ui;cursor:pointer}
-.g-gun:empty{display:none}
-@media (hover:hover) and (pointer:fine){.g-radio{bottom:14px}.g-hint{bottom:56px}}
-@keyframes gRadio{from{opacity:0;translate:-50% 8px}}
-.g-ann{position:absolute;left:12px;right:12px;top:24%;text-align:center;font:900 clamp(1.8rem,7.5vw,4.5rem)/1 Georgia,serif;color:var(--pink,#ff4fb8);text-shadow:0 0 30px var(--pink,#ff4fb8),0 4px 0 #000;opacity:0}
-.g-ann.show{animation:gAnn 1.7s ease-out}
-.g-ann.gold{color:#ffd24a;text-shadow:0 0 30px #ffb000,0 4px 0 #000}
-.g-hint{position:absolute;left:12px;right:12px;bottom:calc(222px + env(safe-area-inset-bottom,0px));text-align:center;font-weight:800;color:#8fd0ff;text-shadow:0 2px 0 #000,0 0 10px #000}
-.g-float{position:absolute;translate:-50% -50%;font:900 22px Georgia,serif;color:#ffd24a;text-shadow:0 2px 0 #000;animation:gFloat .9s ease-out forwards}
-.g-pad{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;padding:12px 12px calc(14px + env(safe-area-inset-bottom,0px))}
+.g-gold{color:var(--gold);font:400 14px/1.5 var(--pp)}
+.g-hp{width:156px;height:14px;border:var(--box);background:#3b0d0d;box-shadow:var(--sh)}
+.g-hp i{display:block;height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--green) 0 10px,#1d8a2d 10px 12px)}
+.g-stam{width:156px;height:8px;border:var(--box);background:#0d1e3b}
+.g-stam i{display:block;height:100%;background:var(--cyan)}
+.g-loot,.g-weather{font-size:15px}
+.g-job{font-size:15px;color:var(--gold)}
+.g-job:empty,.g-gun:empty,.g-race:empty{display:none}
+.g-gun{pointer-events:auto;color:#fff;font:500 15px var(--px);text-shadow:var(--o);cursor:pointer}
+.g-race{display:grid;gap:4px;width:min(260px,calc(100vw - 190px));box-sizing:border-box;text-align:right;font-size:clamp(13px,3.6vw,16px)}
+.g-race b{font:700 1em/1.3 var(--px);color:var(--gold);text-transform:uppercase}
+.g-race span{font-size:.92em;color:#e9dcff}
+.g-race i{display:block;height:10px;border:2px solid #000;background:#2a1a40}
+.g-race u{display:block;height:100%;background:repeating-linear-gradient(90deg,var(--pink) 0 8px,var(--gold) 8px 16px)}
+.g-map{position:absolute;left:12px;top:calc(64px + env(safe-area-inset-top,0px));width:150px;height:150px;border:var(--box);box-shadow:var(--sh);image-rendering:pixelated}
+.g-speed{position:absolute;left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));min-width:84px;padding:6px 8px;text-align:center;line-height:1;background:var(--panel);border:var(--box);box-shadow:var(--sh)}
+.g-speed b{display:block;font:400 20px var(--pp);color:#fff}
+.g-speed small{display:block;margin-top:4px;font:700 11px var(--px);color:var(--cyan)}
+.g-radio{position:absolute;left:50%;translate:-50% 0;bottom:calc(196px + env(safe-area-inset-bottom,0px));max-width:min(640px,calc(100% - 24px));box-sizing:border-box;padding:6px 10px;background:var(--panel);border:var(--box);box-shadow:var(--sh);font-size:14px;color:#f4e9ff;text-align:center}
+.g-radio.on{animation:gRadio .4s steps(4)}
+.g-ann{position:absolute;left:12px;right:12px;top:max(24%,236px);text-align:center;font:700 clamp(1.8rem,8vw,4.2rem)/1.05 var(--px);text-transform:uppercase;color:var(--pink);opacity:0;text-shadow:3px 0 0 #000,-3px 0 0 #000,0 3px 0 #000,0 -3px 0 #000,4px 4px 0 #000}
+.g-ann.show{animation:gAnn 1.7s steps(12)}
+.g-ann.gold{color:var(--gold)}
+.g-hint{position:absolute;left:12px;right:12px;bottom:calc(240px + env(safe-area-inset-bottom,0px));text-align:center;font-size:17px;color:var(--cyan)}
+.g-float{position:absolute;translate:-50% -50%;font:400 14px var(--pp);color:var(--gold);animation:gFloat .9s steps(9) forwards}
+.g-pad{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;padding:12px 12px calc(16px + env(safe-area-inset-bottom,0px));text-shadow:none}
 .g-pad div{display:flex;gap:10px;align-items:flex-end}
-.g-pad button{width:70px;height:70px;border-radius:50%;border:2px solid rgba(255,255,255,.35);background:rgba(0,0,0,.35);color:#fff;font:800 12px system-ui;touch-action:none;-webkit-tap-highlight-color:transparent}
-.g-pad button.held{background:rgba(255,79,184,.6)}
-.g-pad .g-gas{width:86px;height:86px;background:rgba(57,255,106,.25)}
-.g-pad .g-act{position:absolute;right:24px;bottom:calc(112px + env(safe-area-inset-bottom,0px));width:62px;height:62px;background:rgba(255,210,74,.3);font-size:11px}
-@media (hover:hover) and (pointer:fine){.g-pad{display:none}}
-.g-screen{position:absolute;inset:0;display:flex;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));background:radial-gradient(ellipse at center,rgba(18,8,38,.45),rgba(18,8,38,.88));text-align:center;overflow:auto}
-.g-screen>div{margin:auto;max-width:520px;display:grid;gap:12px;justify-items:center}
-.g-screen p{margin:0;color:#f4e9ff;max-width:44ch}
-.g-kicker.g-kicker{letter-spacing:.2em;text-transform:uppercase;font-size:12px;color:#ffd24a}
-.g-title{margin:0;font:900 clamp(3.2rem,17vw,6.5rem)/.9 Georgia,serif;color:#fff;text-shadow:0 0 30px var(--pink,#ff4fb8),0 6px 0 #000}
-.g-title span{display:block;margin-top:6px;font-size:.36em;letter-spacing:.14em;text-transform:uppercase;color:var(--pink,#ff4fb8)}
-.g-inv.g-inv{color:#ffd24a;font-weight:800}
-.g-tip.g-tip{color:#8fd0ff;font-size:14px}
-.g-dead{margin:0;font:900 clamp(2rem,9vw,4rem)/1 Georgia,serif;color:#ff3b3b;text-shadow:0 0 24px #ff3b3b,0 4px 0 #000}
-.g-recap{width:min(100%,380px);box-sizing:border-box;list-style:none;margin:0;padding:12px 18px;border:1px solid rgba(255,255,255,.2);border-radius:12px;background:rgba(0,0,0,.4);display:grid;gap:4px;text-align:left}
-.g-btns{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:4px}
-.g-btns button{padding:14px 28px;border-radius:999px;border:0;font:900 17px system-ui;cursor:pointer;background:linear-gradient(135deg,var(--violet,#7a2cff),var(--pink,#ff4fb8));color:#fff;box-shadow:0 0 24px rgba(255,79,184,.5)}
-.g-btns .g-out{background:rgba(255,255,255,.1);box-shadow:none;border:1px solid rgba(255,255,255,.35)}
-.g-btns button:focus-visible,.g-x:focus-visible{outline:3px solid #fff;outline-offset:3px}
-.g-map{position:absolute;left:12px;top:calc(62px + env(safe-area-inset-top,0px));width:150px;height:150px;border-radius:12px;border:1px solid rgba(255,255,255,.3);box-shadow:0 4px 16px rgba(0,0,0,.5)}
-.g-screen{touch-action:pan-y}
-.g-screen.g-shopping{background:rgba(18,8,38,.82)}
-.g-screen.g-strip{background:linear-gradient(to top,rgba(18,8,38,.92) 35%,transparent 75%)}
-.g-screen.g-strip>div{margin:auto auto 0}
-.g-reels{--cell:72px;display:flex;gap:10px;padding:12px;border-radius:16px;background:linear-gradient(#ffd24a,#8a6a10);box-shadow:0 0 30px rgba(255,210,74,.5)}
-.g-reel{width:var(--cell);height:var(--cell);overflow:hidden;border-radius:10px;background:#fff8e0;box-shadow:inset 0 6px 10px rgba(0,0,0,.4)}
-.g-reel div{display:flex;flex-direction:column}
-.g-reel span{height:var(--cell);flex:none;display:grid;place-items:center;font-size:44px;line-height:1}
+.g-pad button{width:68px;height:68px;border:var(--box);background:rgba(14,7,30,.78);color:#fff;font:700 13px var(--px);text-shadow:var(--o);box-shadow:var(--sh);touch-action:none;-webkit-tap-highlight-color:transparent}
+.g-pad button.held{background:var(--pink);translate:2px 2px;box-shadow:2px 2px 0 #000}
+.g-pad .g-gas{width:84px;height:84px;background:rgba(20,90,40,.85)}
+.g-pad .g-act,.g-pad .g-jump{position:absolute;bottom:calc(112px + env(safe-area-inset-bottom,0px));width:68px;height:52px}
+.g-pad .g-act{right:24px;background:rgba(110,80,10,.88)}
+.g-pad .g-jump{left:12px;background:rgba(20,70,110,.88)}
+@media (hover:hover) and (pointer:fine){.g-pad{display:none}.g-radio{bottom:14px}.g-hint{bottom:64px}}
+.g-screen{position:absolute;inset:0;display:flex;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));background:rgba(14,7,30,.72);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);text-align:center;overflow:auto;touch-action:pan-y}
+.g-screen>div{margin:auto;width:min(540px,100%);box-sizing:border-box;display:grid;gap:12px;justify-items:center;padding:20px 16px;background:var(--panel);border:var(--box);box-shadow:inset 0 0 0 3px var(--pink),8px 8px 0 #000}
+.g-screen p{margin:0;color:#f4e9ff;max-width:46ch}
+.g-kicker.g-kicker{font:700 14px/1.4 var(--px);letter-spacing:.08em;text-transform:uppercase;color:var(--gold)}
+.g-title{margin:0;font:400 clamp(2.2rem,11vw,4.4rem)/1.1 var(--pp);color:#fff;text-shadow:4px 4px 0 var(--pink),8px 8px 0 #000}
+.g-title span{display:block;margin-top:12px;font:700 .5em var(--px);letter-spacing:.12em;text-transform:uppercase;color:var(--pink);text-shadow:3px 3px 0 #000}
+.g-inv.g-inv{color:var(--gold)}
+.g-tip.g-tip{color:var(--cyan);font-size:15px}
+.g-goal.g-goal{color:#fff}
+.g-msg.g-msg{color:var(--gold)}
+.g-dead{margin:0;font:700 clamp(1.8rem,8vw,3.2rem)/1.05 var(--px);text-transform:uppercase;color:var(--red);text-shadow:4px 4px 0 #000}
+.g-win{color:var(--gold)}
+.g-recap{width:min(100%,380px);box-sizing:border-box;list-style:none;margin:0;padding:10px 14px;border:var(--box);background:rgba(0,0,0,.45);display:grid;gap:4px;text-align:left}
+.g-btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+.g-btns button{padding:12px 18px;border:var(--box);font:700 17px var(--px);text-transform:uppercase;cursor:pointer;background:var(--pink);color:#000;box-shadow:var(--sh)}
+.g-btns button:active:not(:disabled){translate:2px 2px;box-shadow:2px 2px 0 #000}
+.g-btns .g-out{background:#2a1a40;color:#fff}
 .g-btns button:disabled{opacity:.45;cursor:not-allowed}
-.g-shop{display:grid;gap:8px;width:min(100%,440px)}
-.g-shop button{display:grid;grid-template-columns:1fr auto;gap:2px 12px;text-align:left;padding:10px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.45);color:#fff;font:inherit;cursor:pointer}
-.g-shop b{font-weight:900}
-.g-shop span{grid-column:1;font-size:13px;font-weight:500;color:#d6c4ea}
-.g-shop i{grid-row:1/span 2;grid-column:2;align-self:center;font-style:normal;font-weight:900;color:#ffd24a;white-space:nowrap}
+.g-btns button:focus-visible,.g-x:focus-visible,.g-shop button:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+.g-shop{display:grid;gap:8px;width:min(100%,460px)}
+.g-shop button{display:grid;grid-template-columns:1fr auto;gap:2px 12px;text-align:left;padding:10px 12px;border:var(--box);background:#22143a;color:#fff;font:500 17px var(--px);box-shadow:var(--sh);cursor:pointer}
+.g-shop b{font-weight:700}
+.g-shop span{grid-column:1;font-size:14px;color:#cbb8e0}
+.g-shop i{grid-row:1/span 2;grid-column:2;align-self:center;font:400 11px var(--pp);color:var(--gold);white-space:nowrap}
 .g-shop button:disabled{opacity:.42;cursor:not-allowed}
-.g-shop button:not(:disabled):hover{border-color:var(--pink,#ff4fb8)}
-.g-shop button:focus-visible{outline:3px solid #fff;outline-offset:2px}
-.g-msg.g-msg{color:#ffd24a;font-weight:800}
-.g-goal.g-goal{color:#fff;font-weight:700}
-.g-win{color:#ffd24a;text-shadow:0 0 24px #ffb000,0 4px 0 #000}
-@keyframes gAnn{0%{opacity:0;scale:2}12%{opacity:1;scale:1}75%{opacity:1}100%{opacity:0;scale:.95}}
+.g-shop button:not(:disabled):hover{background:#3a1f5e}
+.g-screen.g-shopping{background-color:rgba(14,7,30,.6)}
+.g-screen.g-strip{background:linear-gradient(to top,rgba(14,7,30,.9) 30%,transparent 70%)}
+.g-screen.g-strip>div{margin:auto auto 0}
+.g-reels{--cell:72px;display:flex;gap:8px;padding:10px;border:var(--box);background:var(--gold);box-shadow:inset 0 0 0 3px #8a6a10,var(--sh)}
+.g-reel{width:var(--cell);height:var(--cell);overflow:hidden;border:var(--box);background:#fff8e0}
+.g-reel div{display:flex;flex-direction:column}
+.g-reel span{height:var(--cell);flex:none;display:grid;place-items:center;font-size:42px;line-height:1}
+@keyframes gAnn{0%{opacity:0;scale:1.6}12%{opacity:1;scale:1}75%{opacity:1}100%{opacity:0}}
 @keyframes gFloat{to{translate:-50% -170%;opacity:0}}
 @keyframes gBlink{50%{opacity:.2}}
-@media (max-height:520px){.g-screen>div{gap:8px}.g-title{font-size:3rem}.g-dead{font-size:2rem}.g-recap{grid-template-columns:1fr 1fr;column-gap:18px}}
+@keyframes gRadio{from{opacity:0;translate:-50% 8px}}
+@media (max-height:520px){.g-screen>div{gap:8px;padding:12px}.g-title{font-size:2rem}.g-dead{font-size:1.5rem}.g-recap{grid-template-columns:1fr 1fr;column-gap:18px}}
 `;
