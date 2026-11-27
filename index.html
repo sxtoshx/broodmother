@@ -169,7 +169,6 @@ body{overflow-x:clip}
   .ab:hover img{rotate:-8deg}
 }
 .adhd-btn{position:fixed;right:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:57;padding:10px 14px;border-radius:10px;border:1px solid var(--pink);background:rgba(0,0,0,.6);color:var(--glow);font:inherit;font-weight:700;letter-spacing:.06em;cursor:pointer;box-shadow:0 0 16px rgba(255,79,184,.35)}
-.adhd-btn[aria-pressed=true]{background:var(--pink);color:#000}
 .adhd-btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .adhd .bg{animation:hue 1.5s steps(8) infinite}
 @keyframes hue{to{filter:hue-rotate(360deg)}}
@@ -187,6 +186,16 @@ body{overflow-x:clip}
 .cookie button:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .counter{margin-top:14px;line-height:1.9}
 .counter b span{display:inline-block;min-width:1.3em;margin:0 1px;padding:1px 3px;background:#000;color:#39ff6a;border:1px solid #333;font:700 1rem monospace;text-align:center}
+.loud-win95.loud-win95.loud-win95{background:#c0c0c0;color:#000;border:2px solid;border-color:#fff #404040 #404040 #fff;border-radius:0;box-shadow:inset -1px -1px #808080,inset 1px 1px #dfdfdf;font-family:Tahoma,"MS Sans Serif",Verdana,sans-serif;text-shadow:none}
+.loud-neon.loud-neon.loud-neon{background:#000;color:#39ff14;border:2px solid #39ff14;border-radius:4px;box-shadow:0 0 8px #39ff14,0 0 24px #39ff14,inset 0 0 12px rgba(57,255,20,.45);text-shadow:0 0 8px #39ff14;font-family:"Courier New",monospace;text-transform:uppercase}
+.loud-brutal.loud-brutal.loud-brutal{background:#ffeb3b;color:#000;border:3px solid #000;border-radius:0;box-shadow:6px 6px 0 #000;font-family:Impact,"Arial Black",sans-serif;text-transform:uppercase;letter-spacing:.04em;text-shadow:none}
+.loud-chrome.loud-chrome.loud-chrome{background:linear-gradient(180deg,#fff 0%,#b7c3d0 45%,#6b7a8c 50%,#dfe6ee 100%);color:#14142b;border:2px solid #fff;border-radius:999px;box-shadow:0 0 0 2px #6b7a8c,0 6px 16px rgba(0,0,0,.5);font-style:italic;font-weight:900;text-shadow:0 1px 0 #fff}
+.loud-comic.loud-comic.loud-comic{background:#ff6ec7;color:#fff200;border:3px dashed #00e5ff;border-radius:18px 4px 18px 4px;box-shadow:none;font-family:"Comic Sans MS","Comic Sans",cursive;font-weight:700;text-shadow:2px 2px 0 #000;rotate:-2deg}
+.loud-pixel.loud-pixel.loud-pixel{background:#2b2bff;color:#fff;border:0;border-radius:0;box-shadow:0 4px 0 #000,4px 0 0 #000,-4px 0 0 #000,0 -4px 0 #000,inset -4px -4px 0 #1717a8;font-family:"Courier New",monospace;font-weight:900;text-shadow:2px 2px 0 #000}
+.loud-bsod.loud-bsod.loud-bsod{background:#0000aa;color:#fff;border:2px solid #fff;border-radius:0;box-shadow:none;font-family:"Lucida Console","Courier New",monospace;text-shadow:none}
+.loud-vapor.loud-vapor.loud-vapor{background:linear-gradient(135deg,#ff71ce,#01cdfe,#05ffa1,#b967ff,#fffb96);color:#000;border:2px solid #fff;border-radius:12px;box-shadow:0 0 20px #ff71ce;font-weight:900;text-shadow:0 0 6px #fff}
+.loud-caution.loud-caution.loud-caution{background:repeating-linear-gradient(45deg,#ffd400 0 12px,#111 12px 24px);color:#fff;border:3px solid #111;border-radius:0;box-shadow:none;font-weight:900;text-transform:uppercase;text-shadow:0 0 3px #000,0 0 3px #000,0 0 3px #000}
+.loud-gold.loud-gold.loud-gold{background:radial-gradient(circle at 30% 30%,#fff6b0,#ffb300 60%,#b36b00);color:#3b1d00;border:3px solid #fff;border-radius:999px;box-shadow:0 0 0 3px #b36b00,0 8px 20px rgba(255,170,0,.6);font-weight:900;text-shadow:0 1px 0 #fff3}
 </style>
 </head>
 <body>
@@ -1121,7 +1130,7 @@ body{overflow-x:clip}
   var adhdBtn=document.getElementById('adhdBtn'),adhdTimer=0;
   adhdBtn.addEventListener('click',function(){
     var on=document.body.classList.toggle('adhd');
-    adhdBtn.setAttribute('aria-pressed',on);
+    adhdBtn.setAttribute('aria-pressed',on);adhdBtn.textContent=on?'СДВГ ВКЛ':'СДВГ';
     clearInterval(adhdTimer);
     if(!on)return;
     announce('СДВГ РЕЖИМ');
@@ -1163,6 +1172,11 @@ body{overflow-x:clip}
     online.textContent=spiders+' '+plural(spiders,'паук','паука','пауков')+', 1 Азалина и участковый Добрянки';
   }
   tickCounter();setInterval(tickCounter,1000);
+
+  var loudStyles=['win95','neon','brutal','chrome','comic','pixel','bsod','vapor','caution','gold'];
+  [].forEach.call(document.querySelectorAll('.btn,.hero-switch button,.leak button,.adhd-btn,.roshan,.cookie button'),function(b){
+    b.classList.add('loud-'+pick(loudStyles));
+  });
 })();
 </script>
 </body>
