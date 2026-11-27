@@ -188,6 +188,12 @@ body{overflow-x:clip}
 @keyframes boing{to{scale:1.08}}
 .roshan{position:fixed;left:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:57;padding:10px 14px;border-radius:10px;border:1px solid var(--ember2);background:rgba(0,0,0,.6);color:var(--ember2);font:inherit;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer}
 .roshan:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.gta-btn{position:fixed;right:12px;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:57;padding:8px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.35);background:linear-gradient(135deg,var(--violet),var(--pink));color:#fff;font:900 1rem/1.1 Georgia,serif;letter-spacing:.04em;cursor:pointer;box-shadow:0 0 18px rgba(255,79,184,.55);text-shadow:0 2px 0 rgba(0,0,0,.35)}
+.gta-btn b{font-size:1.3em}
+.gta-btn:disabled{opacity:.6;cursor:progress}
+.gta-btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){.gta-btn{animation:gtaBob 2.4s ease-in-out infinite}}
+@keyframes gtaBob{50%{rotate:-4deg;scale:1.06}}
 @media(prefers-reduced-motion:no-preference){.roshan.alive{animation:roshanAlive .7s ease-in-out infinite alternate}}
 @keyframes roshanAlive{to{scale:1.08;box-shadow:0 0 26px 6px #ff3b3b}}
 .cookie{position:fixed;left:50%;top:calc(44px + env(safe-area-inset-top,0px));translate:-50% 0;z-index:61;width:min(440px,calc(100vw - 32px));padding:16px;border-radius:14px;background:rgba(10,5,20,.95);border:1px solid var(--pink);box-shadow:0 0 30px rgba(0,0,0,.6);color:var(--bone);line-height:1.45;animation:toastIn .3s ease-out}
@@ -2134,6 +2140,7 @@ body{overflow-x:clip}
 <img id="tripleKill" src="img/ubil_troih.webp" alt="">
 <button type="button" class="adhd-btn" id="adhdBtn" aria-pressed="false">СДВГ</button>
 <button type="button" class="roshan" id="roshan" aria-label="Убить Рошана">Рош: 8:00</button>
+<button type="button" class="gta-btn" id="gtaBtn">GTA <b>VI</b></button>
 <div class="cookie" id="cookie" role="dialog" aria-label="Куки" hidden>
   <p>🍪 Мы используем куки, пауков и прописку в Добрянке. Отказаться нельзя: Триада уже в курсе.</p>
   <div><button type="button" data-cookie="ok">Принять</button><button type="button" data-cookie="sad">Принять с грустным лицом</button></div>
@@ -2148,6 +2155,7 @@ body{overflow-x:clip}
   function stored(key){try{return +localStorage.getItem(key)||0}catch(e){return 0}}
   function store(key,value){try{localStorage.setItem(key,value)}catch(e){}}
 
+  function away(){return document.hidden||document.body.classList.contains('gta')}
   var squashed=stored('squashed');
   function spider(){
     var w=innerWidth,h=innerHeight,leftward=Math.random()<.5;
@@ -2166,7 +2174,7 @@ body{overflow-x:clip}
     });
   }
   function crawl(){
-    if(!document.hidden&&document.querySelectorAll('.spider').length<3)spider();
+    if(!away()&&document.querySelectorAll('.spider').length<3)spider();
     setTimeout(crawl,5000+Math.random()*9000);
   }
   setTimeout(crawl,2500);
@@ -2183,7 +2191,7 @@ body{overflow-x:clip}
   function gg(){announce('GG WP')}
   var streak=0,lastKill=0,firstBlood=true,streakNames={2:'DOUBLE KILL',3:'TRIPLE KILL',4:'ULTRA KILL',5:'RAMPAGE!',7:'WICKED SICK',9:'GODLIKE',12:'BEYOND GODLIKE'};
   addEventListener('click',function(e){
-    if(e.target.closest&&e.target.closest('#roshan,#adhdBtn'))return;
+    if(e.target.closest&&e.target.closest('#roshan,#adhdBtn,#gtaBtn'))return;
     var now=Date.now();streak=now-lastKill<1300?streak+1:1;lastKill=now;
     if(firstBlood){firstBlood=false;announce('FIRST BLOOD')}
     else if(streakNames[streak]){announce(streakNames[streak]);if(streak===3)showTripleKill()}
@@ -2295,7 +2303,7 @@ body{overflow-x:clip}
     if(!on)return;
     announce('СДВГ РЕЖИМ');
     adhdTimer=setInterval(function(){
-      if(document.hidden)return;
+      if(away())return;
       var x=Math.random()*vw,y=Math.random()*vh;
       burst(x,y,14);damage(x,y);
       if(Math.random()<.15)spider();
@@ -2320,10 +2328,18 @@ body{overflow-x:clip}
     announce('ROSHAN HAS BEEN SLAIN');
     var cheese=Math.random()<.3;
     loot.aegis++;if(cheese)loot.cheese++;saveLoot();
-    toast(cheese?'Аегис и сыр твои. Азалина в ахуе':'Аегис твой. Pis`master в ахуе');
+    toast(cheese?'Аегис и сыр твои. В GTA VI это вторая жизнь и аптечка':'Аегис твой, Pis`master в ахуе. В GTA VI это вторая жизнь');
     roshanAt=respawnTime();tickRoshan();
   });
   tickRoshan();setInterval(tickRoshan,1000);
+
+  var gtaBtn=document.getElementById('gtaBtn');
+  gtaBtn.addEventListener('click',function(){
+    gtaBtn.disabled=true;
+    import('./js/gta.js').then(function(m){m.open({loot:loot,saveLoot:saveLoot})})
+      .catch(function(e){console.error(e);toast('GTA VI опять перенесли: видюха не тянет')})
+      .then(function(){gtaBtn.disabled=false});
+  });
 
   var cookie=document.getElementById('cookie');
   if(!stored('cookiesAccepted'))setTimeout(function(){cookie.hidden=false},3000);
