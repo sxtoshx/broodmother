@@ -113,6 +113,14 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   .media-placeholder{min-height:220px}
 }
 
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));translate:-50% 0;z-index:60;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:rgba(10,5,20,.9);color:var(--bone);border:1px solid var(--pink);box-shadow:0 0 24px rgba(255,79,184,.35);font-weight:600;text-align:center;animation:toastIn .25s ease-out}
+@keyframes toastIn{from{opacity:0;translate:-50% 12px}}
+.spider{position:fixed;left:0;top:0;z-index:50;padding:8px;border:0;background:none;font-size:34px;line-height:1;cursor:crosshair;-webkit-tap-highlight-color:transparent;filter:drop-shadow(0 3px 4px rgba(0,0,0,.7))}
+.spider span{display:block;animation:skitter .16s steps(2) infinite alternate}
+@keyframes skitter{from{rotate:-9deg}to{rotate:9deg}}
+.spider.dead{pointer-events:none}
+.spider.dead span{animation:splat .6s ease-out forwards}
+@keyframes splat{to{scale:2.4 .2;opacity:0}}
 </style>
 </head>
 <body>
@@ -593,6 +601,41 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
       pt.style.transform='perspective(800px) rotateX('+(e.clientY/innerHeight-.5)*-10+'deg) rotateY('+(e.clientX/innerWidth-.5)*10+'deg)';
     });
   }
+})();
+</script>
+<div class="toast" id="toast" role="status" hidden></div>
+<script>
+(function(){
+  var toastEl=document.getElementById('toast'),toastTimer;
+  function toast(text){
+    toastEl.textContent=text;toastEl.hidden=false;
+    clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastEl.hidden=true},2600);
+  }
+  function stored(key){try{return +localStorage.getItem(key)||0}catch(e){return 0}}
+  function store(key,value){try{localStorage.setItem(key,value)}catch(e){}}
+
+  var squashed=stored('squashed');
+  function spider(){
+    var w=innerWidth,h=innerHeight,leftward=Math.random()<.5;
+    var x0=leftward?w+10:-70,x1=leftward?-70:w+10,y0=Math.random()*h*.85,y1=Math.random()*h*.85;
+    var s=document.createElement('button');
+    s.type='button';s.className='spider';s.setAttribute('aria-label','Раздавить паука');
+    s.innerHTML='<span>🕷️</span>';
+    document.body.appendChild(s);
+    var run=s.animate([{transform:'translate('+x0+'px,'+y0+'px)'},{transform:'translate('+x1+'px,'+y1+'px)'}],{duration:6000+Math.random()*7000});
+    run.onfinish=function(){s.remove()};
+    s.addEventListener('click',function(){
+      run.pause();s.classList.add('dead');
+      squashed++;store('squashed',squashed);
+      toast('Раздавлено пауков: '+squashed);
+      setTimeout(function(){s.remove()},700);
+    });
+  }
+  function crawl(){
+    if(!document.hidden&&document.querySelectorAll('.spider').length<3)spider();
+    setTimeout(crawl,5000+Math.random()*9000);
+  }
+  setTimeout(crawl,2500);
 })();
 </script>
 </body>
