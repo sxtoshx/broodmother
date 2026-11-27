@@ -692,6 +692,7 @@ body{overflow-x:clip}
     var br=[];
     for(var k=0;k<3;k++){var s=pts[2+Math.floor(Math.random()*8)],b=[s.slice()],bx=s[0],by=s[1];for(var j=0;j<5;j++){bx+=(Math.random()-.5)*80;by+=Math.random()*60;b.push([bx,by])}br.push(b)}
     bolts.push({pts:pts,br:br,life:1,pink:Math.random()<.5});
+    if(Math.random()<.4)spatialThunder(Math.max(-1,Math.min(1,sx/W*2-1)),.65+Math.random()*.35);
   }
   function path(a){x.beginPath();x.moveTo(a[0][0],a[0][1]);for(var i=1;i<a.length;i++)x.lineTo(a[i][0],a[i][1]);x.stroke()}
 
@@ -704,7 +705,35 @@ body{overflow-x:clip}
       bytes.then(function(b){if(b)audioCtx.decodeAudioData(b,function(buf){thunderBuffers.push(buf)},function(){})});
     });
   }
-  function playThunder(){
+  var thunderReverb=null;
+  function skyReverb(){
+    var len=Math.floor(audioCtx.sampleRate*3.2),ir=audioCtx.createBuffer(2,len,audioCtx.sampleRate);
+    for(var ch=0;ch<2;ch++){var d=ir.getChannelData(ch);for(var i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6)}
+    var conv=audioCtx.createConvolver(),wet=audioCtx.createGain();
+    conv.buffer=ir;wet.gain.value=.55;conv.connect(wet);wet.connect(audioCtx.destination);
+    return conv;
+  }
+  function spatialThunder(pan,distance){
+    if(!audioCtx||!thunderBuffers.length||thunderVoices>=5)return;
+    if(!thunderReverb)thunderReverb=skyReverb();
+    var src=audioCtx.createBufferSource(),low=audioCtx.createBiquadFilter(),panner=audioCtx.createPanner(),dry=audioCtx.createGain(),send=audioCtx.createGain();
+    src.buffer=thunderBuffers[Math.floor(Math.random()*thunderBuffers.length)];
+    src.playbackRate.value=(.8+Math.random()*.3)*(1-distance*.15);
+    var start=audioCtx.currentTime+distance*.7,end=start+src.buffer.duration/src.playbackRate.value;
+    var x0=pan*7,z=-(2+distance*10),drift=(Math.random()<.5?-1:1)*(4+Math.random()*6);
+    low.type='lowpass';low.frequency.value=9000-distance*7800;
+    panner.panningModel='HRTF';panner.distanceModel='inverse';panner.refDistance=2;panner.rolloffFactor=.6;
+    if(panner.positionX){
+      panner.positionX.setValueAtTime(x0,start);panner.positionX.linearRampToValueAtTime(x0+drift,end);
+      panner.positionY.value=4;panner.positionZ.value=z;
+    }else panner.setPosition(x0,4,z);
+    dry.gain.value=1.5-distance*.7;send.gain.value=.3+distance*.6;
+    src.connect(low);low.connect(panner);panner.connect(dry);dry.connect(audioCtx.destination);
+    panner.connect(send);send.connect(thunderReverb);
+    thunderVoices++;src.onended=function(){thunderVoices--};
+    src.start(start);
+  }
+  function playThunder(pan,distance){
     try{
       var AC=window.AudioContext||window.webkitAudioContext;
       if(!AC)return;
@@ -722,17 +751,7 @@ body{overflow-x:clip}
       }
       if(audioCtx.state==='suspended')audioCtx.resume();
       var now=audioCtx.currentTime;
-      if(thunderBuffers.length){
-        if(thunderVoices>=4)return;
-        var sample=audioCtx.createBufferSource(),sampleGain=audioCtx.createGain();
-        sample.buffer=thunderBuffers[Math.floor(Math.random()*thunderBuffers.length)];
-        sample.playbackRate.value=.85+Math.random()*.3;
-        sampleGain.gain.value=.9;
-        sample.connect(sampleGain);sampleGain.connect(audioCtx.destination);
-        thunderVoices++;sample.onended=function(){thunderVoices--};
-        sample.start(now);
-        return;
-      }
+      if(thunderBuffers.length){spatialThunder(pan,distance);return}
       var noise=audioCtx.createBufferSource();
       noise.buffer=thunderNoise;
       var low=audioCtx.createBiquadFilter();
@@ -757,8 +776,8 @@ body{overflow-x:clip}
   }
 
   // Молнии по всему экрану при каждом клике
-  function clickLightning(){
-    playThunder();
+  function clickLightning(e){
+    playThunder(e&&e.clientX!=null?e.clientX/W*2-1:0,.15+Math.random()*.45);
     if(performance.now()-lastFlash>330){clickFlash=1;lastFlash=performance.now()}
     for(var q=0;q<4;q++){
       var sx=Math.random()*W, sy=-12;
