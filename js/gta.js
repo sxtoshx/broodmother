@@ -469,7 +469,9 @@ function create() {
     }
     const diff = wrap(Math.atan2(tx - c.pos.x, tz - c.pos.z) - c.heading);
     let gas = Math.abs(diff) > 1.3 && c.speed > 15 ? -.5 : 1, steer = clamp(diff * 2.2, -1, 1);
-    if (c.reverse > 0) { c.reverse -= dt; gas = -1; steer = -steer; }
+    const arrest = d < 16 && Math.abs(player.speed) < 4;
+    if (arrest) { gas = d > 8 ? (c.speed > 6 ? -1 : .4) : (c.speed > 1 ? -1 : 0); c.stuck = 0; }
+    else if (c.reverse > 0) { c.reverse -= dt; gas = -1; steer = -steer; }
     else if (Math.abs(c.speed) < 2 && (c.stuck += dt) > 1) { c.reverse = .9; c.stuck = 0; }
     else if (Math.abs(c.speed) >= 2) c.stuck = 0;
     drive(c, gas, steer, Math.abs(diff) > 1.8 && c.speed > 8, dt, top);
@@ -557,7 +559,7 @@ function create() {
     }
     for (let a = 0; a < cops.length; a++) for (let b = a + 1; b < cops.length; b++) bump(cops[a], cops[b]);
     if (now - lastKill > 8 && near > 35) heat = Math.max(0, heat - .22 * dt);
-    if (Math.abs(player.speed) < 2.5 && near < 7 && invuln <= 0) bust += dt; else bust = Math.max(0, bust - dt * 2);
+    if (Math.abs(player.speed) < 2.5 && near < 10 && invuln <= 0) bust += dt; else bust = Math.max(0, bust - dt * 2);
     if (bust > 2.2) die('bust');
   }
   function crowdStep(dt) {
@@ -622,7 +624,7 @@ function create() {
     const want = Math.ceil(heat - 1e-6);
     if (shown.stars !== want) { shown.stars = want; stars.forEach((s, k) => s.classList.toggle('on', k < want)); }
     wantedEl.classList.toggle('cool', want > 0 && now - lastKill > 8);
-    show('🪙 ' + (run.gold || 0), 'gold', goldEl);
+    show('💰 ' + (run.gold || 0), 'gold', goldEl);
     show(`🛡 ${site.loot.aegis} · 🧀 ${site.loot.cheese}`, 'loot', lootEl);
     const w = Math.round(hp) + '%';
     if (shown.hp !== w) { shown.hp = w; hpEl.style.width = w; }
@@ -698,6 +700,7 @@ function create() {
   addEventListener('keydown', e => { const k = KEYS[e.code]; if (k && driving()) { keys[k] = true; e.preventDefault(); } });
   addEventListener('keyup', e => { const k = KEYS[e.code]; if (k) { keys[k] = false; if (driving()) e.preventDefault(); } });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+  document.addEventListener('visibilitychange', () => { if (ac && opened) document.hidden ? ac.suspend() : ac.resume(); });
 
   return {
     show(s) {
@@ -740,8 +743,8 @@ body.gta{overflow:hidden}
 .g-pad button.held{background:rgba(255,79,184,.6)}
 .g-pad .g-gas{width:86px;height:86px;background:rgba(57,255,106,.25)}
 @media (hover:hover) and (pointer:fine){.g-pad{display:none}}
-.g-screen{position:absolute;inset:0;display:grid;place-items:center;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));background:radial-gradient(ellipse at center,rgba(18,8,38,.45),rgba(18,8,38,.88));text-align:center;overflow:auto}
-.g-screen>div{max-width:520px;display:grid;gap:12px;justify-items:center}
+.g-screen{position:absolute;inset:0;display:flex;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));background:radial-gradient(ellipse at center,rgba(18,8,38,.45),rgba(18,8,38,.88));text-align:center;overflow:auto}
+.g-screen>div{margin:auto;max-width:520px;display:grid;gap:12px;justify-items:center}
 .g-screen p{margin:0;color:#f4e9ff;max-width:44ch}
 .g-kicker.g-kicker{letter-spacing:.2em;text-transform:uppercase;font-size:12px;color:#ffd24a}
 .g-title{margin:0;font:900 clamp(3.2rem,17vw,6.5rem)/.9 Georgia,serif;color:#fff;text-shadow:0 0 30px var(--pink,#ff4fb8),0 6px 0 #000}
@@ -757,4 +760,5 @@ body.gta{overflow:hidden}
 @keyframes gAnn{0%{opacity:0;scale:2}12%{opacity:1;scale:1}75%{opacity:1}100%{opacity:0;scale:.95}}
 @keyframes gFloat{to{translate:-50% -170%;opacity:0}}
 @keyframes gBlink{50%{opacity:.2}}
+@media (max-height:520px){.g-screen>div{gap:8px}.g-title{font-size:3rem}.g-dead{font-size:2rem}.g-recap{grid-template-columns:1fr 1fr;column-gap:18px}}
 `;
