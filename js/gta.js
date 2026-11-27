@@ -24,13 +24,20 @@ const WEATHER = [
   { icon: '🌫️', name: 'Туман', t: [0, 8], fog: [12, 110], light: .8, grip: 8 }
 ];
 const WANTED = [['photo_pudge', 'Pudge'], ['photo_invoker', 'Invoker'], ['photo_monkey', 'Monkey King'], ['photo_brew', 'Брюмастер'], ['photo_pango', 'Пангольер'], ['photo_qop', 'Квопа'], ['photo_bat', 'Батрайдер'], ['photo_cm', 'Crystal Maiden']];
-const SHOPS = ['РАЗЛИВНОЕ', 'ЦВЕТЫ 24', 'СЕМЕЧКИ', 'АПТЕКА', 'ОПТИКА «ТРИАДА»', 'ВСЁ ПО 228'];
+const SHOPS = ['РАЗЛИВНОЕ', 'ЦВЕТЫ 24', 'СЕМЕЧКИ', 'ОПТИКА «ТРИАДА»', 'ВСЁ ПО 228', 'ПИВО 24'];
+const GUNS = {
+  pm: { name: 'Макаров', dmg: 34, rate: .32, range: 45, cone: .45, ammo: 24, price: 500, refill: 24 },
+  sg: { name: 'Обрез', dmg: 70, rate: .85, range: 20, cone: .7, ammo: 10, price: 1200, refill: 10, spread: 4 },
+  ak: { name: 'Калаш', dmg: 22, rate: .1, range: 55, cone: .35, ammo: 90, price: 2500, refill: 60 }
+};
 const GOAL = 13370;
 const SHOPDEF = {
   shawarma: { sign: 'ШАУРМА 24', color: '#ff4fb8', icon: '🌯', title: 'Шаурма 24', sub: 'Мы не знаем, что внутри. И ты не узнаешь' },
   tire: { sign: 'ШИНОМОНТАЖ', color: '#3a6cf4', icon: '🔧', title: 'Шиномонтаж «У Палыча»', sub: 'Поставим движок от комбайна, без вопросов' },
   crypto: { sign: 'КАЗИНО «КРИПТА»', color: '#1f8a5a', icon: '🎰', title: 'Казино «Крипта обмен»', sub: 'Курс бирки к рублю 1 к 1337. Ставь всё, Триада одобряет' },
   pawn: { sign: 'ЛОМБАРД', color: '#d4a017', icon: '🚗', title: 'Ломбард', sub: 'Тачки с историей. Историю не рассказываем' },
+  guns: { sign: 'ОХОТА И РЫБАЛКА', color: '#6b4f2a', icon: '🔫', title: 'Охота и рыбалка', sub: 'Лицензия? Какая лицензия. Ты же из Добрянки' },
+  pharmacy: { sign: 'АПТЕКА', color: '#1f9a6a', icon: '💊', title: 'Аптека «Здоровье Добрянки»', sub: 'Фармацевт смотрит поверх очков и уже всё понял' },
   mvd: { color: '#2a6bff', icon: '🚔', title: 'МВД Добрянки', sub: 'Дежурный жуёт беляш и смотрит на тебя как на прописку' }
 };
 
@@ -247,7 +254,7 @@ function city(scene) {
   const add = (mesh, x, y, z, ry = 0) => { mesh.position.set(x, y, z); mesh.rotation.y = ry; scene.add(mesh); return mesh; };
   const parked = [];
   const posters = WANTED.slice().sort(() => Math.random() - .5).slice(0, 6);
-  const special = { '0,0': 'gres', '3,2': 'mvd', '1,4': 'statue', '5,3': 'park', '1,1': 'shawarma', '4,4': 'tire', '2,5': 'crypto', '5,1': 'pawn' };
+  const special = { '0,0': 'gres', '3,2': 'mvd', '1,4': 'statue', '5,3': 'park', '1,1': 'shawarma', '4,4': 'tire', '2,5': 'crypto', '5,1': 'pawn', '3,0': 'guns', '4,2': 'pharmacy' };
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
     const cx = line(i) + CELL / 2, cz = line(j) + CELL / 2, B = CELL - ROAD, type = special[i + ',' + j];
     solid.add(BOX, '#8e8898', M(cx, .15, cz, 0, 0, 0, B, .3, B));
@@ -361,11 +368,11 @@ function create() {
   document.head.append(style);
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-job"></div><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" aria-hidden="true"></canvas><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" aria-hidden="true"></canvas><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
-  const weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
+  const gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
 
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, 1, .5, 1000);
   scene.fog = new THREE.Fog('#c9527f', 70, 320);
@@ -408,7 +415,7 @@ function create() {
     const mesh = new THREE.Mesh(spec.geo, mat), lights = [];
     mesh.add(new THREE.Mesh(shadowGeo, shadowMat)).children[0].position.y = .05;
     if (spec.cop) for (const k of [0, 1]) { const l = new THREE.Mesh(BOX, lightMats[k]); l.scale.set(.6, .22, .4); l.position.set(k ? .4 : -.4, 1.9, -.25); mesh.add(l); lights.push(l); }
-    return { spec, mesh, lights, r: 1.9, m: 1, pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0, stuck: 0, reverse: 0, wi: -1, wj: -1, pi: -1, pj: -1 };
+    return { spec, mesh, lights, r: 1.9, m: 1, hp: 100, gunCD: rand(1, 2), pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0, stuck: 0, reverse: 0, wi: -1, wj: -1, pi: -1, pj: -1 };
   };
   const cars = [], homes = [];
   const park = (spec, x, z, heading) => { const c = car(spec); c.home = [x, z, heading]; homes.push(c); scene.add(c.mesh); return c; };
@@ -463,6 +470,18 @@ function create() {
     flash = Math.max(0, flash - dt * 3);
     hemi.intensity = 1.8 * weather.light + flash * 4; sunLight.intensity = 2.6 * weather.light;
   }
+  const heroGun = new THREE.Mesh(new Batch().add(BOX, '#1a1a1a', M(0, -.75, .18, 0, 0, 0, .12, .2, .5)).geometry(), mat);
+  heroGun.visible = false; hero.arms[0].add(heroGun);
+  const tracers = [];
+  for (let i = 0; i < 12; i++) {
+    const line = new THREE.Line(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(new Float32Array(6), 3)), new THREE.LineBasicMaterial({ color: '#ffe9a0', fog: false }));
+    line.frustumCulled = false; line.visible = false; scene.add(line); tracers.push({ line, t: 0 });
+  }
+  function tracer(a, b, color) {
+    const tr = tracers.find(t => t.t <= 0) || tracers[0], p = tr.line.geometry.attributes.position;
+    p.setXYZ(0, a.x, a.y, a.z); p.setXYZ(1, b.x, b.y, b.z); p.needsUpdate = true;
+    tr.line.material.color.set(color); tr.line.visible = true; tr.t = .07;
+  }
   const heroShadow = new THREE.Mesh(new THREE.CircleGeometry(.7, 12).rotateX(-Math.PI / 2), shadowMat);
   heroShadow.position.y = .05; hero.mesh.add(heroShadow); hero.mesh.visible = false; scene.add(hero.mesh);
   let player = myCar;
@@ -482,8 +501,8 @@ function create() {
   let splatNext = 0;
 
   let site, state = 'title', opened = false, paused = [], last = 0, now = 0, hp = 100, heat = 0, bust = 0, invuln = 0, dyingT = 0, cause = '', shakeAmt = 0;
-  let radioAt = 0, lastHurt = 0, lastKill = -99, streak = 0, firstBlood = true, spawnCD = 0, hintUntil = 0, run = {}, doorNear = null, shopDoor = null, winT = 0;
-  const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set() }, shown = {};
+  let fireCD = 0, aimT = 0, radioAt = 0, lastHurt = 0, lastKill = -99, streak = 0, firstBlood = true, spawnCD = 0, hintUntil = 0, run = {}, doorNear = null, shopDoor = null, winT = 0;
+  const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set(), fire: new Set() }, shown = {};
   const touch = matchMedia('(pointer:coarse)').matches;
   const on = k => keys[k] || (held[k] ? held[k].size > 0 : false);
 
@@ -636,12 +655,7 @@ function create() {
     }
     const dx = player.pos.x - beat.pos.x, dz = player.pos.z - beat.pos.z, d = Math.hypot(dx, dz);
     if (heat <= 0 || d > 70) { beat.active = false; beat.mesh.visible = false; beat.cd = 6; return; }
-    if (!player.foot && d < 2.6 && Math.abs(player.speed) > 6) {
-      beat.active = false; beat.mesh.visible = false; beat.cd = 25;
-      spray(beat.pos, ['#2b3f6b', '#1e2f5a', '#c9a64a'], 16, 8); floatText('+322', beat.pos);
-      run.gold += 322; heat = Math.min(5, heat + 1); lastKill = now; ann('УЧАСТКОВЫЙ В БОЛЬНИЦЕ');
-      noise(.25, 700, .5, 'bandpass'); return;
-    }
+    if (!player.foot && d < 2.6 && Math.abs(player.speed) > 6) { beatDown(); return; }
     let tx = player.pos.x, tz = player.pos.z;
     if (clear(beat.pos, player.pos)) beat.wi = -1;
     else {
@@ -759,8 +773,8 @@ function create() {
     setTimeout(() => { if (state === 'over' && opened) screen(overHtml(record)); }, 1300);
   }
   function respawn() {
-    const lost = Math.floor(run.gold * (cause === 'bust' ? .2 : .3)), m = doors.find(d => d.kind === 'mvd');
-    run.gold -= lost; run.deaths++;
+    const lost = Math.floor(run.gold * (cause === 'bust' ? .2 : run.bahily ? .15 : .3)), m = doors.find(d => d.kind === 'mvd');
+    run.gold -= lost; run.deaths++; if (cause !== 'bust') run.bahily = false;
     state = 'play'; screen(''); dlg.classList.remove('dying'); dlg.focus();
     hp = 100; heat = 0; bust = 0; invuln = 2.5; lastHurt = now;
     while (cops.length) dropCop(0);
@@ -777,6 +791,43 @@ function create() {
     for (let k = cops.length - 1; k >= 0; k--) if (cops[k].pos.distanceTo(player.pos) < 30) dropCop(k);
     spray(player.pos, ['#ffd24a', '#fff3a0', '#ff4fb8'], 30, 10);
     hint('Аегис потрачен. Менты разбежались', 2.5);
+  }
+  function blowCop(c) {
+    const k = cops.indexOf(c);
+    if (k < 0) return;
+    spray(c.pos, ['#ff8a2a', '#ffd24a', '#333', '#fff'], 40, 13); noise(1.2, 140, .9, 'lowpass');
+    dropCop(k); heat = Math.min(5, heat + 1); lastKill = now; shakeAmt = 1.2; ann('МВД В ЯРОСТИ');
+  }
+  function beatDown() {
+    beat.active = false; beat.mesh.visible = false; beat.cd = 25;
+    spray(beat.pos, ['#2b3f6b', '#1e2f5a', '#c9a64a'], 16, 8); floatText('+322', beat.pos);
+    run.gold += 322; heat = Math.min(5, heat + 1); lastKill = now; ann('УЧАСТКОВЫЙ В БОЛЬНИЦЕ');
+    noise(.25, 700, .5, 'bandpass');
+  }
+  function fire() {
+    const g = GUNS[run.gun];
+    fireCD = g.rate;
+    if (!run.guns[run.gun]) { hint('Патроны кончились — Охота и рыбалка 🔫', 1.5); noise(.05, 3000, .2, 'highpass'); return; }
+    run.guns[run.gun]--; aimT = .35;
+    const h = player, from = V(h.pos.x + Math.sin(h.heading) * .9 - Math.cos(h.heading) * .5, h.y + 1.55, h.pos.z + Math.cos(h.heading) * .9 + Math.sin(h.heading) * .5), found = [];
+    const look = (e, kind) => {
+      const dx = e.pos.x - h.pos.x, dz = e.pos.z - h.pos.z, d = Math.hypot(dx, dz), a = Math.abs(wrap(Math.atan2(dx, dz) - h.heading));
+      if (d < g.range && a < g.cone && clear(h.pos, e.pos)) found.push({ e, kind, score: d + a * 40 });
+    };
+    for (const c of crowd) if (!c.dead) look(c, 'crowd');
+    for (const c of cops) look(c, 'cop');
+    if (beat.active) look(beat, 'beat');
+    found.sort((a, b) => a.score - b.score);
+    const hits = found.slice(0, g.spread || 1);
+    if (!hits.length) tracer(from, tmp.set(h.pos.x + Math.sin(h.heading) * g.range, from.y, h.pos.z + Math.cos(h.heading) * g.range), '#ffe9a0');
+    for (const { e, kind } of hits) {
+      tracer(from, tmp.set(e.pos.x, (e.y || 0) + 1, e.pos.z), '#ffe9a0');
+      if (kind === 'crowd') squash(e);
+      else if (kind === 'beat') beatDown();
+      else { e.hp -= g.dmg; spray(e.pos, ['#ffb347', '#fff3a0'], 5, 5); if (e.hp <= 0) blowCop(e); }
+    }
+    noise(run.gun === 'sg' ? .35 : .14, run.gun === 'sg' ? 900 : 1600, run.gun === 'sg' ? .9 : .6, 'bandpass');
+    if (heat < .6) { heat = .6; lastKill = now; }
   }
   function squash(s) {
     const courier = s.k.kind === 'courier', gold = courier ? 1337 : pick([228, 322, 69, 420, 1337, 228]);
@@ -803,7 +854,8 @@ function create() {
     player = myCar; hero.mesh.visible = false;
     beat.active = false; beat.mesh.visible = false; beat.cd = 0;
     hp = 100; heat = 0; bust = 0; invuln = 0; streak = 0; lastKill = -99; firstBlood = true; spawnCD = 0; shakeAmt = 0;
-    run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0, deaths: 0 };
+    run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0, deaths: 0, guns: {}, gun: null, drunk: 0, energy: 0, bahily: false };
+    heroGun.visible = false;
     stamina = 1; setWeather();
     for (const d of doors) d.inside = false;
     for (const s of crowd) { s.pos.copy(spot(25)); s.dead = false; }
@@ -815,11 +867,16 @@ function create() {
   function update(dt) {
     run.time += dt; invuln = Math.max(0, invuln - dt);
     if (now - lastHurt > 6 && hp < 100) hp = Math.min(100, hp + 4 * dt);
-    const steer = (on('left') ? 1 : 0) - (on('right') ? 1 : 0);
+    run.drunk = Math.max(0, run.drunk - dt); run.energy = Math.max(0, run.energy - dt);
+    const steer = clamp((on('left') ? 1 : 0) - (on('right') ? 1 : 0) + (run.drunk ? Math.sin(now * 2.1) * .45 : 0), -1, 1);
     if (player.foot) {
       const sprint = (on('sprint') || (touch && on('down'))) && stamina > .03;
-      stamina = clamp(stamina + (sprint ? -.22 : .16) * dt, 0, 1);
-      walk(player, on('up') || sprint ? 1 : !touch && on('down') ? -1 : 0, steer, dt, sprint ? 11 : 7);
+      stamina = clamp(stamina + (sprint && !run.energy ? -.22 : .16) * dt, 0, 1);
+      walk(player, on('up') || sprint ? 1 : !touch && on('down') ? -1 : 0, steer, dt, sprint ? (run.energy ? 13 : 11) : 7);
+      fireCD -= dt; aimT -= dt;
+      heroGun.visible = !!run.gun;
+      if (run.gun && (on('hand') || on('fire') || on('mouse')) && fireCD <= 0) fire();
+      if (aimT > 0) hero.arms[0].rotation.x = -1.5;
     } else {
       const gas = (on('up') ? 1 : 0) - (on('down') ? 1 : 0), before = Math.abs(player.speed), imp = drive(player, gas, steer, on('hand') || on('sprint'), dt, player.spec.top + run.engine * 4);
       if (imp > 6) { noise(.35, 500, Math.min(.8, imp / 20), 'lowpass'); spray(tmp.copy(player.pos).addScaledVector(fwd, 2), ['#ffb347', '#fff3a0'], 6, 5); }
@@ -853,6 +910,15 @@ function create() {
       if (hit > 5) { hurt((hit - 5) * 1.1 + 2, 'cop'); noise(.3, 600, Math.min(.8, hit / 15), 'lowpass'); }
     }
     for (let a = 0; a < cops.length; a++) for (let b = a + 1; b < cops.length; b++) bump(cops[a], cops[b]);
+    if (heat >= 3) for (const c of cops) {
+      if ((c.gunCD -= dt) > 0) continue;
+      c.gunCD = rand(1, 1.6);
+      if (c.pos.distanceTo(player.pos) > 40 || !clear(c.pos, player.pos)) continue;
+      const hit = Math.random() < .35;
+      tracer(tmp2.set(c.pos.x, c.y + 1.6, c.pos.z), tmp.set(player.pos.x + (hit ? 0 : rand(-2, 2)), player.y + 1.2, player.pos.z + (hit ? 0 : rand(-2, 2))), '#ff5a3a');
+      noise(.12, 1400, .35, 'bandpass');
+      if (hit) hurt(player.foot ? 9 : 6, 'cop');
+    }
     const grabbed = beatStep(dt); jobStep();
     if (now - lastKill > 8 && near > 35) heat = Math.max(0, heat - (player.spec.chill ? .6 : .3) * dt);
     if (grabbed || (Math.abs(player.speed) < 2.5 && near < 10 && invuln <= 0)) bust += dt * (grabbed ? 1.4 : 1); else bust = Math.max(0, bust - dt * 2);
@@ -915,6 +981,7 @@ function create() {
       p.mesh.scale.setScalar(5 + p.phase * 16);
     }
     const flash = now * 6 % 2 < 1;
+    for (const tr of tracers) if (tr.t > 0 && (tr.t -= dt) <= 0) tr.line.visible = false;
     for (const c of cops.concat(cars)) {
       if (c.lights.length) { c.lights[0].visible = flash; c.lights[1].visible = !flash; }
       if (c !== player) place(c, dt);
@@ -933,6 +1000,7 @@ function create() {
     if (shakeAmt > .01) { camera.position.x += rand(-1, 1) * shakeAmt; camera.position.y += rand(-1, 1) * shakeAmt * .5; shakeAmt *= Math.exp(-7 * dt); }
     tmp2.copy(player.pos).addScaledVector(fwd, foot ? 3 : 6); tmp2.y = player.y + (foot ? 1.6 : 1.2);
     camera.lookAt(tmp2);
+    if (run.drunk) { camera.rotation.z += Math.sin(now * 1.3) * .09; camera.position.y += Math.sin(now * 1.7) * .25; }
   }
   function show(text, key, el) { if (shown[key] !== text) { shown[key] = text; el.textContent = text; } }
   function drawHud() {
@@ -940,12 +1008,13 @@ function create() {
     if (shown.stars !== want) { shown.stars = want; stars.forEach((s, k) => s.classList.toggle('on', k < want)); }
     wantedEl.classList.toggle('cool', want > 0 && now - lastKill > 8);
     show(`💰 ${run.gold || 0} / ${GOAL}`, 'gold', goldEl);
-    show(`🛡 ${site.loot.aegis} · 🧀 ${site.loot.cheese}`, 'loot', lootEl);
+    show(`🛡 ${site.loot.aegis} · 🧀 ${site.loot.cheese}${run.drunk ? ' · 🥴' : ''}${run.energy ? ' · ⚡' : ''}`, 'loot', lootEl);
+    show(run.gun ? `🔫 ${GUNS[run.gun].name} · ${run.guns[run.gun]}${Object.keys(run.guns).length > 1 ? ' ⇄' : ''}` : '', 'gun', gunEl);
     const w = Math.round(hp) + '%';
     if (shown.hp !== w) { shown.hp = w; hpEl.style.width = w; }
     const near = state === 'play' && player.foot ? nearestCar() : null;
     const crew = state === 'play' ? nearCrew() : null;
-    show(crew ? 'БАЗАР' : player.foot ? (near ? 'СЕСТЬ' : '—') : 'ВЫЙТИ', 'act', actEl);
+    show(crew ? 'БАЗАР' : player.foot ? (near ? 'СЕСТЬ' : run.gun ? 'ОГОНЬ' : '—') : 'ВЫЙТИ', 'act', actEl);
     const j = run.job;
     show(j ? `🎯 ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
     radio.hidden = !(state === 'play' && !player.foot);
@@ -1029,6 +1098,18 @@ function create() {
         run.gold += bet * 2; return `Бирка выросла! +${bet}`;
       }
     }));
+    if (kind === 'guns') return [
+      ...Object.entries(GUNS).map(([key, g]) => ({ name: g.name, note: run.guns[key] !== undefined ? `уже есть, патронов ${run.guns[key]}` : `${key === 'sg' ? 'косит пачку пауков разом' : key === 'ak' ? 'очередями, как в девяностые' : 'классика участкового'}, ${g.ammo} патронов`, price: g.price, off: run.guns[key] !== undefined, buy: () => { run.guns[key] = g.ammo; run.gun = key; hint(touch ? 'Пешком: круглая кнопка — огонь, тап по стволу — сменить' : 'Пробел или клик — огонь, Q — сменить ствол', 3); return `${g.name} твой. Не свети на районе`; } })),
+      { name: 'Патроны', note: run.gun ? `к стволу «${GUNS[run.gun].name}»` : 'сначала купи ствол', price: 150, off: !run.gun, buy: () => { run.guns[run.gun] += GUNS[run.gun].refill; return 'Насыпали в пакет из Пятёры'; } },
+      { name: 'Удочка', note: 'в Каме ничего не ловится, но выглядишь солидно', price: 228, buy: () => 'Удочка в багажнике. Рыба в Каме смеётся' }
+    ];
+    if (kind === 'pharmacy') return [
+      { name: 'Аптечка', note: 'полное здоровье, без кошек', price: 300, buy: () => { hp = 100; return 'Забинтовали. Как новый'; } },
+      { name: 'Боярышник', note: '30 секунд всё плывёт, зато смелый', price: 69, buy: () => { run.drunk = 30; return 'Местный классик. Земля качается'; } },
+      { name: 'Энергетик «Триада»', note: 'минуту бегаешь без устали и быстрее', price: 150, buy: () => { run.energy = 60; stamina = 1; return 'Сердце стучит как саб в девятке'; } },
+      { name: 'Активированный уголь', note: 'лечит от боярышника. От МВД не лечит', price: 50, buy: () => { run.drunk = 0; return 'Протрезвел. Обидно'; } },
+      { name: 'Бахилы', note: 'в ЦРБ после смерти заберут вдвое меньше', price: 15, off: run.bahily, buy: () => { run.bahily = true; return 'Бахилы надеты. ЦРБ уважает'; } }
+    ];
     if (kind === 'pawn') return [['priora', 'Белая приора', 1500, 'скорость 38, гнётся от взгляда'], ['cart', 'Телега Батрайдера', 2280, 'медленная, но урон в 2 раза меньше'], ['uaz', 'Списанный УАЗ МВД', 3220, 'менты думают, что свой: розыск спадает в 2 раза быстрее']].map(([key, name, price, note]) => ({
       name, note, price, buy: () => {
         leaveShop();
@@ -1099,7 +1180,7 @@ function create() {
     mx.restore();
   }
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль, справа газ и тормоз (пешком — бег), круглая кнопка сверху — выйти из тачки или угнать чужую.' : 'WASD или стрелки, пробел — ручник, Shift — бег, F — выйти из тачки или угнать чужую, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 🚗 и казино 🎰 на карте, заходить пешком. Триада 🗣️ даёт работу.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль, справа газ и тормоз (пешком — бег), круглая кнопка сверху — выйти из тачки или угнать чужую.' : 'WASD или стрелки, пробел — ручник, Shift — бег, F — выйти из тачки или угнать чужую, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 🚗 💊 🔫 и казино 🎰 на карте, заходить пешком. Триада 🗣️ даёт работу.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
     return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b> / ${GOAL}${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${'🚨'.repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
@@ -1143,16 +1224,24 @@ function create() {
     const b = e.target.closest('button');
     if (!b) return;
     e.preventDefault();
-    if (b.hasAttribute('data-act')) { act(); return; }
+    if (b.hasAttribute('data-act')) {
+      if (state === 'play' && player.foot && run.gun && !nearestCar() && !nearCrew()) { held.fire.add(e.pointerId); b.classList.add('held'); } else act();
+      return;
+    }
     held[b.dataset.k].add(e.pointerId); b.classList.add('held');
   });
-  const release = e => { for (const k in held) held[k].delete(e.pointerId); pad.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('held', held[b.dataset.k].size > 0)); };
+  const release = e => { for (const k in held) held[k].delete(e.pointerId); pad.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('held', held[b.dataset.k].size > 0)); actEl.classList.toggle('held', held.fire.size > 0); };
+  const switchGun = () => { const own = Object.keys(run.guns); if (own.length) run.gun = own[(own.indexOf(run.gun) + 1) % own.length]; };
+  gunEl.addEventListener('click', switchGun);
+  dlg.firstElementChild.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) keys.mouse = true; });
+  dlg.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') keys.mouse = false; });
   for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEventListener(t, release);
   pad.addEventListener('contextmenu', e => e.preventDefault());
   const KEYS = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'hand', ShiftLeft: 'sprint', ShiftRight: 'sprint' };
   const driving = () => opened && (state === 'play' || state === 'dying');
   addEventListener('keydown', e => {
     if ((e.code === 'KeyF' || e.code === 'KeyE') && driving()) { e.preventDefault(); if (!e.repeat) act(); return; }
+    if (e.code === 'KeyQ' && driving()) { e.preventDefault(); if (!e.repeat) switchGun(); return; }
     const k = KEYS[e.code];
     if (k && driving()) { keys[k] = true; e.preventDefault(); }
   });
@@ -1197,6 +1286,8 @@ body.gta{overflow:hidden}
 .g-stam{width:150px;height:5px;background:rgba(0,0,0,.5)}
 .g-stam i{display:block;height:100%;background:#8fd0ff}
 .g-weather{font-size:14px;font-weight:800}
+.g-gun{pointer-events:auto;padding:4px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.3);background:rgba(0,0,0,.45);color:#fff;font:800 14px system-ui;cursor:pointer}
+.g-gun:empty{display:none}
 @media (hover:hover) and (pointer:fine){.g-radio{bottom:14px}.g-hint{bottom:56px}}
 @keyframes gRadio{from{opacity:0;translate:-50% 8px}}
 .g-ann{position:absolute;left:12px;right:12px;top:24%;text-align:center;font:900 clamp(1.8rem,7.5vw,4.5rem)/1 Georgia,serif;color:var(--pink,#ff4fb8);text-shadow:0 0 30px var(--pink,#ff4fb8),0 4px 0 #000;opacity:0}
