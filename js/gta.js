@@ -39,6 +39,7 @@ const SHOPDEF = {
   guns: { sign: 'ОХОТА И РЫБАЛКА', color: '#6b4f2a', icon: '🔫', title: 'Охота и рыбалка', sub: 'Лицензия? Какая лицензия. Ты же из Добрянки' },
   pharmacy: { sign: 'АПТЕКА', color: '#1f9a6a', icon: '💊', title: 'Аптека «Здоровье Добрянки»', sub: 'Фармацевт смотрит поверх очков и уже всё понял' },
   strip: { sign: 'СТРИПУХА «ПАУТИНА»', color: '#ff2fa8', icon: '💃', title: 'Стрипуха «Паутина»', sub: 'Бруда на шесте, Пудж на подтанцовке. Руками не трогать, только золото' },
+  race: { color: '#ffffff', icon: '🏁', title: 'Гран-при Добрянки', sub: '10 экипажей МВД против тебя. Правила? Какие правила' },
   mvd: { color: '#2a6bff', icon: '🚔', title: 'МВД Добрянки', sub: 'Дежурный жуёт беляш и смотрит на тебя как на прописку' }
 };
 
@@ -231,6 +232,22 @@ function pudgeGeo() {
   b.add(BOX, '#7a7a80', M(1.5, 3.4, .2, 0, 0, .4, .12, .6, .12));
   return b.geometry();
 }
+function sportGeo(body, stripe) {
+  const b = new Batch();
+  b.add(BOX, body, M(0, .62, 0, 0, 0, 0, 2.3, .5, 4.7));
+  b.add(BOX, body, M(0, .86, 1.3, -.12, 0, 0, 2.2, .22, 1.9));
+  b.add(BOX, '#141420', M(0, 1.08, -.35, 0, 0, 0, 1.8, .46, 1.7));
+  b.add(BOX, stripe, M(0, 1.33, -.35, 0, 0, 0, .45, .02, 1.7));
+  b.add(BOX, stripe, M(0, .88, .3, 0, 0, 0, .45, .02, 4.3));
+  for (const sx of [-1, 1]) {
+    for (const sz of [-1, 1]) b.add(CYL, '#111', M(sx * 1.12, .46, sz * 1.5, 0, 0, Math.PI / 2, .96, .38, .96));
+    b.add(BOX, '#222', M(sx * .7, 1.2, -2.1, 0, 0, 0, .1, .5, .1));
+    b.add(BOX, '#fff6b0', M(sx * .72, .74, 2.36, 0, 0, 0, .5, .14, .06));
+    b.add(BOX, '#ff2030', M(sx * .72, .78, -2.36, 0, 0, 0, .5, .14, .06));
+  }
+  b.add(BOX, body, M(0, 1.48, -2.1, 0, 0, 0, 2.2, .08, .55));
+  return b.geometry();
+}
 function courierGeo() {
   const b = new Batch();
   b.add(BOX, '#8a6a4a', M(0, 1.2, 0, 0, 0, 0, .9, .8, 1.7));
@@ -381,11 +398,11 @@ function create() {
   document.head.append(style);
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" aria-hidden="true"></canvas><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">✕</button><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${'<span>🚨</span>'.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" aria-hidden="true"></canvas><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
-  const gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
+  const raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
 
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, 1, .5, 1000);
   scene.fog = new THREE.Fog('#c9527f', 70, 320);
@@ -421,6 +438,8 @@ function create() {
     cop: { name: 'тачку МВД', geo: carGeo('#f4f4f4', '#1e4fa3'), top: 34, armor: .8, cop: true },
     civ: ['#3a6cf4', '#e8e8e8', '#1f8a5a', '#d4b24a', '#5a2a6e'].map(c => ({ name: 'чужую тачку', geo: carGeo(c), top: 30, armor: 1 })),
     priora: { name: 'белую приору', geo: carGeo('#f2f2f2', '#c9c9c9'), top: 38, armor: 1.1 },
+    sport: { name: 'спорткар «Бруда GT»', geo: sportGeo('#ff2fa8', '#ffffff'), top: 46, armor: 1, grip: 3 },
+    sport2: { name: 'спорткар «Pis-мастер RS»', geo: sportGeo('#39d353', '#111111'), top: 44, armor: 1, grip: 3 },
     cart: { name: 'телегу Батрайдера', geo: cartGeo(), top: 30, armor: .5 },
     uaz: { name: 'УАЗ МВД', geo: uazGeo(), top: 30, armor: .7, chill: true }
   };
@@ -433,6 +452,7 @@ function create() {
   const cars = [], homes = [];
   const park = (spec, x, z, heading) => { const c = car(spec); c.home = [x, z, heading]; homes.push(c); scene.add(c.mesh); return c; };
   const myCar = park(specs.nine, 0, 0, 0);
+  park(specs.sport2, line(1) + 4.6, line(4) + 10, 0);
   for (const [x, z] of world.parked) park(specs.cop, x, z, 0);
   for (let k = 0; k < 7; k++) { const side = pick([-1, 1]); park(pick(specs.civ), line(Math.floor(rand(0, N + 1))) + side * 4.6, line(Math.floor(rand(0, N))) + CELL / 2 + rand(-12, 12), side > 0 ? 0 : Math.PI); }
   const hero = Object.assign(person(mat, { top: '#ff4fb8', stripe: '#ffffff', skin: '#e8b894', hat: '#151515', legs: '#22222e' }), { spec: { name: 'ты', armor: 1 }, foot: true, r: .6, m: .15, t: 0, pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0 });
@@ -567,6 +587,107 @@ function create() {
     scene.add(new THREE.Mesh(b.geometry(), mat));
     rooms[kind] = { kind, ox, oz, rings, anim, door: doors.find(d => d.kind === kind) };
   });
+  const TR = { ox: 0, oz: 3000, halfW: 9, NS: 640, laps: 2 };
+  const trackCurve = new THREE.CatmullRomCurve3([[0, -200], [180, -220], [270, -120], [220, 20], [300, 140], [200, 250], [40, 200], [-60, 270], [-230, 210], [-270, 40], [-180, -80], [-210, -200], [-90, -250]].map(([x, z]) => V(TR.ox + x, 0, TR.oz + z)), true, 'centripetal');
+  const tp = trackCurve.getSpacedPoints(TR.NS).slice(0, TR.NS), tn = tp.map((p, i) => { const a = tp[(i + TR.NS - 1) % TR.NS], b = tp[(i + 1) % TR.NS], dx = b.x - a.x, dz = b.z - a.z, l = Math.hypot(dx, dz); return V(dz / l, 0, -dx / l); });
+  {
+    const strip = (half, y, colorAt) => {
+      const pos = [], col = [], idx = [];
+      for (let i = 0; i <= TR.NS; i++) {
+        const p = tp[i % TR.NS], n = tn[i % TR.NS], c = new THREE.Color(colorAt(i));
+        pos.push(p.x + n.x * half, y, p.z + n.z * half, p.x - n.x * half, y, p.z - n.z * half);
+        col.push(c.r, c.g, c.b, c.r, c.g, c.b);
+        if (i < TR.NS) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
+      }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); g.setIndex(idx); g.computeVertexNormals();
+      scene.add(new THREE.Mesh(g, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide })));
+    };
+    strip(TR.halfW + 1.4, .02, i => Math.floor(i / 3) % 2 ? '#e8e8e8' : '#c0392b');
+    strip(TR.halfW, .04, i => i < 3 ? (i % 2 ? '#fff' : '#111') : '#34303d');
+    const grass = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshLambertMaterial({ color: '#2e4728' }));
+    grass.rotation.x = -Math.PI / 2; grass.position.set(TR.ox, -.02, TR.oz); scene.add(grass);
+    const tb = new Batch(), h0 = Math.atan2(tp[1].x - tp[0].x, tp[1].z - tp[0].z);
+    for (let k = -3; k <= 3; k++) { const i = (k * 14 + TR.NS) % TR.NS, p = tp[i], n = tn[i]; tb.add(BOX, pick(['#5a5a6a', '#6a5a7a']), M(p.x + n.x * 20, 2.5, p.z + n.z * 20, 0, Math.atan2(n.x, n.z), 0, 14, 5, 6)); }
+    for (const s of [-1, 1]) tb.add(BOX, '#d0d0d0', M(tp[0].x + tn[0].x * s * (TR.halfW + 2), 4, tp[0].z + tn[0].z * s * (TR.halfW + 2), 0, 0, 0, .6, 8, .6));
+    for (let k = 0; k < 160; k++) { const i = Math.floor(rand(0, TR.NS)), p = tp[i], n = tn[i], d = rand(22, 60) * pick([-1, 1]); tb.add(ICO, pick(['#4f8a3a', '#3f7a3a']), M(p.x + n.x * d, 4, p.z + n.z * d, 0, rand(0, 3), 0, 4, 6, 4)); }
+    scene.add(new THREE.Mesh(tb.geometry(), mat));
+    const banner = label('ГРАН-ПРИ ДОБРЯНКИ · МВД', 2 * TR.halfW + 4, 2.2, '#c0392b', '#fff');
+    banner.material.side = THREE.DoubleSide; banner.position.set(tp[0].x, 7.5, tp[0].z); banner.rotation.y = h0; scene.add(banner);
+  }
+  const raceGate = { kind: 'race', x: line(N) - 3.5, z: 4, inside: false, ring: ring('#ffffff'), icon: iconSprite('🏁') };
+  raceGate.ring.position.set(raceGate.x, .5, raceGate.z); raceGate.ring.scale.set(2.2, 1, 2.2); raceGate.icon.position.set(raceGate.x, 5, raceGate.z); raceGate.icon.scale.set(4, 4, 1);
+  let race = null;
+  function trackKeep(c, full) {
+    let best = c.ti || 0, bd = Infinity;
+    const span = full ? TR.NS : 14;
+    for (let k = -span; k <= span; k++) { const i = ((full ? 0 : c.ti) + k + TR.NS * 2) % TR.NS, d = (tp[i].x - c.pos.x) ** 2 + (tp[i].z - c.pos.z) ** 2; if (d < bd) { bd = d; best = i; } }
+    if (!full) {
+      if (c.ti > TR.NS * .9 && best < TR.NS * .1 && c.half) { c.lap++; c.half = false; if (c.lap >= TR.laps && !race.finish.includes(c)) race.finish.push(c); }
+      if (best > TR.NS * .45 && best < TR.NS * .55) c.half = true;
+    }
+    c.ti = best;
+    const p = tp[best], n = tn[best], off = (c.pos.x - p.x) * n.x + (c.pos.z - p.z) * n.z, lim = TR.halfW - .4;
+    if (Math.abs(off) > lim) {
+      const push = off - Math.sign(off) * lim, vn = c.vel.x * n.x + c.vel.z * n.z;
+      c.pos.x -= n.x * push; c.pos.z -= n.z * push;
+      if (vn * Math.sign(off) > 0) { c.vel.x -= n.x * vn * 1.4; c.vel.z -= n.z * vn * 1.4; c.speed *= .96; }
+    }
+  }
+  function startRace() {
+    leaveShop();
+    const rc = car(specs.sport), grid = [];
+    for (let k = 0; k < 11; k++) grid.push(k);
+    const myslot = 6;
+    race = { cars: [], finish: [], goAt: run.time + 3.4, start: run.time + 3.4, prev: player, cd: 4, car: rc };
+    grid.forEach(k => {
+      const c = k === myslot ? rc : car(specs.cop), row = Math.floor(k / 2), i = (TR.NS - 6 - row * 4) % TR.NS, n = tn[i], side = k % 2 ? -3.4 : 3.4;
+      c.pos.set(tp[i].x + n.x * side, 0, tp[i].z + n.z * side);
+      c.heading = Math.atan2(tp[(i + 1) % TR.NS].x - tp[i].x, tp[(i + 1) % TR.NS].z - tp[i].z);
+      c.speed = 0; c.vel.set(0, 0, 0); c.y = 0; c.lap = -1; c.half = true; c.ti = i; c.lane = rand(-4, 4); c.raceTop = rand(36, 43); c.ram = k % 4 === 1;
+      if (c !== rc) scene.add(c.mesh); else scene.add(rc.mesh);
+      race.cars.push(c); place(c, 1);
+    });
+    if (player.foot) hero.mesh.visible = false;
+    player = rc; zone = 'race'; chase(0, true);
+  }
+  function endRace(rank) {
+    const rc = race.car;
+    for (const c of race.cars) if (c !== rc) scene.remove(c.mesh);
+    zone = 'city';
+    rc.pos.set(raceGate.x - 6, 0, raceGate.z); rc.heading = -Math.PI / 2; rc.speed = 0; rc.vel.set(0, 0, 0); rc.y = 0; rc.lap = 0;
+    if (rank === 1) { cars.push(rc); player = rc; place(rc, 1); run.gold += 3000; ann('ПОБЕДА', 'gold'); hint('+3000 и спорткар «Бруда GT» твой', 3); }
+    else {
+      scene.remove(rc.mesh);
+      hero.pos.set(raceGate.x - 6, 0, raceGate.z); hero.heading = -Math.PI / 2; hero.y = 0; hero.mesh.visible = true; player = hero; place(hero, 1);
+      if (rank && rank <= 3) { run.gold += 1000; ann(`${rank} МЕСТО`, 'gold'); hint('+1000 за подиум. Спорткар МВД забрало обратно', 3); }
+      else hint(rank ? `${rank} место из 11. Спорткар МВД забрало обратно` : 'Сдался. МВД забрало спорткар', 3);
+    }
+    raceGate.inside = true; race = null; chase(0, true);
+  }
+  function raceStep(dt) {
+    const go = run.time >= race.goAt, left = Math.ceil(race.goAt - run.time);
+    if (!go && left < race.cd) { race.cd = left; ann(left > 0 ? String(left) : 'GO', left > 0 ? '' : 'gold'); noise(.12, left > 0 ? 900 : 1800, .4, 'bandpass'); }
+    if (go && race.cd > 0) { race.cd = 0; ann('GO', 'gold'); }
+    for (const c of race.cars) {
+      if (c !== player) {
+        if (!go) { c.speed = 0; c.vel.set(0, 0, 0); }
+        else {
+          const ahead = tp[(c.ti + 12) % TR.NS], n = tn[(c.ti + 12) % TR.NS];
+          let tx = ahead.x + n.x * c.lane, tz = ahead.z + n.z * c.lane;
+          if (c.ram && c.pos.distanceTo(player.pos) < 16) { tx = player.pos.x; tz = player.pos.z; }
+          const diff = wrap(Math.atan2(tx - c.pos.x, tz - c.pos.z) - c.heading);
+          drive(c, Math.abs(diff) > .35 && c.speed > 24 ? -.4 : 1, clamp(diff * 2.6, -1, 1), false, dt, c.raceTop);
+        }
+      } else if (!go) { c.speed = 0; c.vel.set(0, 0, 0); }
+      trackKeep(c);
+    }
+    for (let a = 0; a < race.cars.length; a++) for (let b = a + 1; b < race.cars.length; b++) bump(race.cars[a], race.cars[b]);
+    const flash = now * 6 % 2 < 1;
+    for (const c of race.cars) { if (c.lights.length) { c.lights[0].visible = flash; c.lights[1].visible = !flash; } if (c !== player) place(c, dt); }
+    if (race.finish.includes(race.car)) endRace(race.finish.indexOf(race.car) + 1);
+  }
+  const racePlace = () => 1 + race.cars.filter(c => c !== race.car && c.lap * TR.NS + c.ti > race.car.lap * TR.NS + race.car.ti).length;
   let zone = 'city', room = null, stripHype = 0, beatAt = 0, spinning = false;
   function enterRoom(d) {
     room = rooms[d.kind]; zone = 'inside';
@@ -780,6 +901,7 @@ function create() {
   }
   function act() {
     if (state !== 'play') return;
+    if (zone === 'race') { endRace(0); return; }
     const crew = nearCrew();
     if (crew) { talk(crew); return; }
     if (!player.foot) {
@@ -810,7 +932,7 @@ function create() {
     const grip = Math.min(1, Math.abs(c.speed) / 6) * Math.sign(c.speed);
     c.heading += steer * (hand ? 3.3 : 2.3) * grip * (1 - .3 * Math.abs(c.speed) / top) * dt;
     fwd.set(Math.sin(c.heading), 0, Math.cos(c.heading));
-    c.vel.lerp(tmp.copy(fwd).multiplyScalar(c.speed), 1 - Math.exp(-(hand ? 2.2 : grip) * dt));
+    c.vel.lerp(tmp.copy(fwd).multiplyScalar(c.speed), 1 - Math.exp(-(hand ? 2.2 : grip + (c.spec.grip || 0)) * dt));
     c.pos.addScaledVector(c.vel, dt);
     const r = 1.8, imp = collide(c, r);
     if (c.touch) c.speed = c.vel.dot(fwd);
@@ -963,7 +1085,8 @@ function create() {
       c.pos.set(x, 0, z); c.heading = h; c.speed = 0; c.vel.set(0, 0, 0); c.y = groundY(x, z); c.stolen = false; c.mesh.visible = true; c.mesh.rotation.z = 0;
       cars.push(c); place(c, 1);
     }
-    player = myCar; hero.mesh.visible = false; zone = 'city'; room = null; mapC.hidden = false;
+    if (race) { for (const c of race.cars) scene.remove(c.mesh); race = null; }
+    player = myCar; hero.mesh.visible = false; zone = 'city'; room = null; mapC.hidden = false; raceGate.inside = false;
     beat.active = false; beat.mesh.visible = false; beat.cd = 0;
     hp = 100; heat = 0; bust = 0; invuln = 0; streak = 0; lastKill = -99; firstBlood = true; spawnCD = 0; shakeAmt = 0;
     run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0, deaths: 0, guns: {}, gun: null, drunk: 0, energy: 0, bahily: false };
@@ -997,7 +1120,11 @@ function create() {
     }
     player.mesh.visible = invuln <= 0 || now * 10 % 2 < 1.4;
     if (zone === 'inside') { roomStep(); return; }
+    if (zone === 'race') { raceStep(dt); return; }
     if (player.pos.x < -RIVER) { die('kama'); return; }
+    const atGate = Math.hypot(player.pos.x - raceGate.x, player.pos.z - raceGate.z) < 4;
+    if (atGate && !raceGate.inside) { raceGate.inside = true; openShop(raceGate); return; }
+    raceGate.inside = atGate;
     doorNear = null;
     for (const d of doors) {
       const dist = Math.hypot(player.pos.x - d.x, player.pos.z - d.z), inside = player.foot && dist < 1.9;
@@ -1129,6 +1256,7 @@ function create() {
     const crew = state === 'play' ? nearCrew() : null;
     show(crew ? 'БАЗАР' : player.foot ? (near ? 'СЕСТЬ' : run.gun ? 'ОГОНЬ' : '—') : 'ВЫЙТИ', 'act', actEl);
     const j = run.job;
+ show(race ? `🏁 Круг ${clamp(race.car.lap + 1, 1, TR.laps)}/${TR.laps} · место ${racePlace()}/11 · ${clockStr(Math.max(0, run.time - race.start))}` : '', 'race', raceEl);
     show(j ? `🎯 ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
     radio.hidden = !(state === 'play' && !player.foot);
     if (!radio.hidden && now > radioAt) { radioAt = now + 7; radio.textContent = '📻 Добрянка FM · ' + pick(RADIO)(); radio.classList.remove('on'); void radio.offsetWidth; radio.classList.add('on'); }
@@ -1228,7 +1356,8 @@ function create() {
       { name: 'Активированный уголь', note: 'лечит от боярышника. От МВД не лечит', price: 50, buy: () => { run.drunk = 0; return 'Протрезвел. Обидно'; } },
       { name: 'Бахилы', note: 'в ЦРБ после смерти заберут вдвое меньше', price: 15, off: run.bahily, buy: () => { run.bahily = true; return 'Бахилы надеты. ЦРБ уважает'; } }
     ];
-    if (kind === 'pawn') return [['priora', 'Белая приора', 1500, 'скорость 38, гнётся от взгляда'], ['cart', 'Телега Батрайдера', 2280, 'медленная, но урон в 2 раза меньше'], ['uaz', 'Списанный УАЗ МВД', 3220, 'менты думают, что свой: розыск спадает в 2 раза быстрее']].map(([key, name, price, note]) => ({
+    if (kind === 'race') return [{ name: `Погнали: ${TR.laps} круга против 10 экипажей`, note: 'победа — 3000 и спорткар «Бруда GT», подиум — 1000. F — сдаться', price: 0, buy: () => { startRace(); } }];
+    if (kind === 'pawn') return [['sport', 'Спорткар «Бруда GT»', 6000, 'скорость 46, держит дорогу как клей'], ['priora', 'Белая приора', 1500, 'скорость 38, гнётся от взгляда'], ['cart', 'Телега Батрайдера', 2280, 'медленная, но урон в 2 раза меньше'], ['uaz', 'Списанный УАЗ МВД', 3220, 'менты думают, что свой: розыск спадает в 2 раза быстрее']].map(([key, name, price, note]) => ({
       name, note, price, buy: () => {
         leaveShop(); exitRoom();
         const c = car(specs[key]);
@@ -1335,7 +1464,19 @@ function create() {
   for (const d of doors) { const [x, y] = toMap(d.x, d.z); mb.fillText(SHOPDEF[d.kind].icon, x, y); }
   for (const c of crews) { const [x, y] = toMap(c.x, c.z); mb.fillText('🗣️', x, y); }
   for (const b of world.blocks) if (b.type === 'statue') { const [x, y] = toMap(b.cx, b.cz); mb.fillText('🗿', x, y); }
+  const TMR = 320, tsc = MS / (2 * TMR), toTrack = (x, z) => [(TMR - (x - TR.ox)) * tsc, (TMR - (z - TR.oz)) * tsc];
+  const trackBase = canvas(MS, MS), tb2 = trackBase.getContext('2d');
+  tb2.fillStyle = '#24361f'; tb2.fillRect(0, 0, MS, MS); tb2.strokeStyle = '#3a3444'; tb2.lineWidth = TR.halfW * 2 * tsc + 2; tb2.lineJoin = 'round';
+  tb2.beginPath(); tp.forEach((p, i) => { const [x, y] = toTrack(p.x, p.z); i ? tb2.lineTo(x, y) : tb2.moveTo(x, y); }); tb2.closePath(); tb2.stroke();
+  { const [x, y] = toTrack(tp[0].x, tp[0].z); tb2.font = `${Math.round(MS / 11)}px system-ui,"Apple Color Emoji",sans-serif`; tb2.textAlign = 'center'; tb2.textBaseline = 'middle'; tb2.fillText('🏁', x, y); }
+  mb.fillText('🏁', ...toMap(raceGate.x, raceGate.z));
   function drawMap() {
+    if (zone === 'race') {
+      mx.drawImage(trackBase, 0, 0);
+      for (const c of race.cars) if (c !== player) { const [x, y] = toTrack(c.pos.x, c.pos.z); mx.fillStyle = '#2a6bff'; mx.beginPath(); mx.arc(x, y, MS / 50, 0, 7); mx.fill(); }
+      const [x, y] = toTrack(player.pos.x, player.pos.z); mx.fillStyle = '#ff2fa8'; mx.beginPath(); mx.arc(x, y, MS / 32, 0, 7); mx.fill(); mx.strokeStyle = '#fff'; mx.lineWidth = MS / 100; mx.stroke();
+      return;
+    }
     mx.drawImage(mapBase, 0, 0);
     const blink = now * 4 % 2 < 1;
     for (const c of cops) { const [x, y] = toMap(c.pos.x, c.pos.z); mx.fillStyle = blink ? '#ff2030' : '#2a6bff'; mx.beginPath(); mx.arc(x, y, MS / 45, 0, 7); mx.fill(); }
@@ -1348,7 +1489,7 @@ function create() {
     mx.restore();
   }
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль, справа газ и тормоз (пешком — бег), круглая кнопка сверху — выйти из тачки или угнать чужую.' : 'WASD или стрелки, пробел — ручник, Shift — бег, F — выйти из тачки или угнать чужую, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 🚗 💊 🔫, казино 🎰 и стрипуха 💃 на карте — заходи пешком внутрь. Триада 🗣️ даёт работу.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль, справа газ и тормоз (пешком — бег), круглая кнопка сверху — выйти из тачки или угнать чужую.' : 'WASD или стрелки, пробел — ручник, Shift — бег, F — выйти из тачки или угнать чужую, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 🚗 💊 🔫, казино 🎰 и стрипуха 💃 на карте — заходи пешком внутрь. Триада 🗣️ даёт работу, на 🏁 — гонка с МВД.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
     return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b> / ${GOAL}${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${'🚨'.repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
@@ -1451,6 +1592,8 @@ body.gta{overflow:hidden}
 .g-loot{font-size:15px}
 .g-job{font-size:15px;font-weight:800;color:#ffd24a}
 .g-job:empty{display:none}
+.g-race{font:900 17px system-ui;color:#fff;background:rgba(0,0,0,.5);padding:4px 10px;border-radius:10px}
+.g-race:empty{display:none}
 .g-radio{position:absolute;left:50%;translate:-50% 0;bottom:calc(186px + env(safe-area-inset-bottom,0px));max-width:min(640px,calc(100% - 24px));padding:6px 12px;border-radius:999px;background:rgba(10,5,20,.7);border:1px solid rgba(255,255,255,.18);font-size:13px;font-weight:700;color:#f4e9ff;text-align:center}
 .g-radio.on{animation:gRadio .5s ease-out}
 .g-stam{width:150px;height:5px;background:rgba(0,0,0,.5)}
