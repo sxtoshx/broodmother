@@ -613,7 +613,7 @@ function create() {
     for (let k = 0; k < 160; k++) { const i = Math.floor(rand(0, TR.NS)), p = tp[i], n = tn[i], d = rand(22, 60) * pick([-1, 1]); tb.add(ICO, pick(['#4f8a3a', '#3f7a3a']), M(p.x + n.x * d, 4, p.z + n.z * d, 0, rand(0, 3), 0, 4, 6, 4)); }
     scene.add(new THREE.Mesh(tb.geometry(), mat));
     const banner = label('ГРАН-ПРИ ДОБРЯНКИ · МВД', 2 * TR.halfW + 4, 2.2, '#c0392b', '#fff');
-    banner.material.side = THREE.DoubleSide; banner.position.set(tp[0].x, 7.5, tp[0].z); banner.rotation.y = h0; scene.add(banner);
+    banner.material.side = THREE.DoubleSide; banner.position.set(tp[0].x, 7.5, tp[0].z); banner.rotation.y = h0 + Math.PI; scene.add(banner);
   }
   const raceGate = { kind: 'race', x: line(N) - 3.5, z: 4, inside: false, ring: ring('#ffffff'), icon: iconSprite('🏁') };
   raceGate.ring.position.set(raceGate.x, .5, raceGate.z); raceGate.ring.scale.set(2.2, 1, 2.2); raceGate.icon.position.set(raceGate.x, 5, raceGate.z); raceGate.icon.scale.set(4, 4, 1);
@@ -1283,7 +1283,7 @@ function create() {
     if (shown.hp !== w) { shown.hp = w; hpEl.style.width = w; }
     const near = state === 'play' && player.foot ? nearestCar() : null;
     const crew = state === 'play' ? nearCrew() : null;
-    show(crew ? 'БАЗАР' : player.foot ? (near ? 'СЕСТЬ' : run.gun ? 'ОГОНЬ' : '—') : 'ВЫЙТИ', 'act', actEl);
+    show(zone === 'race' ? 'СДАТЬСЯ' : crew ? 'БАЗАР' : player.foot ? (near ? 'СЕСТЬ' : run.gun ? 'ОГОНЬ' : '—') : 'ВЫЙТИ', 'act', actEl);
     const j = run.job;
  show(race ? `🏁 Круг ${clamp(race.car.lap + 1, 1, TR.laps)}/${TR.laps} · место ${racePlace()}/11 · ${clockStr(Math.max(0, run.time - race.start))}` : '', 'race', raceEl);
     show(j ? `🎯 ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
@@ -1621,7 +1621,7 @@ body.gta{overflow:hidden}
 .g-loot{font-size:15px}
 .g-job{font-size:15px;font-weight:800;color:#ffd24a}
 .g-job:empty{display:none}
-.g-race{font:900 17px system-ui;color:#fff;background:rgba(0,0,0,.5);padding:4px 10px;border-radius:10px}
+.g-race{max-width:calc(100vw - 190px);box-sizing:border-box;text-align:right;font:900 clamp(13px,3.6vw,17px)/1.25 system-ui;color:#fff;background:rgba(0,0,0,.5);padding:4px 10px;border-radius:10px}
 .g-race:empty{display:none}
 .g-radio{position:absolute;left:50%;translate:-50% 0;bottom:calc(186px + env(safe-area-inset-bottom,0px));max-width:min(640px,calc(100% - 24px));padding:6px 12px;border-radius:999px;background:rgba(10,5,20,.7);border:1px solid rgba(255,255,255,.18);font-size:13px;font-weight:700;color:#f4e9ff;text-align:center}
 .g-radio.on{animation:gRadio .5s ease-out}
