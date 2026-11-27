@@ -125,6 +125,8 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
 .ticker{position:absolute;top:env(safe-area-inset-top);left:0;right:0;overflow:hidden;white-space:nowrap;padding:7px 0;font-size:.85rem;color:var(--glow);background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,79,184,.3)}
 .ticker span{display:inline-block;padding-left:100%;animation:tick 70s linear infinite}
 @keyframes tick{to{transform:translateX(-100%)}}
+.gg{position:fixed;inset:0;z-index:55;display:grid;place-items:center;pointer-events:none;font:900 clamp(4rem,18vw,11rem) Georgia,serif;color:var(--pink);text-shadow:0 0 40px var(--pink);animation:gg 1.8s ease-out forwards}
+@keyframes gg{from{scale:.3;opacity:0}20%{scale:1.1;opacity:1}70%{opacity:1}to{scale:1.5;opacity:0}}
 </style>
 </head>
 <body>
@@ -645,6 +647,23 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   var realTitle=document.title,awayTitles=['вернись 🕷️','паук скучает','ты куда','брудик ждёт','лоу приорити за ливер'];
   document.addEventListener('visibilitychange',function(){
     document.title=document.hidden?awayTitles[Math.floor(Math.random()*awayTitles.length)]:realTitle;
+  });
+
+  function gg(){
+    var el=document.createElement('div');el.className='gg';el.textContent='GG WP';
+    el.addEventListener('animationend',function(){el.remove()});
+    document.body.appendChild(el);
+  }
+  function ez(){toast('На вас отправлена жалоба. Low priority: 5 игр')}
+  function invasion(){
+    toast('БРУДЫ ИДУТ');
+    for(var i=0;i<12;i++)setTimeout(spider,i*180);
+  }
+  var typed='',cheats={gg:gg,ez:ez,brood:invasion};
+  addEventListener('keydown',function(e){
+    if(!/^Key/.test(e.code)||e.ctrlKey||e.metaKey||e.altKey)return;
+    typed=(typed+e.code.slice(3).toLowerCase()).slice(-5);
+    for(var word in cheats)if(typed.slice(-word.length)===word){typed='';cheats[word]()}
   });
 })();
 </script>
