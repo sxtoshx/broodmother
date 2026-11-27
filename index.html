@@ -107,6 +107,12 @@ body.visage #bgBeast{background:
   radial-gradient(ellipse at 10% 0%,rgba(80,125,145,.28),transparent 55%),
   linear-gradient(180deg,#091c2b,#102c3b 55%,#07131f)}
 body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
+body.skywrath{--bg:#0b0d2a;--bg2:#252a6b;--violet:#6f7dff;--pink:#ffcf5c;--glow:#fff0b3;--bone:#f4f0e2;--muted:#aeb2d6;--ember:#d6a33a;--ember2:#ffd977}
+body.skywrath #bgPurple{background:radial-gradient(ellipse at 50% 35%,#252a6b 0%,#0b0d2a 72%)}
+body.skywrath #bgBeast{background:
+  radial-gradient(ellipse at 50% 115%,rgba(255,200,80,.3),transparent 60%),
+  radial-gradient(ellipse at 10% 0%,rgba(110,125,255,.35),transparent 55%),
+  linear-gradient(180deg,#0e1238,#1b2160 55%,#090b24)}
 @media(max-width:720px){
   .hero-switch{gap:8px;padding:10px}
   .hero-switch button{padding:9px 10px}
@@ -438,6 +444,132 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   </article>
 </section>
 
+<section id="skywrath" class="hero-panel" aria-label="Skywrath Mage" aria-hidden="true">
+  <nav class="hero-switch" aria-label="Переключение героев">
+    <button type="button" data-hero-prev aria-label="Предыдущий герой">← Назад</button>
+    <div class="switch-name"><span data-hero-name>СКАЙМАГ</span><span class="switch-count" data-hero-count>3 / 3</span></div>
+    <button type="button" data-hero-next aria-label="Следующий герой">Вперёд →</button>
+  </nav>
+  <div class="intro">
+    <div class="art"><video muted loop playsinline preload="none" poster="img/skywrath_hero.png" aria-label="Skywrath Mage"><source src="img/skywrath_mage.webm" type="video/webm"></video></div>
+    <div>
+      <h2 class="name">Skywrath Mage</h2>
+      <p class="tag">Орёт с неба и разваливает всё магией</p>
+      <div class="chips"><span>Интеллект</span><span>Дальний бой</span><span>Патч 7.42</span><span>Крыша: Триада</span></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Способности</h3>
+  <div class="abil">
+    <div class="ab"><img class="port" src="img/skywrath_mage.png" alt="Skywrath Mage"><span>Skywrath Mage</span></div>
+    <div class="ab"><img src="img/skywrath_mage_arcane_bolt.png" alt=""><span>Arcane Bolt</span></div>
+    <a class="ab" href="#s-concussive"><img src="img/skywrath_mage_concussive_shot.png" alt=""><i class="mark"></i><span>Concussive Shot</span></a>
+    <a class="ab" href="#s-seal"><img src="img/skywrath_mage_ancient_seal.png" alt=""><i class="mark"></i><span>Ancient Seal</span></a>
+    <a class="ab" href="#s-flare"><img src="img/skywrath_mage_mystic_flare.png" alt=""><i class="mark"></i><span>Mystic Flare</span></a>
+    <a class="ab gold" href="#s-shield"><img src="img/skywrath_mage_shield_of_the_scion.png" alt=""><i class="mark"></i><span>Shield of the Scion<br>врождённая</span></a>
+  </div>
+  <p class="legend"><i class="mark"></i> есть изменения в последних патчах, нажмите, чтобы перейти к ним</p>
+
+  <div class="card">
+    <div class="ah"><img class="ic" src="img/skywrath_mage_shield_of_the_scion.png" alt=""><b>Shield of the Scion · врождённая способность</b></div>
+    <p style="line-height:1.5">Пассивная. Когда Skywrath Mage наносит вражескому герою магический урон способностями, он получает барьер от магического урона на 10 секунд и +1 к интеллекту за каждый стак. Каждый стак действует независимо.</p>
+    <div class="stats">
+      <div><small>Барьер</small><b>13,5 + 1,5 за ур.</b></div>
+      <div><small>Длительность</small><b>10 сек</b></div>
+      <div><small>Интеллект за стак</small><b>+1</b></div>
+    </div>
+  </div>
+
+  <h3 class="sec">Изменения героя</h3>
+  <article class="patch">
+    <h4>Патч 7.42 <time>· 18.11.2026</time></h4>
+    <div class="card" id="s-shield">
+      <div class="ah"><img class="ic" src="img/skywrath_mage_shield_of_the_scion.png" alt=""><b>Shield of the Scion</b></div>
+      <ul>
+        <li><span class="b up">Бафф</span><span>Теперь также даёт +1 к интеллекту за каждый стак</span></li>
+        <li><span class="b dn">Нерф</span><span>Длительность снижена с 12 до 10 сек <span class="pc">−17%</span></span></li>
+      </ul>
+    </div>
+    <div class="card" id="s-seal">
+      <div class="ah"><img class="ic" src="img/skywrath_mage_ancient_seal.png" alt=""><b>Ancient Seal</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Усиление магического урона снижено с 20/25/30/35% до 16/20/24/28% <span class="pc">−20% −20% −20% −20%</span></span></li>
+      </ul>
+    </div>
+    <div class="card" id="s-flare">
+      <div class="ah"><img class="ic" src="img/skywrath_mage_mystic_flare.png" alt=""><b>Mystic Flare</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Урон снижен с 800/1200/1600 до 800/1125/1450 <span class="pc">0% −6% −9%</span></span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b nw">Замена</span><span>Талант 10 уровня: +1,5 к регенерации маны заменён на +5 к барьеру Shield of the Scion</span></li>
+        <li><span class="b up">Бафф</span><span>Талант 15 уровня: замедление Concussive Shot увеличено с +20% до +25%</span></li>
+        <li><span class="b dn">Нерф</span><span>Талант 15 уровня: снижение перезарядки Ancient Seal уменьшено с 6 до 5 сек <span class="pc">−17%</span></span></li>
+        <li><span class="b dn">Нерф</span><span>Талант 20 уровня: усиление магического урона Ancient Seal снижено с +10% до +8% <span class="pc">−20%</span></span></li>
+        <li><span class="b dn">Нерф</span><span>Талант 25 уровня: урон Mystic Flare снижен с +400 до +350 <span class="pc">−13%</span></span></li>
+      </ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41d <time>· 04.06.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul><li><span class="b up">Бафф</span><span>Базовая сила увеличена с 21 до 22 <span class="pc">+5%</span></span></li></ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41c <time>· 06.05.2026</time></h4>
+    <div class="card">
+      <div class="ah"><img class="ic" src="img/skywrath_mage_mystic_flare.png" alt=""><b>Mystic Flare</b></div>
+      <ul><li><span class="b up">Бафф</span><span>Перезарядка снижена с 60/40/20 до 55/35/15 сек <span class="pc">−8% −13% −25%</span></span></li></ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41b <time>· 07.04.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul><li><span class="b up">Бафф</span><span>Базовая регенерация маны увеличена на 0,25</span></li></ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.41 <time>· 24.03.2026</time></h4>
+    <div class="card">
+      <div class="ah"><b>Ruin and Restoration</b></div>
+      <ul><li><span class="b rm">Удалено</span><span>Врождённая способность удалена</span></li></ul>
+    </div>
+    <div class="card">
+      <div class="ah"><img class="ic" src="img/skywrath_mage_shield_of_the_scion.png" alt=""><b>Shield of the Scion</b></div>
+      <ul><li><span class="b nw">Новое</span><span>Новая пассивная врождённая способность: магический урон способностями по вражеским героям даёт барьер от магического урона в 13,5 + 1,5 за уровень на 12 сек. Каждый экземпляр складывается независимо</span></li></ul>
+    </div>
+    <div class="card" id="s-concussive">
+      <div class="ah"><img class="ic" src="img/skywrath_mage_concussive_shot.png" alt=""><b>Concussive Shot</b></div>
+      <ul><li><span class="b nw">Изменение</span><span>Spirit Bear теперь считается настоящим героем при выборе цели. Крипы-герои теперь второстепенные цели</span></li></ul>
+    </div>
+    <div class="card">
+      <div class="ah"><b>Общее</b></div>
+      <ul><li><span class="b rm">Удалено</span><span>Аспекты удалены из игры у всех героев</span></li></ul>
+    </div>
+  </article>
+
+  <article class="patch">
+    <h4>Патч 7.40 <time>· 15.12.2025</time></h4>
+    <div class="card">
+      <div class="ah"><b>Таланты</b></div>
+      <ul>
+        <li><span class="b dn">Нерф</span><span>Талант 15 уровня: снижение перезарядки Ancient Seal уменьшено с 7 до 6 сек <span class="pc">−14%</span></span></li>
+        <li><span class="b up">Бафф</span><span>Талант 15 уровня: замедление Concussive Shot увеличено с +15% до +20%</span></li>
+      </ul>
+    </div>
+  </article>
+</section>
+
 <section class="leak" aria-label="Слив патча">
   <h3 class="sec">Слив патча</h3>
   <article class="patch">
@@ -581,7 +713,7 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   if(hv){
     hv.muted=true;
     hv.defaultMuted=true;
-    function playVid(){if(hv.paused)hv.play().catch(function(){});}
+    function playVid(){if(hv.paused&&hv.closest('.hero-panel.active'))hv.play().catch(function(){});}
     playVid();
     if('IntersectionObserver' in window){
       new IntersectionObserver(function(e){if(e[0].isIntersecting)playVid();},{threshold:0.1}).observe(hv);
