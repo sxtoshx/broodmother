@@ -137,7 +137,7 @@ body:is(.pudge,.invoker,.monkey,.cm,.furion,.meepo,.qop,.brew,.pango,.bat) #bgBe
   .media-placeholder{min-height:220px}
 }
 
-.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));translate:-50% 0;z-index:60;width:max-content;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:rgba(10,5,20,.9);color:var(--bone);border:1px solid var(--pink);box-shadow:0 0 24px rgba(255,79,184,.35);font-weight:600;text-align:center;animation:toastIn .25s ease-out}
+.toast{pointer-events:none;position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));translate:-50% 0;z-index:60;width:max-content;max-width:calc(100vw - 32px);padding:12px 20px;border-radius:12px;background:rgba(10,5,20,.9);color:var(--bone);border:1px solid var(--pink);box-shadow:0 0 24px rgba(255,79,184,.35);font-weight:600;text-align:center;animation:toastIn .25s ease-out}
 @keyframes toastIn{from{opacity:0;translate:-50% 12px}}
 .spider{position:fixed;left:0;top:0;z-index:50;padding:8px;border:0;background:none;font-size:44px;line-height:1;cursor:crosshair;-webkit-tap-highlight-color:transparent;filter:drop-shadow(0 0 3px var(--glow)) drop-shadow(0 0 10px var(--pink))}
 .spider span{display:block;animation:skitter .16s steps(2) infinite alternate}
@@ -188,6 +188,8 @@ body{overflow-x:clip}
 @keyframes boing{to{scale:1.08}}
 .roshan{position:fixed;left:12px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:57;padding:10px 14px;border-radius:10px;border:1px solid var(--ember2);background:rgba(0,0,0,.6);color:var(--ember2);font:inherit;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer}
 .roshan:focus-visible{outline:3px solid #fff;outline-offset:3px}
+@media(prefers-reduced-motion:no-preference){.roshan.alive{animation:roshanAlive .7s ease-in-out infinite alternate}}
+@keyframes roshanAlive{to{scale:1.08;box-shadow:0 0 26px 6px #ff3b3b}}
 .cookie{position:fixed;left:50%;top:calc(44px + env(safe-area-inset-top,0px));translate:-50% 0;z-index:61;width:min(440px,calc(100vw - 32px));padding:16px;border-radius:14px;background:rgba(10,5,20,.95);border:1px solid var(--pink);box-shadow:0 0 30px rgba(0,0,0,.6);color:var(--bone);line-height:1.45;animation:toastIn .3s ease-out}
 .cookie div{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .cookie button{flex:1 1 auto;padding:10px 12px;border-radius:10px;border:1px solid var(--pink);background:rgba(255,255,255,.06);color:var(--bone);font:inherit;cursor:pointer}
@@ -2131,7 +2133,7 @@ body{overflow-x:clip}
 <div id="announcer" aria-hidden="true"></div>
 <img id="tripleKill" src="img/ubil_troih.webp" alt="">
 <button type="button" class="adhd-btn" id="adhdBtn" aria-pressed="false">СДВГ</button>
-<button type="button" class="roshan" id="roshan" aria-label="Убить Рошана">Рош: <span>8:00</span></button>
+<button type="button" class="roshan" id="roshan" aria-label="Убить Рошана">Рош: 8:00</button>
 <div class="cookie" id="cookie" role="dialog" aria-label="Куки" hidden>
   <p>🍪 Мы используем куки, пауков и прописку в Добрянке. Отказаться нельзя: Триада уже в курсе.</p>
   <div><button type="button" data-cookie="ok">Принять</button><button type="button" data-cookie="sad">Принять с грустным лицом</button></div>
@@ -2300,19 +2302,28 @@ body{overflow-x:clip}
     },260);
   });
 
-  var roshanBtn=document.getElementById('roshan'),roshanTime=roshanBtn.querySelector('span'),roshanAt=0;
-  function respawnRoshan(){roshanAt=Date.now()+(480+Math.random()*180)*1000}
+  var loot={aegis:stored('aegis'),cheese:stored('cheese')};
+  function saveLoot(){store('aegis',loot.aegis);store('cheese',loot.cheese)}
+  function respawnTime(){var at=Date.now()+(480+Math.random()*180)*1000;store('roshanAt',at);return at}
+  function clock(s){return Math.floor(s/60)+':'+('0'+s%60).slice(-2)}
+  var roshanBtn=document.getElementById('roshan'),roshanAt=stored('roshanAt')||respawnTime();
+  function roshanLeft(){return Math.max(0,Math.ceil((roshanAt-Date.now())/1000))}
   function tickRoshan(){
-    var left=Math.max(0,Math.ceil((roshanAt-Date.now())/1000));
-    if(!left){toast('Рошан респнулся. Триада уже стоит у ямы');respawnRoshan();left=Math.ceil((roshanAt-Date.now())/1000)}
-    roshanTime.textContent=Math.floor(left/60)+':'+('0'+left%60).slice(-2);
+    var left=roshanLeft();
+    if(!left&&!roshanBtn.classList.contains('alive'))toast('Рошан респнулся. Триада уже стоит у ямы');
+    roshanBtn.classList.toggle('alive',!left);
+    roshanBtn.textContent=(left?'Рош: '+clock(left):'РОШАН ЖИВ — БЕЙ')+(loot.aegis?' · 🛡'+loot.aegis:'');
   }
   roshanBtn.addEventListener('click',function(){
+    var left=roshanLeft();
+    if(left){toast(pick(['Рошан ещё дохлый','Бьёшь пустую яму, МВД Добрянки записало','Аегис ещё не завезли в Добрянку','Pis`master уже стоит у ямы'])+'. Ещё '+clock(left));return}
     announce('ROSHAN HAS BEEN SLAIN');
-    toast(pick(['Аегис забрал Pis`master','Аегис изъят МВД Добрянки','Азалина украла сыр','Сыр продан на рынке в Добрянке']));
-    respawnRoshan();tickRoshan();
+    var cheese=Math.random()<.3;
+    loot.aegis++;if(cheese)loot.cheese++;saveLoot();
+    toast(cheese?'Аегис и сыр твои. Азалина в ахуе':'Аегис твой. Pis`master в ахуе');
+    roshanAt=respawnTime();tickRoshan();
   });
-  respawnRoshan();tickRoshan();setInterval(tickRoshan,1000);
+  tickRoshan();setInterval(tickRoshan,1000);
 
   var cookie=document.getElementById('cookie');
   if(!stored('cookiesAccepted'))setTimeout(function(){cookie.hidden=false},3000);
