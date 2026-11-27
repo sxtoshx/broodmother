@@ -790,7 +790,8 @@ body{overflow-x:clip}
     if(!thunderBus){
       thunderBus=audioCtx.createDynamicsCompressor();
       thunderBus.threshold.value=-14;thunderBus.knee.value=10;thunderBus.ratio.value=8;thunderBus.attack.value=.003;thunderBus.release.value=.4;
-      thunderBus.connect(audioCtx.destination);
+      var trim=audioCtx.createGain();trim.gain.value=.6;
+      thunderBus.connect(trim);trim.connect(audioCtx.destination);
     }
     return thunderBus;
   }
