@@ -144,7 +144,7 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
 <canvas id="fx" aria-hidden="true"></canvas>
 
 <section class="hero">
-  <div class="ticker"><span>СЛИВ ПАТЧА 7.42b ✦ Broodmother: паутина теперь по подписке ✦ Beastmaster: кабан ушёл к другому ✦ Visage: фамильяры вступили в профсоюз ✦ Курьер: больше не носит ваши надежды ✦ Тиммейты: прирост интеллекта снижен с 0,1 до 0 ✦ Рошан: сыр теперь только по рецепту ✦ Мид: достаётся тому, кто первый написал «мид» ✦ Ваш MMR: без изменений (к сожалению)</span></div>
+  <div class="ticker"><span>СЛИВ ПАТЧА 7.42b ✦ Добрянка: прирост бандитизма увеличен с 2.0 до 8.1 ✦ Триада: +15 к броне, иммунитет к МВД ✦ МВД Добрянки: время приезда на вызов увеличено с 40 минут до «ну завтра наберите» ✦ Азалина: прирост подписчиков снижен с 3 до 2 (мама отписалась) ✦ Pis`master: кабан теперь платит Триаде за крышу ✦ Добрянская ГРЭС: +200% к ауре пиздеца в радиусе 30 км ✦ Broodmother: пауки получили прописку в Добрянке, Триада в ахуе ✦ Pudge: хук теперь дотягивается до Перми ✦ Азалинаприст: канал перемещён из категории «говно» в категорию «анал» ✦ Кама: вода пахнет ещё хуже, это бафф</span></div>
   <main>
     <div class="portrait" id="portrait"><img src="avatar.png" alt="Azalina"></div>
     <h1>АЗАЛИНАПРИСТ ПОДПИСАТЬСЯ</h1>
@@ -441,7 +441,7 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
 <section class="leak" aria-label="Слив патча">
   <h3 class="sec">Слив патча</h3>
   <article class="patch">
-    <h4>Патч 7.43 <time>· источник: двоюродный брат работает в Valve</time></h4>
+    <h4>Патч 7.43 <time>· источник: кум работает в МВД Добрянки</time></h4>
     <div class="card"><ul id="leakList"></ul></div>
     <button type="button" id="leakBtn">слить ещё</button>
   </article>
@@ -662,7 +662,7 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   }
   setTimeout(crawl,2500);
 
-  var realTitle=document.title,awayTitles=['вернись 🕷️','паук скучает','ты куда','брудик ждёт','лоу приорити за ливер'];
+  var realTitle=document.title,awayTitles=['Триада видит, что ты ушёл','Азалина плачет 🕷️','вернись, сука','МВД Добрянки уже выехало','Pis`master ждёт'];
   document.addEventListener('visibilitychange',function(){
     document.title=document.hidden?awayTitles[Math.floor(Math.random()*awayTitles.length)]:realTitle;
   });
@@ -672,9 +672,9 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
     el.addEventListener('animationend',function(){el.remove()});
     document.body.appendChild(el);
   }
-  function ez(){toast('На вас отправлена жалоба. Low priority: 5 игр')}
+  function ez(){toast('На тебя написали заяву в МВД Добрянки. Low priority: 5 игр')}
   function invasion(){
-    toast('БРУДЫ ИДУТ');
+    toast('БРУДЫ ИДУТ НА ДОБРЯНКУ');
     for(var i=0;i<12;i++)setTimeout(spider,i*180);
   }
   var typed='',cheats={gg:gg,ez:ez,brood:invasion};
@@ -684,7 +684,7 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
     for(var word in cheats)if(typed.slice(-word.length)===word){typed='';cheats[word]()}
   });
 
-  var pokes=0,pokeLines=['не тыкай','ну хватит','я всё маме расскажу','+25 MMR за настойчивость','репорт за флуд'];
+  var pokes=0,pokeLines=['не тыкай, Азалина и так в депрессии','ещё раз ткнёшь — Триада приедет','Азалина подала заяву в МВД Добрянки','+25 MMR за домогательство к аватарке','хватит, блять, она живая'];
   var portraitImg=document.querySelector('#portrait img');
   portraitImg.addEventListener('click',function(){
     if(++pokes%5)return;
@@ -693,8 +693,8 @@ body.visage .hero-switch{border-color:rgba(150,205,220,.25)}
   });
   portraitImg.addEventListener('animationend',function(){portraitImg.classList.remove('spin')});
 
-  var leakHeroes=['Broodmother','Beastmaster','Visage','Pudge','Techies','Курьер','Рошан','Ваш керри','Тиммейт на миде'];
-  var leakStats=['урон','броня','харизма','количество ног','шанс зафидить','желание жить','скорость тильта','длина хука','APM в чате'];
+  var leakHeroes=['Триада','МВД Добрянки','Азалина','Pis`master','Добрянская ГРЭС','Broodmother','Участковый','Pudge','Кама'];
+  var leakStats=['бандитизм','крыша','откаты','подписчики','перегар','скорость приезда на вызов','аура пиздеца','прописка','уважение на районе'];
   var leakList=document.getElementById('leakList');
   function pick(list){return list[Math.floor(Math.random()*list.length)]}
   function leakLine(){
