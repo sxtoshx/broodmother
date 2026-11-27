@@ -1014,6 +1014,16 @@ body{overflow-x:clip}
     labels.push(label);runVfx();
   }
   addEventListener('click',function(e){burst(e.clientX,e.clientY,26);damage(e.clientX,e.clientY)});
+
+  var trailPalette=themePalette(),trailPaletteAt=0,lastTrail=0;
+  addEventListener('pointermove',function(e){
+    var now=performance.now();
+    if(now-lastTrail<16)return;
+    lastTrail=now;
+    if(now-trailPaletteAt>1000){trailPalette=themePalette();trailPaletteAt=now}
+    spark(e.clientX,e.clientY,(Math.random()-.5)*1.6,Math.random()*1.2,1+Math.random()*1.6,pick(trailPalette),.045);
+    runVfx();
+  },{passive:true});
 })();
 </script>
 </body>
