@@ -500,11 +500,15 @@ function city(scene, D) {
       x.stroke();
     }
     if (look.house) for (const b of B) { x.fillStyle = b.code === 'h' || b.code === 'g' ? look.house : look.block; path(x, b.p, s); x.fill(); }
+    if (look.edge) {
+      const f = 160 * s, W = c.width, Hh = c.height, edge = (x0, y0, x1, y1, rx, ry, rw, rh) => { const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, look.edge); g.addColorStop(1, 'rgba(45,90,143,0)'); x.fillStyle = g; x.fillRect(rx, ry, rw, rh); };
+      edge(0, 0, f, 0, 0, 0, f, Hh); edge(W, 0, W - f, 0, W - f, 0, f, Hh); edge(0, 0, 0, f, 0, 0, W, f); edge(0, Hh, 0, Hh - f, 0, Hh - f, W, f);
+    }
     return c;
   }
 
   const TS = 4 / ST, groundTex = texture(paint(canvas((nx - 1) * 4, (nz - 1) * 4), TS, { noise: 14, water: [150, 140, 105], sand: [176, 162, 118], land: [78, 112, 52], green: { p: '#4a7a35', f: '#33592a' }, yard: '#6d6a60', foot: '#a49a80', road: [6, '#77736a', 1] }));
-  const MAPS = .4, mapCanvas = paint(canvas(Math.ceil((X1 - X0) * MAPS), Math.ceil((Z1 - Z0) * MAPS)), MAPS, { noise: 0, water: [45, 90, 143], sand: [120, 130, 96], land: [58, 85, 46], green: { p: '#2f6a2a', f: '#24561f' }, foot: 'rgba(255,255,255,.14)', road: [0, '#e8e0cc', 2], house: '#8a6a5a', block: '#6e667c' });
+  const MAPS = .4, mapCanvas = paint(canvas(Math.ceil((X1 - X0) * MAPS), Math.ceil((Z1 - Z0) * MAPS)), MAPS, { noise: 0, water: [45, 90, 143], sand: [120, 130, 96], land: [58, 85, 46], green: { p: '#2f6a2a', f: '#24561f' }, foot: 'rgba(255,255,255,.14)', road: [0, '#e8e0cc', 2], house: '#8a6a5a', block: '#6e667c', edge: '#2d5a8f' });
 
   {
     const pos = new Float32Array(nx * nz * 3), uv = new Float32Array(nx * nz * 2), all = [];
@@ -831,16 +835,17 @@ export async function open(site) {
 
 function create(data) {
   const renderer = new THREE.WebGLRenderer({ antialias: devicePixelRatio < 2, powerPreference: 'high-performance' });
-  const prefs = Object.assign({ vol: .8, sfx: 1, weather: .45, car: .7, radio: true, fov: 62, speedFov: true, quality: 'mid', sens: .0022, post: true }, (() => { try { return JSON.parse(localStorage.getItem('gtaPrefs')) || {}; } catch (e) { return {}; } })());
+  const vp = document.querySelector('meta[name="viewport"]'), vpBase = vp ? vp.content : '';
+  const prefs = Object.assign({ vol: .8, sfx: 1, weather: .45, car: .7, fm: false, questOpen: true, fov: 62, speedFov: true, quality: 'mid', sens: .0022, post: true }, (() => { try { return JSON.parse(localStorage.getItem('gtaPrefs')) || {}; } catch (e) { return {}; } })());
   const QUALITY = { low: .6, mid: 1, high: 1.5 };
   renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY[prefs.quality] || 1));
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hurt"></div><div class="g-flash"></div><div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><button type="button" class="g-gear" aria-label="Настройки">${ico('gear')}</button><div class="g-quest" role="button" aria-label="Цель и маршрут"></div><div class="g-aim" hidden></div><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${`<span>${ico('star')}</span>`.repeat(5)}</div><div class="g-gold"></div><div class="g-hprow">${ico('heart')}<div class="g-hp"><i></i></div></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button></div><div class="g-radio" hidden></div><div class="g-mapbox"><div class="g-weather"></div><canvas class="g-map" width="400" height="400" role="button" aria-label="Карта и навигация"></canvas></div><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-full" hidden><canvas></canvas><div class="g-ftip" hidden></div><div class="g-fz"><button type="button" data-z="in" aria-label="Приблизить">+</button><button type="button" data-z="out" aria-label="Отдалить">−</button><button type="button" data-z="me" aria-label="К себе">${ico('pin')}</button></div><button type="button" class="g-fx" aria-label="Закрыть карту">X</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hurt"></div><div class="g-flash"></div><div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><button type="button" class="g-gear" aria-label="Настройки">${ico('gear')}</button><div class="g-quest" role="button" aria-label="Цель и маршрут"></div><div class="g-aim" hidden></div><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${`<span>${ico('star')}</span>`.repeat(5)}</div><div class="g-gold"></div><div class="g-hprow">${ico('heart')}<div class="g-hp"><i></i></div></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button></div><div class="g-radio" hidden></div><div class="g-mapbox"><div class="g-weather"></div><canvas class="g-map" width="400" height="400" role="button" aria-label="Карта и навигация"></canvas></div><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div class="g-joy"></div><div class="g-stick"><i></i></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-full" hidden><canvas></canvas><div class="g-ftip" hidden></div><div class="g-fz"><button type="button" data-z="in" aria-label="Приблизить">+</button><button type="button" data-z="out" aria-label="Отдалить">−</button><button type="button" data-z="me" aria-label="К себе">${ico('pin')}</button></div><button type="button" class="g-fx" aria-label="Закрыть карту">X</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
-  const aimEl = $('.g-aim'), jumpEl = $('.g-jump'), speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), questEl = $('.g-quest'), hurtEl = $('.g-hurt'), flashEl = $('.g-flash'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
+  const aimEl = $('.g-aim'), jumpEl = $('.g-jump'), speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), questEl = $('.g-quest'), hurtEl = $('.g-hurt'), flashEl = $('.g-flash'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
 
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, 1, .5, 1000);
   scene.fog = new THREE.Fog('#c9527f', 70, 320);
@@ -929,12 +934,16 @@ function create(data) {
   drop.ring.position.set(drop.x, drop.y + .5, drop.z); drop.ring.scale.set(1.8, 1, 1.8);
   const beat = Object.assign(person(mat, { top: '#2b3f6b', stripe: '#c9a64a', skin: '#e3b08c', hat: '#1e2f5a', legs: '#1e2f5a' }), { foot: true, r: .55, m: .15, t: 0, pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0, active: false, cd: 0, wn: -1 });
   beat.mesh.visible = false; scene.add(beat.mesh);
+  const dotC = canvas(32, 32), dotX = dotC.getContext('2d'), dotG = dotX.createRadialGradient(16, 16, 0, 16, 16, 16);
+  dotG.addColorStop(0, 'rgba(255,255,255,1)'); dotG.addColorStop(.5, 'rgba(255,255,255,.6)'); dotG.addColorStop(1, 'rgba(255,255,255,0)');
+  dotX.fillStyle = dotG; dotX.fillRect(0, 0, 32, 32);
+  const dotTex = texture(dotC);
   const PN = 1400, drops = new Float32Array(PN * 3), rainPos = new Float32Array(PN * 6), snowPos = new Float32Array(PN * 3);
   for (let i = 0; i < PN; i++) { drops[i * 3] = rand(-35, 35); drops[i * 3 + 1] = rand(-10, 25); drops[i * 3 + 2] = rand(-35, 35); }
   const rainGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
   const snowGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
   const rainMesh = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: '#a9bfe0', transparent: true, opacity: .55, fog: false }));
-  const snowMesh = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: '#ffffff', size: .22, transparent: true, opacity: .9 }));
+  const snowMesh = new THREE.Points(snowGeo, new THREE.PointsMaterial({ map: dotTex, color: '#ffffff', size: .3, transparent: true, opacity: .9, depthWrite: false }));
   rainMesh.frustumCulled = snowMesh.frustumCulled = false; scene.add(rainMesh, snowMesh);
   let weather = WEATHER[0], temp = 15, flash = 0, boltAt = 0, grip = 9, stamina = 1, hour = 18.8, weatherAt = 0, dayW = { n: 0, d: 1, y: 0 };
   const wcur = { rain: 0, snow: 0, f0: 70, f1: 320, light: 1, grip: 9 };
@@ -1365,12 +1374,15 @@ function create(data) {
   const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set(), fire: new Set(), hand: new Set() }, shown = {};
   const touch = matchMedia('(pointer:coarse)').matches;
   const on = k => keys[k] || (held[k] ? held[k].size > 0 : false);
-  let camYaw = 0, camPitch = 0, lastLook = -9, locked = false, selfUnlock = false, hurtFx = 0, flashFx = 0, lastGoalN = 0;
+  let camYaw = 0, camPitch = 0, lastLook = -9, locked = false, selfUnlock = false, hurtFx = 0, flashFx = 0;
   const rd = V(0, 0, 1), canLock = !touch && !!renderer.domElement.requestPointerLock;
   const free = () => locked && zone !== 'inside';
+  const orbit = () => (locked || touch) && zone !== 'inside';
+  const joy = { id: null, x: 0, y: 0, ox: 0, oy: 0 }, camTouch = { id: null, x: 0, y: 0 };
 
   let ac, master, eng, engGain, sir, sirGain, noiseBuf;
   const bus = {};
+  function savePrefs() { try { localStorage.setItem('gtaPrefs', JSON.stringify(prefs)); } catch (e) {} }
   function applyPrefs() {
     if (ac) { master.gain.value = prefs.vol * .6; bus.sfx.gain.value = prefs.sfx; bus.weather.gain.value = prefs.weather; bus.car.gain.value = prefs.car; }
     renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY[prefs.quality] || 1)); shown.w = 0;
@@ -1814,7 +1826,7 @@ function create(data) {
     if (race) { for (const c of race.cars) scene.remove(c.mesh); race = null; }
     player = myCar; hero.mesh.visible = false; zone = 'city'; room = null; mapC.hidden = false; raceGate.inside = false;
     beat.active = false; beat.mesh.visible = false; beat.cd = 0; reviveTriada();
-    gps = null; copField = null; mapOpen = false; fullEl.hidden = true; lastGoalN = 0; hurtFx = flashFx = 0;
+    gps = null; copField = null; mapOpen = false; fullEl.hidden = true; hurtFx = flashFx = 0;
     hp = 100; heat = 0; bust = 0; invuln = 0; streak = 0; lastKill = -99; firstBlood = true; spawnCD = 0; shakeAmt = 0;
     run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0, deaths: 0, guns: {}, gun: null, drunk: 0, energy: 0, bahily: false, license: false, spravka: false, passport: false, blockOpen: false, shoes: false, respect: false };
     exam = null; rock = null; examRing.visible = examIcon.visible = false; rockMesh.visible = false;
@@ -1836,21 +1848,24 @@ function create(data) {
     run.drunk = Math.max(0, run.drunk - dt); run.energy = Math.max(0, run.energy - dt);
     const steer = clamp((on('left') ? 1 : 0) - (on('right') ? 1 : 0) + (run.drunk ? Math.sin(now * 2.1) * .45 : 0), -1, 1);
     if (player.foot) {
-      const sprint = (on('sprint') || (touch && on('down'))) && stamina > .03;
+      const jm = joy.id !== null ? Math.hypot(joy.x, joy.y) : 0, stick = jm > .18;
+      const sprint = (on('sprint') || jm > .93) && stamina > .03;
       stamina = clamp(stamina + (sprint && !run.energy ? -.22 : .16) * dt, 0, 1);
-      const top = (sprint ? (run.energy ? 13 : 11) : 7) + (run.shoes ? 2 : 0);
-      if (free()) {
-        const fz = (on('up') || (sprint && !on('down')) ? 1 : 0) - (on('down') ? 1 : 0), fx = (on('right') ? 1 : 0) - (on('left') ? 1 : 0), aiming = run.gun && (on('fire') || on('mouse') || aimT > 0);
+      const top = ((sprint ? (run.energy ? 13 : 11) : 7) + (run.shoes ? 2 : 0)) * (stick && !sprint ? clamp(jm * 1.3, .4, 1) : 1);
+      if (free() || stick) {
+        const fz = stick ? joy.y : (on('up') || (sprint && !on('down')) ? 1 : 0) - (on('down') ? 1 : 0), fx = stick ? joy.x : (on('right') ? 1 : 0) - (on('left') ? 1 : 0), aiming = free() && run.gun && (on('fire') || on('mouse') || aimT > 0);
         const want = Math.atan2(Math.sin(camYaw) * fz - Math.cos(camYaw) * fx, Math.cos(camYaw) * fz + Math.sin(camYaw) * fx) + (run.drunk ? Math.sin(now * 2.1) * .4 : 0);
         player.heading += wrap((aiming ? camYaw : fz || fx ? want : player.heading) - player.heading) * Math.min(1, dt * 14);
         walk(player, fz || fx ? 1 : 0, 0, dt, top, want);
-      } else walk(player, on('up') || sprint ? 1 : !touch && on('down') ? -1 : 0, steer, dt, top);
+      } else walk(player, on('up') || sprint ? 1 : on('down') ? -1 : 0, steer, dt, top);
       fireCD -= dt; aimT -= dt;
       heroGun.visible = !!run.gun;
       if (run.gun && (on('fire') || on('mouse')) && fireCD <= 0) fire();
       if (aimT > 0) hero.arms[0].rotation.x = -1.5;
     } else {
-      const gas = (on('up') ? 1 : 0) - (on('down') ? 1 : 0), before = Math.abs(player.speed), imp = drive(player, gas, steer, on('hand') || on('sprint'), dt, player.spec.top + run.engine * 4);
+      const jy = joy.id !== null ? joy.y : 0, jx = joy.id !== null ? joy.x : 0;
+      const gas = clamp((on('up') ? 1 : 0) - (on('down') ? 1 : 0) + (jy > .2 ? (jy - .2) / .8 : jy < -.3 ? (jy + .3) / .7 : 0), -1, 1), wheel = clamp(steer - Math.sign(jx) * Math.abs(jx) ** 1.4, -1, 1);
+      const before = Math.abs(player.speed), imp = drive(player, gas, wheel, on('hand') || on('sprint'), dt, player.spec.top + run.engine * 4);
       if (imp > 6) { play('crash', Math.min(1, imp / 18)) || noise(.35, 500, Math.min(.8, imp / 20), 'lowpass'); spray(tmp.copy(player.pos).addScaledVector(fwd, 2), ['#ffb347', '#fff3a0'], 6, 5); }
       const atBlock = imp > 6 && block && !run.blockOpen && Math.hypot(player.pos.x - block.bx, player.pos.z - block.bz) < 10;
       if (atBlock && before > 27.5 && run.armor) { breakBlock(); hurt(40, 'wall'); player.speed = before * .75; player.vel.set(Math.sin(player.heading) * player.speed, 0, Math.cos(player.heading) * player.speed); }
@@ -1858,7 +1873,7 @@ function create(data) {
         if (atBlock && before > 12) hint(run.armor ? 'Мало! Разгонись больше 100 км/ч' : `Шлагбаум МВД крепче тачки. Нужна броня — шиномонтаж ${ico('tire')}`, 2.5);
         if (imp > 14 && before > 14) hurt((imp - 14) * 1.2, atBlock ? 'block' : 'wall');
       }
-      player.lean = -steer * Math.min(1, Math.abs(player.speed) / 20) * .06;
+      player.lean = -wheel * Math.min(1, Math.abs(player.speed) / 20) * .06;
     }
     player.mesh.visible = invuln <= 0 || now * 10 % 2 < 1.4;
     if (state !== 'play') return;
@@ -1920,8 +1935,6 @@ function create(data) {
       if (hit) { hurt(player.foot ? 9 : 6, 'cop'); if (player.foot && Math.random() < .4) play(pick(['scream1', 'scream2']), .7); }
     }
     const grabbed = beatStep(dt); jobStep(); gpsStep(dt);
-    const gn = goal().n;
-    if (gn !== lastGoalN) { lastGoalN = gn; if (!exam && !run.job && (!gps || gps.goal)) routeGoal(); }
     if (now - lastKill > 8 && near > 35) heat = Math.max(0, heat - (player.spec.chill ? .6 : .3) * dt);
     if (grabbed || ((player.foot ? Math.abs(player.speed) < 2.5 : surrender()) && near < 10 && invuln <= 0)) bust += dt * (grabbed ? 1.4 : 1); else bust = Math.max(0, bust - dt * 2);
     if (bust > 2.2) die('bust');
@@ -1994,18 +2007,18 @@ function create(data) {
   }
   function chase(dt, snap) {
     const portrait = camera.aspect < .9, v = Math.abs(player.speed), foot = player.foot;
-    const inRoom = zone === 'inside', back = inRoom ? (portrait ? 6 : 5) : foot ? (portrait ? 8 : 6) : (portrait ? 14 : 10) + v * .12, up = inRoom ? 3 : foot ? (portrait ? 5 : 3.2) : (portrait ? 8.5 : 4.8) + v * .05, fr = free();
-    if (!fr) { camYaw = player.heading; camPitch = 0; }
-    else if (!foot && now - lastLook > 1.6) camYaw += wrap(player.heading - camYaw) * Math.min(1, 2.2 * dt);
+    const inRoom = zone === 'inside', back = inRoom ? (portrait ? 6 : 5) : foot ? (portrait ? 8 : 6) : (portrait ? 14 : 10) + v * .12, up = inRoom ? 3 : foot ? (portrait ? 5 : 3.2) : (portrait ? 8.5 : 4.8) + v * .05, fr = orbit();
+    if (!fr || snap) { camYaw = player.heading; camPitch = 0; }
+    else if (touch ? now - lastLook > 1.1 && (!foot || v > 1) : !foot && now - lastLook > 1.6) camYaw += wrap(player.heading - camYaw) * Math.min(1, (foot ? 1.8 : 2.4) * dt);
     fwd.set(Math.sin(camYaw), 0, Math.cos(camYaw));
-    const sh = fr && foot ? .9 : 0;
+    const sh = free() && foot ? .9 : 0;
     tmp.copy(player.pos).addScaledVector(fwd, -back * Math.cos(camPitch * .9)); tmp.y = player.y + up + back * Math.sin(camPitch * .9); tmp.x -= fwd.z * sh; tmp.z += fwd.x * sh;
     const t = world.hitT(player.pos, tmp, player.y + 1.5, tmp.y);
     if (t < 1) tmp.lerpVectors(tmp2.set(player.pos.x, player.y + 1.5, player.pos.z), tmp, Math.max(.12, t - .06));
     tmp.y = Math.max(tmp.y, groundY(tmp.x, tmp.z) + 1.2);
     camera.position.lerp(tmp, snap ? 1 : 1 - Math.exp(-(t < 1 ? 18 : 5) * dt));
     if (shakeAmt > .01) { camera.position.x += rand(-1, 1) * shakeAmt; camera.position.y += rand(-1, 1) * shakeAmt * .5; shakeAmt *= Math.exp(-7 * dt); }
-    tmp2.copy(player.pos).addScaledVector(fwd, foot ? (fr ? 6 : 3) : 6); tmp2.y = player.y + (foot ? 1.6 : 1.2) - (fr ? Math.sin(camPitch * .9) * 3 : 0); tmp2.x -= fwd.z * sh; tmp2.z += fwd.x * sh;
+    tmp2.copy(player.pos).addScaledVector(fwd, foot ? (free() ? 6 : 3) : 6); tmp2.y = player.y + (foot ? 1.6 : 1.2) - (fr ? Math.sin(camPitch * .9) * 3 : 0); tmp2.x -= fwd.z * sh; tmp2.z += fwd.x * sh;
     camera.lookAt(tmp2);
     if (run.drunk) { camera.rotation.z += Math.sin(now * 1.3) * .09; camera.position.y += Math.sin(now * 1.7) * .25; }
   }
@@ -2017,7 +2030,7 @@ function create(data) {
     show(`${ico('gold')} ${run.gold || 0}`, 'gold', goldEl);
     const q = goal();
     questEl.hidden = state === 'title' || zone === 'race';
-    show(`<b>ЦЕЛЬ ${q.n}/5</b><span>${ico(q.icon)} ${q.text}</span>${q.price && run.gold < q.price ? `<i class="g-bar"><u style="width:${Math.floor(Math.min(1, run.gold / q.price) * 100)}%"></u></i>` : ''}<span class="g-steps">${[['license', 'license'], ['spravka', 'scroll'], ['passport', 'passport'], ['blockOpen', 'barrier']].map(([k, i]) => `<span class="${run[k] ? '' : 'g-off'}">${ico(i)}</span>`).join('')}<span class="g-off">${ico('sunset')}</span></span><small>${gps && gps.goal ? 'маршрут проложен' : touch ? 'тап — проложить маршрут' : 'G или клик — проложить маршрут'}</small>`, 'quest', questEl);
+    show(!prefs.questOpen ? `<div class="g-qh"><b>ЦЕЛЬ ${q.n}/5</b>${ico(q.icon)}<button type="button" class="g-qt" aria-label="Развернуть цель">+</button></div>` : `<div class="g-qh"><b>ЦЕЛЬ ${q.n}/5</b><button type="button" class="g-qt" aria-label="Свернуть цель">−</button></div><span>${ico(q.icon)} ${q.text}</span>${q.price && run.gold < q.price ? `<i class="g-bar"><u style="width:${Math.floor(Math.min(1, run.gold / q.price) * 100)}%"></u></i>` : ''}<span class="g-steps">${[['license', 'license'], ['spravka', 'scroll'], ['passport', 'passport'], ['blockOpen', 'barrier']].map(([k, i]) => `<span class="${run[k] ? '' : 'g-off'}">${ico(i)}</span>`).join('')}<span class="g-off">${ico('sunset')}</span></span><small>${gps && gps.goal ? 'маршрут проложен' : touch ? 'тап — проложить маршрут' : 'G или клик — проложить маршрут'}</small>`, 'quest', questEl);
     show(`${ico('aegis')} ${site.loot.aegis} · ${ico('cheese')} ${site.loot.cheese}${run.drunk ? ` · ${ico('bottle')}` : ''}${run.energy ? ` · ${ico('bolt')}` : ''}`, 'loot', lootEl);
     show(run.gun ? `${ico('gun')} ${GUNS[run.gun].name} · ${run.guns[run.gun]}${Object.keys(run.guns).length > 1 ? ' ⇄' : ''}` : '', 'gun', gunEl);
     const w = Math.round(hp) + '%';
@@ -2037,7 +2050,7 @@ function create(data) {
     speedEl.hidden = !drivingNow;
     if (drivingNow) show(String(Math.round(Math.abs(player.speed) * 3.6)), 'speed', speedEl.firstChild);
     show(exam ? `${ico('flag')} Экзамен ${exam.i}/${exam.cps.length} · ${clockStr(Math.max(0, exam.until - run.time))}` : j ? `${ico('target')} ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
-    radio.hidden = !(prefs.radio && state === 'play' && !player.foot);
+    radio.hidden = !(prefs.fm && state === 'play' && !player.foot);
     const ag = state === 'play' && player.foot && run.gun && zone === 'city' && !menu ? GUNS[run.gun] : null;
     aimEl.hidden = !ag;
     if (ag && free()) { aimEl.style.left = aimEl.style.top = '50%'; aimEl.classList.toggle('lock', !!rayTargets(ag)[0]); }
@@ -2050,7 +2063,6 @@ function create(data) {
     }
     if (!radio.hidden && now > radioAt) { radioAt = now + 7; radio.innerHTML = `${ico('radio')} Добрянка FM · ${pick(RADIO)()}`; radio.classList.remove('on'); void radio.offsetWidth; radio.classList.add('on'); }
     show(`${ico(hour >= 21 || hour < 5 ? 'moon' : 'sun')} ${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.floor(hour % 1 * 6) * 10).padStart(2, '0')} · ${ico(weather.icon)} ${temp > 0 ? '+' : ''}${temp}°`, 'weather', weatherEl);
-    show(player.foot ? 'БЕГ' : 'ТОРМОЗ', 'down', downEl);
     show(player.foot ? 'ПРЫЖОК' : 'РУЧНИК', 'jump', jumpEl);
     stamEl.hidden = !player.foot || state !== 'play';
     const sw = Math.round(stamina * 100) + '%';
@@ -2134,7 +2146,7 @@ function create(data) {
   }
   const MN = 320, motePos = new Float32Array(MN * 3), moteSeed = new Float32Array(MN);
   for (let i = 0; i < MN; i++) { motePos[i * 3] = rand(-30, 30); motePos[i * 3 + 1] = rand(-2, 10); motePos[i * 3 + 2] = rand(-30, 30); moteSeed[i] = rand(0, 99); }
-  const moteMat = new THREE.PointsMaterial({ color: '#fff4d0', size: .1, transparent: true, opacity: .4, depthWrite: false, blending: THREE.AdditiveBlending });
+  const moteMat = new THREE.PointsMaterial({ map: dotTex, color: '#fff4d0', size: .1, transparent: true, opacity: .4, depthWrite: false, blending: THREE.AdditiveBlending });
   const motes = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(motePos, 3)), moteMat);
   motes.frustumCulled = false; scene.add(motes);
   const birdGeo = new THREE.BufferGeometry();
@@ -2146,7 +2158,7 @@ function create(data) {
     const c = camera.position, night = dayW.n > .5, dry = wcur.rain < .3 && wcur.snow < .3;
     motes.visible = zone === 'city' && dry && state !== 'title';
     if (motes.visible) {
-      moteMat.color.set(night ? '#d8ff70' : '#fff4d0').multiplyScalar(night ? 2.2 : 1); moteMat.size = night ? .2 : .09; moteMat.opacity = night ? .55 + .35 * Math.sin(now * 2.7) : .35;
+      moteMat.color.set(night ? '#d8ff70' : '#fff4d0').multiplyScalar(night ? 2.2 : 1); moteMat.size = night ? .28 : .14; moteMat.opacity = night ? .55 + .35 * Math.sin(now * 2.7) : .35;
       for (let i = 0; i < MN; i++) {
         const k = i * 3, sd = moteSeed[i];
         motePos[k] = wrapc(motePos[k] + Math.sin(now * .3 + sd) * dt * .7, c.x, 30);
@@ -2389,7 +2401,7 @@ function create(data) {
   function routeFrom(n) { const path = [n]; for (let k = 0; k < 800 && gps.f[n] > 0; k++) { const m = nav.downhill(gps.f, n); if (m === n) break; path.push(n = m); } return path; }
   function setGps(x, z, icon, name, goalRoute = false) {
     const n = nav.nearest(x, z);
-    gps = { x, z, icon, name, goal: goalRoute, node: n, f: nav.field(n), path: [], off: 0, left: 0 };
+    gps = { x, z, icon, name, goal: goalRoute, node: n, f: nav.field(n), path: [], off: 0, left: 0, prev: -1 };
     gps.path = routeFrom(nav.nearest(player.pos.x, player.pos.z)); routeAt = 0; gpsStep(0);
   }
   function gpsStep(dt) {
@@ -2402,9 +2414,9 @@ function create(data) {
       if (d < best - .01 && d < 25) { best = d; drop = t > .02 ? i + 1 : i; }
       run += Math.hypot(bx - ax, bz - az);
     }
-    if (drop) path.splice(0, drop);
+    if (drop) { gps.prev = path[drop - 1]; path.splice(0, drop); }
     gps.off = best > 30 && zone === 'city' ? gps.off + dt : 0;
-    if (gps.off > 2) { gps.off = 0; gps.path = routeFrom(nav.nearest(px, pz)); }
+    if (gps.off > 2) { gps.off = 0; gps.prev = -1; gps.path = routeFrom(nav.nearest(px, pz)); }
     const h = gps.path[0];
     gps.left = Math.hypot(X[h] - px, Z[h] - pz) + gps.f[h] + Math.hypot(gps.x - X[gps.node], gps.z - Z[gps.node]);
   }
@@ -2421,7 +2433,8 @@ function create(data) {
     routeMesh.visible = !!gps && zone === 'city' && (state === 'play' || state === 'shop');
     if (!routeMesh.visible || now < routeAt) return;
     routeAt = now + .15;
-    const pts = [[player.pos.x, player.pos.z], ...gps.path.map(n => [nav.NX[n], nav.NZ[n]]), [gps.x, gps.z]], pos = [], uv = [], idx = [];
+    const X = nav.NX, Z = nav.NZ, h0 = gps.path[0], pts = gps.path.map(n => [X[n], Z[n]]), pos = [], uv = [], idx = [];
+    if (gps.prev >= 0) { const a = gps.prev, t = segT(player.pos.x, player.pos.z, X[a], Z[a], X[h0], Z[h0]); pts.unshift([X[a] + (X[h0] - X[a]) * t, Z[a] + (Z[h0] - Z[a]) * t]); }
     let walked = 0, carry = 0;
     for (let i = 0; i < pts.length - 1 && walked < 420; i++) {
       const [ax, az] = pts[i], [bx, bz] = pts[i + 1], len = Math.hypot(bx - ax, bz - az);
@@ -2526,11 +2539,17 @@ function create(data) {
     }
   }
   const fullEl = $('.g-full'), fullC = fullEl.firstElementChild, fx = fullC.getContext('2d'), tipEl = $('.g-ftip');
-  const G = world.game, VIEW = [G[0] - 120, G[1] - 120, Math.max(G[2], world.exit[0]) + 120, Math.max(G[3], world.exit[1]) + 120];
   let mapOpen = false;
   const fv = { cx: 0, cz: 0, s: .55, dirty: true };
   const fullSize = () => [fullC.clientWidth || 1, fullC.clientHeight || 1];
-  const minS = () => { const [w, h] = fullSize(); return Math.min(w / (VIEW[2] - VIEW[0]), h / (VIEW[3] - VIEW[1])) * .9; };
+  const BD = [world.bounds[0] + 40, world.bounds[1] + 40, world.bounds[2] - 40, world.bounds[3] - 40];
+  const minS = () => { const [w, h] = fullSize(); return Math.max(w / (BD[2] - BD[0]), h / (BD[3] - BD[1])); };
+  function clampView() {
+    const [w, h] = fullSize();
+    fv.s = clamp(fv.s, minS(), 6);
+    const hw = w / 2 / fv.s, hh = h / 2 / fv.s;
+    fv.cx = clamp(fv.cx, BD[0] + hw, BD[2] - hw); fv.cz = clamp(fv.cz, BD[1] + hh, BD[3] - hh);
+  }
   const fullTo = (x, z) => { const [w, h] = fullSize(); return [(x - fv.cx) * fv.s + w / 2, (z - fv.cz) * fv.s + h / 2]; };
   const fullFrom = (px, py) => { const [w, h] = fullSize(); return [(px - w / 2) / fv.s + fv.cx, (py - h / 2) / fv.s + fv.cz]; };
   const markSize = () => Math.round(clamp(18 + Math.log2(fv.s / minS()) * 4, 18, 34));
@@ -2540,7 +2559,7 @@ function create(data) {
     return best;
   }
   function drawFull() {
-    fv.dirty = false;
+    fv.dirty = false; clampView();
     const dpr = Math.min(2, devicePixelRatio || 1), [w, h] = fullSize(), b = world.map;
     if (fullC.width !== Math.round(w * dpr) || fullC.height !== Math.round(h * dpr)) { fullC.width = Math.round(w * dpr); fullC.height = Math.round(h * dpr); }
     fx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2580,18 +2599,18 @@ function create(data) {
   }
   function zoomAt(px, py, f) {
     const [wx, wz] = fullFrom(px, py), [w, h] = fullSize();
-    fv.s = clamp(fv.s * f, minS(), 6); fv.cx = wx - (px - w / 2) / fv.s; fv.cz = wz - (py - h / 2) / fv.s; fv.dirty = true;
+    fv.s = clamp(fv.s * f, minS(), 6); fv.cx = wx - (px - w / 2) / fv.s; fv.cz = wz - (py - h / 2) / fv.s; clampView(); fv.dirty = true;
   }
   const ptrs = new Map();
   let dragged = 0, pinch = 0;
   const pinchInfo = () => { const [a, c] = [...ptrs.values()], r = fullC.getBoundingClientRect(); return { d: Math.hypot(a[0] - c[0], a[1] - c[1]), x: (a[0] + c[0]) / 2 - r.left, y: (a[1] + c[1]) / 2 - r.top }; };
-  fullC.addEventListener('pointerdown', e => { fullC.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (ptrs.size === 1) dragged = 0; else pinch = pinchInfo().d; });
+  fullC.addEventListener('pointerdown', e => { try { fullC.setPointerCapture(e.pointerId); } catch (err) {} ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (ptrs.size === 1) dragged = 0; else pinch = pinchInfo().d; });
   fullC.addEventListener('pointermove', e => {
     const r = fullC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
     if (ptrs.has(e.pointerId)) {
       const [ox, oy] = ptrs.get(e.pointerId);
       ptrs.set(e.pointerId, [e.clientX, e.clientY]);
-      if (ptrs.size === 1) { fv.cx -= (e.clientX - ox) / fv.s; fv.cz -= (e.clientY - oy) / fv.s; dragged += Math.abs(e.clientX - ox) + Math.abs(e.clientY - oy); fv.dirty = true; tipEl.hidden = true; }
+      if (ptrs.size === 1) { fv.cx -= (e.clientX - ox) / fv.s; fv.cz -= (e.clientY - oy) / fv.s; clampView(); dragged += Math.abs(e.clientX - ox) + Math.abs(e.clientY - oy); fv.dirty = true; tipEl.hidden = true; }
       else if (ptrs.size === 2) { const p2 = pinchInfo(); zoomAt(p2.x, p2.y, p2.d / (pinch || p2.d)); pinch = p2.d; dragged = 99; }
       return;
     }
@@ -2629,7 +2648,7 @@ function create(data) {
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
   let menu = false;
   const menuStack = [];
-  const settingsHtml = () => `<p class="g-kicker">${ico('gear')} Настройки</p><div class="g-set">${[['vol', 'Общая громкость'], ['sfx', 'Стволы, удары, анонсер'], ['weather', 'Дождь и гром'], ['car', 'Мотор и сирены']].map(([k, t]) => `<label>${t}<input type="range" min="0" max="1" step="0.05" value="${prefs[k]}" data-pref="${k}"></label>`).join('')}<label>Обзор (FOV): <b>${prefs.fov}</b><input type="range" min="50" max="90" step="1" value="${prefs.fov}" data-pref="fov"></label>${canLock ? `<label>Чувствительность мыши<input type="range" min="0.0006" max="0.006" step="0.0002" value="${prefs.sens}" data-pref="sens"></label>` : ''}<label class="g-check"><input type="checkbox" data-pref="speedFov"${prefs.speedFov ? ' checked' : ''}>FOV растёт на скорости</label><label class="g-check"><input type="checkbox" data-pref="post"${prefs.post ? ' checked' : ''}>Эффекты: зерно, блюр, свечение</label><label class="g-check"><input type="checkbox" data-pref="radio"${prefs.radio ? ' checked' : ''}>Добрянка FM</label><label>Графика<select data-pref="quality">${[['low', 'Тапок'], ['mid', 'Норм'], ['high', 'Красиво']].map(([v, t]) => `<option value="${v}"${prefs.quality === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></div><div class="g-btns"><button type="button" data-go="back">ГОТОВО</button></div>`;
+  const settingsHtml = () => `<p class="g-kicker">${ico('gear')} Настройки</p><div class="g-set">${[['vol', 'Общая громкость'], ['sfx', 'Стволы, удары, анонсер'], ['weather', 'Дождь и гром'], ['car', 'Мотор и сирены']].map(([k, t]) => `<label>${t}<input type="range" min="0" max="1" step="0.05" value="${prefs[k]}" data-pref="${k}"></label>`).join('')}<label>Обзор (FOV): <b>${prefs.fov}</b><input type="range" min="50" max="90" step="1" value="${prefs.fov}" data-pref="fov"></label>${canLock ? `<label>Чувствительность мыши<input type="range" min="0.0006" max="0.006" step="0.0002" value="${prefs.sens}" data-pref="sens"></label>` : ''}<label class="g-check"><input type="checkbox" data-pref="speedFov"${prefs.speedFov ? ' checked' : ''}>FOV растёт на скорости</label><label class="g-check"><input type="checkbox" data-pref="post"${prefs.post ? ' checked' : ''}>Эффекты: зерно, блюр, свечение</label><label class="g-check"><input type="checkbox" data-pref="fm"${prefs.fm ? ' checked' : ''}>Добрянка FM</label><label>Графика<select data-pref="quality">${[['low', 'Тапок'], ['mid', 'Норм'], ['high', 'Красиво']].map(([v, t]) => `<option value="${v}"${prefs.quality === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></div><div class="g-btns"><button type="button" data-go="back">ГОТОВО</button></div>`;
   const pauseHtml = () => `<p class="g-kicker">Пауза</p><h2 class="g-dead g-win">ПАУЗА</h2><p>Мышь отпущена. Жми «Дальше» — и снова в Добрянку.</p><div class="g-btns"><button type="button" data-go="back">ДАЛЬШЕ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button><button type="button" class="g-out" data-go="out">ВЫЙТИ</button></div>`;
   const confirmHtml = () => `<p class="g-kicker">Выход</p><h2 class="g-dead">ТОЧНО ВЫЙТИ?</h2><p>${state === 'title' ? 'Вернёшься на сайт.' : 'Заезд не сохранится: золото, документы и розыск пропадут. Аегис и сыр останутся.'}</p><div class="g-btns"><button type="button" data-go="back">ОСТАТЬСЯ</button><button type="button" class="g-out" data-go="exit">ВЫЙТИ</button></div>`;
   function overlay(html, focus) {
@@ -2662,7 +2681,7 @@ function create(data) {
   });
   dlg.addEventListener('mousemove', e => { if (!locked) return; camYaw -= e.movementX * prefs.sens; camPitch = clamp(camPitch + e.movementY * prefs.sens, -.45, 1.05); lastLook = now; });
   renderer.domElement.addEventListener('click', lock);
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль и прыжок (в тачке — ручник), справа газ, тормоз (пешком — бег) и кнопка действия: выйти, угнать, стрелять. Тап по миникарте — карта и маршрут.' : 'WASD или стрелки, мышь — камера (клик по игре захватывает курсор), Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, M — карта, G — маршрут к цели, Esc — пауза.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: свалить из Добрянки в закат. Мост на Пермь перекрыл блокпост МВД ${ico('barrier')}. Собери документы — права в автошколе Азиза ${ico('uschool')}, справку в ЦРБ ${ico('cross')}, загранпаспорт на Ozon ${ico('ozon')} — и сунь сержанту ${BRIBE}. Или снеси шлагбаум на броне.</p><p>Магазины на карте — заходи пешком в кольцо. Триада ${ico('skull')} даёт работу, на ${ico('race')} — гонка с МВД.</p><p class="g-inv">${ico('aegis')} Аегис: ${site.loot.aegis} · ${ico('cheese')} Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд побега ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева джойстик: в тачке руль и газ (вниз — тормоз), пешком ходьба, до упора — бег. Справа свайп крутит камеру, кнопки — действие и прыжок (в тачке ручник). Тап по миникарте — карта, тап по цели — маршрут.' : 'WASD или стрелки, мышь — камера (клик по игре захватывает курсор), Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, M — карта, G — маршрут к цели, Esc — пауза.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: свалить из Добрянки в закат. Мост на Пермь перекрыл блокпост МВД ${ico('barrier')}. Собери документы — права в автошколе Азиза ${ico('uschool')}, справку в ЦРБ ${ico('cross')}, загранпаспорт на Ozon ${ico('ozon')} — и сунь сержанту ${BRIBE}. Или снеси шлагбаум на броне.</p><p>Магазины на карте — заходи пешком в кольцо. Триада ${ico('skull')} даёт работу, на ${ico('race')} — гонка с МВД.</p><p class="g-inv">${ico('aegis')} Аегис: ${site.loot.aegis} · ${ico('cheese')} Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд побега ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
     return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b>${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${ico('star').repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
@@ -2687,6 +2706,7 @@ function create(data) {
     document.body.classList.remove('gta');
     paused.forEach(v => v.play().catch(() => {})); paused = [];
     for (const k in keys) keys[k] = false;
+    if (vp) vp.content = vpBase;
     if (dlg.open) dlg.close();
   }
 
@@ -2715,9 +2735,38 @@ function create(data) {
     applyPrefs();
   });
   $('.g-x').addEventListener('click', confirmExit);
-  questEl.addEventListener('click', routeGoal);
+  questEl.addEventListener('click', e => { if (e.target.closest('.g-qt')) { prefs.questOpen = !prefs.questOpen; savePrefs(); } else routeGoal(); });
   dlg.addEventListener('close', hide);
   for (const t of ['click', 'pointerdown', 'pointermove', 'pointerup', 'mousemove']) dlg.addEventListener(t, e => e.stopPropagation());
+  let lastTap = 0;
+  dlg.addEventListener('touchend', e => { if (e.timeStamp - lastTap < 350 && !e.target.closest('button,input,select,label,.g-screen')) e.preventDefault(); lastTap = e.timeStamp; }, { passive: false });
+  for (const t of ['dblclick', 'gesturestart', 'contextmenu']) dlg.addEventListener(t, e => e.preventDefault());
+  dlg.addEventListener('selectstart', e => { if (!e.target.closest || !e.target.closest('input,select')) e.preventDefault(); });
+  const joyEl = $('.g-joy'), stickEl = $('.g-stick'), knobEl = stickEl.firstElementChild;
+  joyEl.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    if (joy.id !== null) return;
+    const r = dlg.getBoundingClientRect();
+    joy.id = e.pointerId; joy.ox = e.clientX - r.left; joy.oy = e.clientY - r.top; joy.x = joy.y = 0;
+    try { joyEl.setPointerCapture(e.pointerId); } catch (err) {}
+    stickEl.classList.add('on'); stickEl.style.left = joy.ox + 'px'; stickEl.style.top = joy.oy + 'px'; stickEl.style.bottom = 'auto';
+  });
+  joyEl.addEventListener('pointermove', e => {
+    if (e.pointerId !== joy.id) return;
+    const r = dlg.getBoundingClientRect(), dx = e.clientX - r.left - joy.ox, dy = e.clientY - r.top - joy.oy, d = Math.hypot(dx, dy), k = d > 56 ? 56 / d : 1;
+    joy.x = dx * k / 56; joy.y = -dy * k / 56;
+    knobEl.style.transform = `translate(${dx * k}px,${dy * k}px)`;
+  });
+  const joyEnd = e => { if (e.pointerId !== joy.id) return; joy.id = null; joy.x = joy.y = 0; knobEl.style.transform = ''; stickEl.classList.remove('on'); stickEl.style.left = stickEl.style.top = stickEl.style.bottom = ''; };
+  for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) joyEl.addEventListener(t, joyEnd);
+  const cv = renderer.domElement;
+  cv.addEventListener('pointerdown', e => { if (e.pointerType === 'touch' && camTouch.id === null) { camTouch.id = e.pointerId; camTouch.x = e.clientX; camTouch.y = e.clientY; } });
+  cv.addEventListener('pointermove', e => {
+    if (e.pointerId !== camTouch.id) return;
+    camYaw -= (e.clientX - camTouch.x) * .008; camPitch = clamp(camPitch + (e.clientY - camTouch.y) * .005, -.45, 1.05); lastLook = now;
+    camTouch.x = e.clientX; camTouch.y = e.clientY;
+  });
+  for (const t of ['pointerup', 'pointercancel']) cv.addEventListener(t, e => { if (e.pointerId === camTouch.id) camTouch.id = null; });
   const pad = $('.g-pad');
   pad.addEventListener('pointerdown', e => {
     const b = e.target.closest('button');
@@ -2760,6 +2809,7 @@ function create(data) {
       paused = [...document.querySelectorAll('video')].filter(v => !v.paused);
       paused.forEach(v => v.pause());
       document.body.classList.add('gta');
+      if (vp) vp.content = vpBase + ', maximum-scale=1, user-scalable=no';
       dlg.showModal(); reset(); screen(titleHtml());
       last = performance.now(); renderer.setAnimationLoop(frame);
     }
@@ -2776,6 +2826,15 @@ body.gta{overflow:hidden}
 #gta::backdrop{background:#000}
 #gta [hidden]{display:none!important}
 #gta button{font-family:var(--px)}
+#gta,#gta *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+#gta *{touch-action:none}
+#gta .g-screen,#gta .g-screen *{touch-action:pan-y}
+#gta .g-set input[type=range]{touch-action:pan-x}
+.g-quest .g-qh{display:flex;align-items:center;gap:8px}
+.g-quest .g-qt{margin-left:auto;width:24px;height:22px;padding:0;border:2px solid #000;background:#2a1a40;color:#fff;font:700 14px var(--px);line-height:1;cursor:pointer}
+#gta .g-stick{display:none;position:absolute;left:calc(96px + env(safe-area-inset-left,0px));bottom:calc(64px + env(safe-area-inset-bottom,0px));width:112px;height:112px;margin:-56px 0 0 -56px;translate:0 50%;border:3px solid rgba(255,255,255,.3);background:rgba(14,7,30,.28);box-shadow:var(--sh);pointer-events:none;opacity:.55}
+#gta .g-stick.on{translate:none;opacity:1}
+#gta .g-stick i{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;background:rgba(255,79,184,.8);border:3px solid #000}
 #gta .gi{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.22em;background:url(img/gta-icons.png?v=${BUILD}) 0 0/${ICONS.length * 100}% 100% no-repeat;image-rendering:pixelated;font-style:normal}
 ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 1) * 100).toFixed(4)}% 0}`).join('\n')}
 #gta .g-reel .gi{width:48px;height:48px}
@@ -2837,19 +2896,16 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-ann.gold{color:var(--gold)}
 .g-hint{position:absolute;left:12px;right:12px;bottom:calc(240px + env(safe-area-inset-bottom,0px));text-align:center;font-size:17px;color:var(--cyan)}
 .g-float{position:absolute;translate:-50% -50%;font:700 22px var(--pp);color:var(--gold);animation:gFloat .9s steps(9) forwards}
-.g-pad{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;align-items:flex-end;padding:12px 12px calc(16px + env(safe-area-inset-bottom,0px));text-shadow:none}
-.g-pad div{display:flex;gap:10px;align-items:flex-end}
-.g-pad button{width:68px;height:68px;border:var(--box);background:rgba(14,7,30,.78);color:#fff;font:700 13px var(--px);text-shadow:var(--o);box-shadow:var(--sh);touch-action:none;-webkit-tap-highlight-color:transparent}
+.g-pad{position:absolute;inset:0;pointer-events:none;text-shadow:none}
+.g-pad .g-joy{position:absolute;left:0;bottom:0;width:52%;height:64%;pointer-events:auto}
+.g-pad button{position:absolute;pointer-events:auto;border:var(--box);color:#fff;font:700 13px var(--px);text-shadow:var(--o);box-shadow:var(--sh);touch-action:none}
 .g-pad button.held{background:var(--pink);translate:2px 2px;box-shadow:2px 2px 0 #000}
-.g-pad .g-gas{width:84px;height:84px;background:rgba(20,90,40,.85)}
-.g-pad .g-act,.g-pad .g-jump{position:absolute;bottom:calc(112px + env(safe-area-inset-bottom,0px));width:68px;height:52px}
-.g-pad .g-act{right:24px;background:rgba(110,80,10,.88)}
-.g-pad .g-jump{left:12px;background:rgba(20,70,110,.88)}
+.g-pad .g-act{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));width:84px;height:84px;background:rgba(110,80,10,.9);font-size:14px}
+.g-pad .g-jump{right:calc(116px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:66px;height:66px;background:rgba(20,70,110,.88)}
 @media (hover:hover) and (pointer:fine){.g-pad{display:none}.g-radio{bottom:14px;max-width:min(640px,calc(100% - 500px))}.g-hint{bottom:64px;left:240px;right:240px}}
 @media (max-width:560px) and (pointer:fine){.g-mapbox{width:150px}.g-map{width:150px;height:150px}.g-speed{left:12px;translate:none;top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:72px}.g-radio{bottom:calc(230px + env(safe-area-inset-bottom,0px))}.g-hint{left:12px;right:12px;bottom:calc(290px + env(safe-area-inset-bottom,0px))}.g-quest{width:calc(100% - 190px)}}
-@media (pointer:coarse){.g-mapbox{bottom:calc(178px + env(safe-area-inset-bottom,0px));width:150px}.g-map{width:150px;height:150px}.g-speed{left:12px;translate:none;top:auto;bottom:calc(178px + env(safe-area-inset-bottom,0px));min-width:72px}.g-radio{bottom:calc(445px + env(safe-area-inset-bottom,0px))}.g-hint{bottom:calc(400px + env(safe-area-inset-bottom,0px))}}
-@media (pointer:coarse) and (max-height:760px) and (orientation:portrait){.g-radio{display:none}.g-hint{left:12px;right:172px;bottom:calc(256px + env(safe-area-inset-bottom,0px));text-align:left;font-size:15px}}
-@media (pointer:coarse) and (max-height:520px){.g-mapbox{bottom:calc(12px + env(safe-area-inset-bottom,0px));right:196px;width:110px}.g-map{width:110px;height:110px}.g-weather{display:none}.g-speed{bottom:auto;top:calc(10px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0}.g-radio{display:none}.g-hint{bottom:calc(104px + env(safe-area-inset-bottom,0px))}}
+@media (pointer:coarse){#gta .g-stick{display:block}.g-x{left:calc(10px + env(safe-area-inset-left,0px))}.g-gear{left:calc(62px + env(safe-area-inset-left,0px))}.g-stats{right:calc(10px + env(safe-area-inset-right,0px));gap:4px}.g-gold{font-size:16px}.g-hp{width:120px}.g-loot{font-size:13px}.g-quest{left:calc(10px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px));width:min(250px,calc(100% - 180px));background:none;border:0;box-shadow:none;padding:2px 0;font-size:13px;text-shadow:var(--o)}.g-quest .g-steps,.g-quest small,.g-quest .g-bar{display:none}.g-mapbox{right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(126px + env(safe-area-inset-bottom,0px));width:136px;gap:4px}.g-map{width:136px;height:136px}.g-weather{font-size:12px;padding:2px 6px}.g-speed{left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;min-width:60px;padding:4px 6px}.g-speed b{font-size:22px}.g-hint{left:12px;right:12px;top:calc(150px + env(safe-area-inset-top,0px));bottom:auto;font-size:14px}.g-radio{top:calc(190px + env(safe-area-inset-top,0px));bottom:auto;font-size:12px}.g-ann{top:32%}}
+@media (pointer:coarse) and (max-height:520px){.g-quest{top:calc(8px + env(safe-area-inset-top,0px));left:calc(116px + env(safe-area-inset-left,0px));width:min(300px,36%)}.g-mapbox{right:auto;left:50%;translate:-50% 0;bottom:calc(6px + env(safe-area-inset-bottom,0px));width:104px}.g-map{width:104px;height:104px}.g-weather{display:none}.g-speed{top:auto;bottom:calc(116px + env(safe-area-inset-bottom,0px))}.g-hint{top:calc(58px + env(safe-area-inset-top,0px));left:30%;right:30%}.g-radio{display:none}.g-ann{top:22%}#gta .g-stick{width:96px;height:96px;margin:-48px 0 0 -48px;bottom:calc(52px + env(safe-area-inset-bottom,0px))}.g-pad .g-joy{height:80%;width:42%}}
 .g-screen{position:absolute;inset:0;display:flex;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));background:rgba(14,7,30,.72);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);text-align:center;overflow:auto;touch-action:pan-y}
 .g-screen>div{margin:auto;width:min(540px,100%);box-sizing:border-box;display:grid;gap:12px;justify-items:center;padding:20px 16px;background:var(--panel);border:var(--box);box-shadow:inset 0 0 0 3px var(--pink),8px 8px 0 #000}
 .g-screen p{margin:0;color:#f4e9ff;max-width:46ch}
