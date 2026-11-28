@@ -1374,7 +1374,7 @@ function create(data) {
   const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set(), fire: new Set(), hand: new Set() }, shown = {};
   const touch = matchMedia('(pointer:coarse)').matches;
   const on = k => keys[k] || (held[k] ? held[k].size > 0 : false);
-  let camYaw = 0, camPitch = 0, lastLook = -9, locked = false, selfUnlock = false, hurtFx = 0, flashFx = 0;
+  let tired = false, mapR = 110, camYaw = 0, camPitch = 0, lastLook = -9, locked = false, selfUnlock = false, hurtFx = 0, flashFx = 0;
   const rd = V(0, 0, 1), canLock = !touch && !!renderer.domElement.requestPointerLock;
   const free = () => locked && zone !== 'inside';
   const orbit = () => (locked || touch) && zone !== 'inside';
@@ -1833,7 +1833,7 @@ function create(data) {
     if (block) { block.solid.gone = false; block.boom.visible = true; block.boom.rotation.z = 0; block.asked = false; }
     for (const l of loiterers) { l.down = 0; l.mesh.rotation.x = 0; }
     heroGun.visible = false;
-    stamina = 1; hour = 18.8; setWeather();
+    stamina = 1; tired = false; hour = 18.8; setWeather();
     for (const d of drunks) { d.active = false; d.mesh.visible = false; }
     for (const d of doors) d.inside = false;
     for (const s of crowd) { s.pos.copy(spot(25)); s.dead = false; }
@@ -1849,7 +1849,8 @@ function create(data) {
     const steer = clamp((on('left') ? 1 : 0) - (on('right') ? 1 : 0) + (run.drunk ? Math.sin(now * 2.1) * .45 : 0), -1, 1);
     if (player.foot) {
       const jm = joy.id !== null ? Math.hypot(joy.x, joy.y) : 0, stick = jm > .18;
-      const sprint = (on('sprint') || jm > .93) && stamina > .03;
+      if (stamina < .03) tired = true; else if (stamina > .35) tired = false;
+      const sprint = (on('sprint') || jm > .93) && !tired;
       stamina = clamp(stamina + (sprint && !run.energy ? -.22 : .16) * dt, 0, 1);
       const top = ((sprint ? (run.energy ? 13 : 11) : 7) + (run.shoes ? 2 : 0)) * (stick && !sprint ? clamp(jm * 1.3, .4, 1) : 1);
       if (free() || stick) {
@@ -2065,6 +2066,7 @@ function create(data) {
     show(`${ico(hour >= 21 || hour < 5 ? 'moon' : 'sun')} ${String(Math.floor(hour)).padStart(2, '0')}:${String(Math.floor(hour % 1 * 6) * 10).padStart(2, '0')} · ${ico(weather.icon)} ${temp > 0 ? '+' : ''}${temp}°`, 'weather', weatherEl);
     show(player.foot ? 'ПРЫЖОК' : 'РУЧНИК', 'jump', jumpEl);
     stamEl.hidden = !player.foot || state !== 'play';
+    stamEl.classList.toggle('tired', tired);
     const sw = Math.round(stamina * 100) + '%';
     if (shown.stam !== sw) { shown.stam = sw; stamEl.firstChild.style.width = sw; }
     if (state === 'play' && bust > .3) show(player.foot ? 'МВД принимает… беги!' : 'МВД принимает… газуй!', 'hint', hintEl);
@@ -2504,7 +2506,8 @@ function create(data) {
       return;
     }
     if (zone !== 'city') return;
-    const R = 110 + Math.min(1, Math.abs(player.speed) / 40) * 90, k = MS / (2 * R), cx = player.pos.x, cz = player.pos.z, b = world.map;
+    mapR += (110 + Math.min(1, Math.abs(player.speed) / 40) * 90 - mapR) * .04;
+    const R = mapR, k = MS / (2 * R), cx = player.pos.x, cz = player.pos.z, b = world.map;
     camera.getWorldDirection(rd);
     const th = Math.PI + Math.atan2(rd.x, rd.z), cs = Math.cos(th), sn = Math.sin(th);
     const toMap = (x, z) => { const dx = (x - cx) * k, dz = (z - cz) * k; return [MS / 2 + dx * cs - dz * sn, MS / 2 + dx * sn + dz * cs]; };
@@ -2543,12 +2546,13 @@ function create(data) {
   const fv = { cx: 0, cz: 0, s: .55, dirty: true };
   const fullSize = () => [fullC.clientWidth || 1, fullC.clientHeight || 1];
   const BD = [world.bounds[0] + 40, world.bounds[1] + 40, world.bounds[2] - 40, world.bounds[3] - 40];
-  const minS = () => { const [w, h] = fullSize(); return Math.max(w / (BD[2] - BD[0]), h / (BD[3] - BD[1])); };
+  const minS = () => { const [w, h] = fullSize(); return Math.min(w / (BD[2] - BD[0]), h / (BD[3] - BD[1])) * .92; };
   function clampView() {
     const [w, h] = fullSize();
     fv.s = clamp(fv.s, minS(), 6);
-    const hw = w / 2 / fv.s, hh = h / 2 / fv.s;
-    fv.cx = clamp(fv.cx, BD[0] + hw, BD[2] - hw); fv.cz = clamp(fv.cz, BD[1] + hh, BD[3] - hh);
+    const hw = w / 2 / fv.s, hh = h / 2 / fv.s, mx0 = (BD[0] + BD[2]) / 2, mz0 = (BD[1] + BD[3]) / 2;
+    fv.cx = hw * 2 >= BD[2] - BD[0] ? mx0 : clamp(fv.cx, BD[0] + hw, BD[2] - hw);
+    fv.cz = hh * 2 >= BD[3] - BD[1] ? mz0 : clamp(fv.cz, BD[1] + hh, BD[3] - hh);
   }
   const fullTo = (x, z) => { const [w, h] = fullSize(); return [(x - fv.cx) * fv.s + w / 2, (z - fv.cz) * fv.s + h / 2]; };
   const fullFrom = (px, py) => { const [w, h] = fullSize(); return [(px - w / 2) / fv.s + fv.cx, (py - h / 2) / fv.s + fv.cz]; };
@@ -2855,6 +2859,7 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-hp i{display:block;height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--green) 0 10px,#1d8a2d 10px 12px)}
 .g-stam{width:156px;height:8px;border:var(--box);background:#0d1e3b}
 .g-stam i{display:block;height:100%;background:var(--cyan)}
+.g-stam.tired i{background:var(--red)}
 .g-loot{font-size:15px}
 .g-hprow{display:flex;align-items:center;gap:6px;filter:drop-shadow(2px 2px 0 #000)}
 .g-quest{pointer-events:auto;cursor:pointer;position:absolute;left:12px;top:calc(64px + env(safe-area-inset-top,0px));width:min(300px,calc(100% - 210px));box-sizing:border-box;padding:6px 9px;background:var(--panel);border:var(--box);box-shadow:var(--sh);display:grid;gap:4px;font-size:14px;line-height:1.25}
@@ -2902,10 +2907,6 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-pad button.held{background:var(--pink);translate:2px 2px;box-shadow:2px 2px 0 #000}
 .g-pad .g-act{right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));width:84px;height:84px;background:rgba(110,80,10,.9);font-size:14px}
 .g-pad .g-jump{right:calc(116px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:66px;height:66px;background:rgba(20,70,110,.88)}
-@media (hover:hover) and (pointer:fine){.g-pad{display:none}.g-radio{bottom:14px;max-width:min(640px,calc(100% - 500px))}.g-hint{bottom:64px;left:240px;right:240px}}
-@media (max-width:560px) and (pointer:fine){.g-mapbox{width:150px}.g-map{width:150px;height:150px}.g-speed{left:12px;translate:none;top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:72px}.g-radio{bottom:calc(230px + env(safe-area-inset-bottom,0px))}.g-hint{left:12px;right:12px;bottom:calc(290px + env(safe-area-inset-bottom,0px))}.g-quest{width:calc(100% - 190px)}}
-@media (pointer:coarse){#gta .g-stick{display:block}.g-x{left:calc(10px + env(safe-area-inset-left,0px))}.g-gear{left:calc(62px + env(safe-area-inset-left,0px))}.g-stats{right:calc(10px + env(safe-area-inset-right,0px));gap:4px}.g-gold{font-size:16px}.g-hp{width:120px}.g-loot{font-size:13px}.g-quest{left:calc(10px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px));width:min(250px,calc(100% - 180px));background:none;border:0;box-shadow:none;padding:2px 0;font-size:13px;text-shadow:var(--o)}.g-quest .g-steps,.g-quest small,.g-quest .g-bar{display:none}.g-mapbox{right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(126px + env(safe-area-inset-bottom,0px));width:136px;gap:4px}.g-map{width:136px;height:136px}.g-weather{font-size:12px;padding:2px 6px}.g-speed{left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;min-width:60px;padding:4px 6px}.g-speed b{font-size:22px}.g-hint{left:12px;right:12px;top:calc(150px + env(safe-area-inset-top,0px));bottom:auto;font-size:14px}.g-radio{top:calc(190px + env(safe-area-inset-top,0px));bottom:auto;font-size:12px}.g-ann{top:32%}}
-@media (pointer:coarse) and (max-height:520px){.g-quest{top:calc(8px + env(safe-area-inset-top,0px));left:calc(116px + env(safe-area-inset-left,0px));width:min(300px,36%)}.g-mapbox{right:auto;left:50%;translate:-50% 0;bottom:calc(6px + env(safe-area-inset-bottom,0px));width:104px}.g-map{width:104px;height:104px}.g-weather{display:none}.g-speed{top:auto;bottom:calc(116px + env(safe-area-inset-bottom,0px))}.g-hint{top:calc(58px + env(safe-area-inset-top,0px));left:30%;right:30%}.g-radio{display:none}.g-ann{top:22%}#gta .g-stick{width:96px;height:96px;margin:-48px 0 0 -48px;bottom:calc(52px + env(safe-area-inset-bottom,0px))}.g-pad .g-joy{height:80%;width:42%}}
 .g-screen{position:absolute;inset:0;display:flex;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));background:rgba(14,7,30,.72);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);text-align:center;overflow:auto;touch-action:pan-y}
 .g-screen>div{margin:auto;width:min(540px,100%);box-sizing:border-box;display:grid;gap:12px;justify-items:center;padding:20px 16px;background:var(--panel);border:var(--box);box-shadow:inset 0 0 0 3px var(--pink),8px 8px 0 #000}
 .g-screen p{margin:0;color:#f4e9ff;max-width:46ch}
@@ -2956,4 +2957,8 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 @keyframes gBlink{50%{opacity:.2}}
 @keyframes gRadio{from{opacity:0;translate:-50% 8px}}
 @media (max-height:520px){.g-screen>div{gap:8px;padding:12px}.g-title{font-size:2rem}.g-dead{font-size:1.5rem}.g-recap{grid-template-columns:1fr 1fr;column-gap:18px}}
+@media (hover:hover) and (pointer:fine){.g-pad{display:none}.g-radio{bottom:14px;max-width:min(640px,calc(100% - 500px))}.g-hint{bottom:64px;left:240px;right:240px}}
+@media (max-width:560px) and (pointer:fine){.g-mapbox{width:150px}.g-map{width:150px;height:150px}.g-speed{left:12px;translate:none;top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:72px}.g-radio{bottom:calc(230px + env(safe-area-inset-bottom,0px))}.g-hint{left:12px;right:12px;bottom:calc(290px + env(safe-area-inset-bottom,0px))}.g-quest{width:calc(100% - 190px)}}
+@media (pointer:coarse){#gta .g-stick{display:block}.g-x{left:calc(10px + env(safe-area-inset-left,0px))}.g-gear{left:calc(62px + env(safe-area-inset-left,0px))}.g-stats{right:calc(10px + env(safe-area-inset-right,0px));gap:4px}.g-gold{font-size:16px}.g-hp{width:120px}.g-loot{font-size:13px}.g-quest{left:calc(10px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px));width:min(250px,calc(100% - 180px));background:none;border:0;box-shadow:none;padding:2px 0;font-size:13px;text-shadow:var(--o)}.g-quest .g-steps,.g-quest small,.g-quest .g-bar{display:none}.g-mapbox{right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(126px + env(safe-area-inset-bottom,0px));width:136px;gap:4px}.g-map{width:136px;height:136px}.g-weather{font-size:12px;padding:2px 6px}.g-speed{left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;min-width:60px;padding:4px 6px}.g-speed b{font-size:22px}.g-hint{left:12px;right:12px;top:calc(150px + env(safe-area-inset-top,0px));bottom:auto;font-size:14px}.g-radio{top:calc(190px + env(safe-area-inset-top,0px));bottom:auto;font-size:12px}.g-ann{top:32%}}
+@media (pointer:coarse) and (max-height:520px){.g-quest{top:calc(8px + env(safe-area-inset-top,0px));left:calc(116px + env(safe-area-inset-left,0px));width:min(300px,36%)}.g-mapbox{right:auto;left:50%;translate:-50% 0;bottom:calc(6px + env(safe-area-inset-bottom,0px));width:104px}.g-map{width:104px;height:104px}.g-weather{display:none}.g-speed{top:auto;bottom:calc(116px + env(safe-area-inset-bottom,0px))}.g-hint{top:calc(58px + env(safe-area-inset-top,0px));left:30%;right:30%}.g-radio{display:none}.g-ann{top:22%}#gta .g-stick{width:96px;height:96px;margin:-48px 0 0 -48px;bottom:calc(52px + env(safe-area-inset-bottom,0px))}.g-pad .g-joy{height:80%;width:42%}}
 `;
