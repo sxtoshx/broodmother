@@ -39,17 +39,25 @@ const GUNS = {
   sg: { name: 'Обрез', dmg: 70, rate: .85, range: 20, cone: .7, ammo: 10, price: 1200, refill: 10, spread: 4 },
   ak: { name: 'Калаш', dmg: 22, rate: .1, range: 55, cone: .35, ammo: 90, price: 2500, refill: 60 }
 };
-const GOAL = 13370;
+const BRIBE = 2000, NO_DOCS = 13370, METEOR = 100000;
 const SHOPDEF = {
   shawarma: { sign: 'ШАУРМА 24', color: '#ff4fb8', icon: 'shawarma', title: 'Шаурма 24', sub: 'Мы не знаем, что внутри. И ты не узнаешь' },
   tire: { sign: 'ШИНОМОНТАЖ', color: '#3a6cf4', icon: 'tire', title: 'Шиномонтаж «У Палыча»', sub: 'Поставим движок от комбайна, без вопросов' },
   crypto: { sign: 'КАЗИНО «КРИПТА»', color: '#1f8a5a', icon: 'cards', title: 'Казино «Крипта обмен»', sub: 'Курс бирки к рублю 1 к 1337. Ставь всё, Триада одобряет' },
   pawn: { sign: 'ЛОМБАРД', color: '#d4a017', icon: 'car', title: 'Ломбард', sub: 'Тачки с историей. Историю не рассказываем' },
   guns: { sign: 'ОХОТА И РЫБАЛКА', color: '#6b4f2a', icon: 'gun', title: 'Охота и рыбалка', sub: 'Лицензия? Какая лицензия. Ты же из Добрянки' },
-  pharmacy: { sign: 'АПТЕКА', color: '#1f9a6a', icon: 'pharmacy', title: 'Аптека «Здоровье Добрянки»', sub: 'Фармацевт смотрит поверх очков и уже всё понял' },
+  pharmacy: { sign: 'АПТЕКА «АПРЕЛЬ»', color: '#1f9a6a', icon: 'pharmacy', title: 'Аптека «Апрель»', sub: 'Фармацевт смотрит поверх очков и уже всё понял' },
   strip: { sign: 'СТРИПУХА «ПАУТИНА»', color: '#ff2fa8', icon: 'strip', title: 'Стрипуха «Паутина»', sub: 'Бруда на шесте, Пудж на подтанцовке. Руками не трогать, только золото' },
   race: { color: '#ffffff', icon: 'race', title: 'Гран-при Добрянки', sub: '10 экипажей МВД против тебя. Правила? Какие правила' },
-  mvd: { color: '#2a6bff', icon: 'mvd', title: 'МВД Добрянки', sub: 'Дежурный жуёт беляш и смотрит на тебя как на прописку' }
+  mvd: { color: '#2a6bff', icon: 'mvd', title: 'МВД Добрянки', sub: 'Дежурный жуёт беляш и смотрит на тебя как на нарушение' },
+  hospital: { sign: 'ЦРБ', color: '#c0392b', icon: 'cross', title: 'Добрянская ЦРБ', sub: 'Очередь с шести утра. Терапевт один, и тот в отпуске' },
+  autoschool: { sign: 'АВТОШКОЛА АЗИЗА', color: '#e0302a', icon: 'uschool', title: 'Автошкола Азиза', sub: 'Азиз учит на Поло и Гранте. Права — по любви или по таксе' },
+  yantar: { sign: 'ЯНТАРЬ 24/7', color: '#d48a10', icon: 'amber', title: 'Магазин «Янтарь» 24/7', sub: 'У входа всегда стоят пацаны. И всегда спрашивают сотку' },
+  kb: { sign: 'КБ', color: '#c0302a', icon: 'kb', title: 'КБ', sub: 'Красное, белое и всё, что между ними' },
+  hotel: { sign: 'ГОСТИНИЦА «ДРУЖБА»', color: '#3a6cf4', icon: 'bed', title: 'Гостиница «Дружба»', sub: 'Номера с видом на ГРЭС. Тараканы входят в стоимость' },
+  ozon: { sign: 'OZON', color: '#2f6fff', icon: 'ozon', title: 'ПВЗ Ozon', sub: 'Срок хранения — вечность. Примерочная — штора' },
+  wb: { sign: 'WILDBERRIES', color: '#b03ad0', icon: 'wb', title: 'ПВЗ Wildberries', sub: 'Очередь из бабушек и одного курьера Доты' },
+  block: { color: '#e0302a', icon: 'barrier', title: 'Блокпост МВД на мосту', sub: 'Сержант лениво поднимает жезл: «Документики, гражданин»' }
 };
 
 function M(x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0, sx = 1, sy = 1, sz = 1) {
@@ -291,7 +299,7 @@ function courierGeo() {
   return b.geometry();
 }
 
-const PLACE_SIGNS = { hospital: ['cross', 'ЦРБ', '#c0392b'], gres: ['gres', 'Добрянская ГРЭС', '#c0392b'], market: ['apple', 'Рынок', '#d4a017'], bus: ['bus', 'Автовокзал', '#3a6cf4'], statue: ['statue', 'Памятник Лехе'] };
+const PLACE_SIGNS = { school: ['book', 'Школа №1', '#3a6cf4'], gres: ['gres', 'Добрянская ГРЭС', '#c0392b'], market: ['apple', 'Рынок', '#d4a017'], bus: ['bus', 'Автовокзал', '#3a6cf4'], statue: ['statue', 'Памятник Лехе'] };
 const area2 = p => { let a = 0; for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) a += p[j] * p[i + 1] - p[i] * p[j + 1]; return a; };
 const outward = p => { if (area2(p) <= 0) return p; const q = []; for (let i = p.length - 2; i >= 0; i -= 2) q.push(p[i], p[i + 1]); return q; };
 const inPoly = (p, x, z) => { let c = false; for (let i = 0, j = p.length - 2; i < p.length; j = i, i += 2) if ((p[j + 1] > z) !== (p[i + 1] > z) && x < p[j] + (p[i] - p[j]) * (z - p[j + 1]) / (p[i + 1] - p[j + 1])) c = !c; return c; };
@@ -312,8 +320,9 @@ function city(scene, D) {
   function solid(p, top) {
     let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
     for (let i = 0; i < p.length; i += 2) { x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); z0 = Math.min(z0, p[i + 1]); z1 = Math.max(z1, p[i + 1]); }
-    const k = solids.push({ p, top, x0, x1, z0, z1, cx: (x0 + x1) / 2, cz: (z0 + z1) / 2 }) - 1;
+    const k = solids.push({ p, top, x0, x1, z0, z1, cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, gone: false }) - 1;
     for (let i = Math.floor(x0 / GC); i <= Math.floor(x1 / GC); i++) for (let j = Math.floor(z0 / GC); j <= Math.floor(z1 / GC); j++) { const c = ckey(i, j); (cells.get(c) || cells.set(c, []).get(c)).push(k); }
+    return solids[k];
   }
   const box = (x0, x1, z0, z1, top) => solid([x0, z1, x1, z1, x1, z0, x0, z0], top);
   function near(x0, x1, z0, z1, fn) {
@@ -321,7 +330,7 @@ function city(scene, D) {
     stamp++;
     for (let i = Math.floor(x0 / GC); i <= Math.floor(x1 / GC); i++) for (let j = Math.floor(z0 / GC); j <= Math.floor(z1 / GC); j++) {
       const list = cells.get(ckey(i, j));
-      if (list) for (const k of list) if (seen[k] !== stamp) { seen[k] = stamp; fn(solids[k]); }
+      if (list) for (const k of list) if (seen[k] !== stamp) { seen[k] = stamp; if (!solids[k].gone) fn(solids[k]); }
     }
   }
   function closest(s, x, z) {
@@ -614,9 +623,11 @@ function city(scene, D) {
   if (P.mvd) for (const s of [-1, 1]) cops.push([P.mvd.x + Math.cos(P.mvd.ang) * s * 7 + P.mvd.rx * 2, P.mvd.z - Math.sin(P.mvd.ang) * s * 7 + P.mvd.rz * 2, P.mvd.ang + Math.PI / 2]);
   const smoke = [];
   if (P.gres) {
-    const p = P.gres, bx = Math.cos(p.ang), bz = -Math.sin(p.ang);
-    for (const o of [-12, 0, 12]) {
-      const x = p.px + bx * o, z = p.pz + bz * o, g = groundY(x, z), sb = batch(x, z, solidMat);
+    const p = P.gres, bx = Math.cos(p.ang), bz = -Math.sin(p.ang), spots = back => [-12, 0, 12].map(o => [p.x - p.rx * back + bx * o, p.z - p.rz * back + bz * o]);
+    let back = 16;
+    while (back < 64 && spots(back).some(([x, z]) => onRoad(x, z, 4.5))) back += 4;
+    for (const [x, z] of spots(back)) {
+      const g = groundY(x, z), sb = batch(x, z, solidMat);
       for (let s = 0; s < 7; s++) { const r = 4.8 - s * .26; sb.add(CYL, s % 2 ? '#ececec' : '#c0392b', M(x, g + 5 + s * 10, z, 0, 0, 0, r, 10, r)); }
       box(x - 2.4, x + 2.4, z - 2.4, z + 2.4, g + 75);
       for (let k = 0; k < 4; k++) smoke.push({ x, z, y: g + 72, phase: k / 4 });
@@ -676,7 +687,7 @@ function city(scene, D) {
     const e = pick(edges);
     if (e.w < 7 || e.len < 14) continue;
     const side = pick([-1, 1]), q = sideOf(e, rand(.25, .75), side, e.w / 2 - 1.3);
-    if (blocked(q.x, q.z, 2.3) || parked.some(([x, z]) => Math.hypot(x - q.x, z - q.z) < 8) || rings.some(p => Math.hypot(p.x - q.x, p.z - q.z) < 10)) continue;
+    if (blocked(q.x, q.z, 2.3) || parked.some(([x, z]) => Math.hypot(x - q.x, z - q.z) < 8) || rings.some(p => Math.hypot(p.x - q.x, p.z - q.z) < 14)) continue;
     parked.push([q.x, q.z, Math.atan2(q.dx * side, q.dz * side)]);
   }
   if (D.bridge) {
@@ -689,7 +700,36 @@ function city(scene, D) {
       solid(outward([mx - ex - wx, mz - ez - wz, mx + ex - wx, mz + ez - wz, mx + ex + wx, mz + ez + wz, mx - ex + wx, mz - ez + wz]), g + 1.1);
     }
   }
-  const m = 40;
+  let blockade = null;
+  if (D.bridge) {
+    const [ax, az, bx, bz] = D.bridge, fe = field(nearestNode(D.exit[0], D.exit[1]));
+    const [tx, tz, ox, oz] = fe[nearestNode(ax, az)] > fe[nearestNode(bx, bz)] ? [ax, az, bx, bz] : [bx, bz, ax, az];
+    const len = Math.hypot(ox - tx, oz - tz), dx = (ox - tx) / len, dz = (oz - tz) / len, px = -dz, pz = dx, x = tx + dx * 3, z = tz + dz * 3, g = Math.max(groundY(x, z), .4), ang = Math.atan2(dx, dz);
+    const sb = batch(x, z, solidMat), slab = (a, b, s) => outward([x + px * s * a - dx * .5, z + pz * s * a - dz * .5, x + px * s * b - dx * .5, z + pz * s * b - dz * .5, x + px * s * b + dx * .5, z + pz * s * b + dz * .5, x + px * s * a + dx * .5, z + pz * s * a + dz * .5]);
+    for (const s of [-1, 1]) {
+      for (let k = 8.4; k < 46; k += 2.4) { const cx = x + px * s * k, cz = z + pz * s * k; sb.add(BOX, k % 4.8 < 2.4 ? '#a8a8b0' : '#e0302a', M(cx, Math.max(groundY(cx, cz), -.8) + .55, cz, 0, ang, 0, 2.3, 1.3, .9)); }
+      solid(slab(7.3, 46, s), g + 1.3);
+      sb.add(BOX, '#2a2a36', M(x + px * s * 7.6, g + .75, z + pz * s * 7.6, 0, 0, 0, .35, 1.5, .35));
+    }
+    const bb = new Batch();
+    for (let k = 0; k < 7; k++) bb.add(BOX, k % 2 ? '#ffffff' : '#e0302a', M(k * 2.1 + 1.05, 0, 0, 0, 0, 0, 2.1, .26, .26));
+    const boom = new THREE.Mesh(bb.geometry(), solidMat);
+    boom.rotation.order = 'YXZ'; boom.position.set(x - px * 7.4, g + 1.1, z - pz * 7.4); boom.rotation.y = Math.atan2(-pz, px); scene.add(boom);
+    const stop = label('СТОП · МВД', 3.4, 1.1, '#e0302a', '#fff');
+    stop.position.set(x - px * 7.6 - dx * .3, g + 2.1, z - pz * 7.6 - dz * .3); stop.rotation.y = ang + Math.PI; scene.add(stop);
+    blockade = { x: x - dx * 9, z: z - dz * 9, ang: ang + Math.PI, bx: x, bz: z, dx, dz, boom, solid: solid(slab(-7.3, 7.3, 1), g + 1.3), cars: [[x - dx * 11 + px * 5.6, z - dz * 11 + pz * 5.6, ang + Math.PI], [x - dx * 16 - px * 5.6, z - dz * 16 - pz * 5.6, ang]] };
+    const c = canvas(512, 160), cx2 = c.getContext('2d');
+    cx2.fillStyle = '#fff'; cx2.fillRect(0, 0, 512, 160); cx2.strokeStyle = '#111'; cx2.lineWidth = 10; cx2.strokeRect(8, 8, 496, 144);
+    cx2.fillStyle = '#111'; fitText(cx2, 'ДОБРЯНКА', 256, 84, 420, 84, 900);
+    cx2.strokeStyle = '#d0202a'; cx2.lineWidth = 14; cx2.beginPath(); cx2.moveTo(24, 136); cx2.lineTo(488, 24); cx2.stroke();
+    const end = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 1.3), new THREE.MeshBasicMaterial({ map: texture(c) })), sx = ox + dx * 8 + px * 9, sz = oz + dz * 8 + pz * 9, sg = groundY(sx, sz);
+    end.position.set(sx, sg + 2.6, sz); end.rotation.y = ang + Math.PI; scene.add(end);
+    batch(sx, sz, solidMat).add(BOX, '#c8c8d0', M(sx + dx * .08, sg + 1.3, sz + dz * .08, 0, 0, 0, .14, 2.6, .14));
+  }
+  const along = (p, side, k, back) => [p.x + Math.cos(p.ang) * side * k + p.rx * back, p.z - Math.sin(p.ang) * side * k + p.rz * back];
+  const aziz = P.autoschool ? [-1, 1].map(s => [...along(P.autoschool, s, 7, 2.5), P.autoschool.ang + Math.PI / 2]) : [];
+  const loiter = P.yantar ? [-4.2, -3, -1.6, 2.4, 3.6].map((k, i) => along(P.yantar, 1, k, i % 2 ? -1.6 : -.6)) : [];
+  const m = 20;
   box(X0 - 60, X0 + m, Z0 - 60, Z1 + 60, 999); box(X1 - m, X1 + 60, Z0 - 60, Z1 + 60, 999);
   box(X0 - 60, X1 + 60, Z0 - 60, Z0 + m, 999); box(X0 - 60, X1 + 60, Z1 - m, Z1 + 60, 999);
 
@@ -709,7 +749,7 @@ function city(scene, D) {
   const e0 = adj[sn].reduce((a, e) => e.w * e.len > a.w * a.len ? e : a);
   const centre = P.market || { px: 0, pz: 0 };
   return {
-    collide, hitT, blocked, solid, box, onRoad, doors, crews, smoke, parked, cops, P, solidMat,
+    collide, hitT, blocked, solid, box, onRoad, doors, crews, smoke, parked, cops, P, solidMat, blockade, aziz, loiter,
     winMats: Object.values(mats).flat(),
     nav: { NN, NX, NZ, adj, nearest: nearestNode, field, downhill },
     map: { canvas: mapCanvas, s: MAPS, x0: X0, z0: Z0 },
@@ -762,11 +802,11 @@ function create(data) {
   renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY[prefs.quality] || 1));
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><button type="button" class="g-gear" aria-label="Настройки">${ico('gear')}</button><div class="g-aim" hidden></div><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${`<span>${ico('star')}</span>`.repeat(5)}</div><div class="g-gold"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" role="button" aria-label="Карта и навигация"></canvas><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-full" hidden><canvas></canvas><button type="button" class="g-fx" aria-label="Закрыть карту">X</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><button type="button" class="g-gear" aria-label="Настройки">${ico('gear')}</button><div class="g-aim" hidden></div><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${`<span>${ico('star')}</span>`.repeat(5)}</div><div class="g-gold"></div><div class="g-goals"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" role="button" aria-label="Карта и навигация"></canvas><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-full" hidden><canvas></canvas><button type="button" class="g-fx" aria-label="Закрыть карту">X</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
-  const aimEl = $('.g-aim'), jumpEl = $('.g-jump'), speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
+  const aimEl = $('.g-aim'), jumpEl = $('.g-jump'), speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), goalEl = $('.g-goals'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
 
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, 1, .5, 1000);
   scene.fog = new THREE.Fog('#c9527f', 70, 320);
@@ -785,7 +825,7 @@ function create(data) {
   const moonC = canvas(128, 128), mxc = moonC.getContext('2d');
   mxc.fillStyle = '#e4ecff'; mxc.beginPath(); mxc.arc(64, 64, 60, 0, 7); mxc.fill();
   mxc.fillStyle = '#b9c4e0'; for (const [x, y, r] of [[44, 50, 12], [80, 76, 9], [70, 38, 6], [50, 86, 7]]) { mxc.beginPath(); mxc.arc(x, y, r, 0, 7); mxc.fill(); }
-  const moon = new THREE.Mesh(new THREE.PlaneGeometry(8.5, 8.5), new THREE.MeshBasicMaterial({ map: texture(moonC), transparent: true, fog: false, depthWrite: false }));
+  const moon = new THREE.Mesh(new THREE.PlaneGeometry(8.5, 8.5), new THREE.MeshBasicMaterial({ map: texture(moonC), alphaTest: .5, fog: false, depthWrite: false }));
   moon.renderOrder = -1; scene.add(moon);
   const headLight = new THREE.SpotLight('#ffe9b0', 0, 80, .55, .6, 1);
   scene.add(headLight, headLight.target);
@@ -803,7 +843,7 @@ function create(data) {
   sx.fillStyle = grad; sx.beginPath(); sx.arc(128, 128, 126, 0, 7); sx.fill();
   sx.globalCompositeOperation = 'destination-out';
   for (let k = 0; k < 6; k++) sx.fillRect(0, 150 + k * 18, 256, 3 + k * 1.6);
-  const sun = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshBasicMaterial({ map: texture(sunC), transparent: true, fog: false, depthWrite: false }));
+  const sun = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshBasicMaterial({ map: texture(sunC), alphaTest: .5, fog: false, depthWrite: false }));
   sun.renderOrder = -1; scene.add(sun);
 
   const world = city(scene, data), mat = world.solidMat, nav = world.nav, P = world.P;
@@ -818,11 +858,15 @@ function create(data) {
     sport: { name: 'спорткар «Бруда GT»', geo: sportGeo('#ff2fa8', '#ffffff'), top: 46, armor: 1, grip: 3 },
     sport2: { name: 'спорткар «Pis-мастер RS»', geo: sportGeo('#39d353', '#111111'), top: 44, armor: 1, grip: 3 },
     cart: { name: 'телегу Батрайдера', geo: cartGeo(), top: 30, armor: .5 },
-    uaz: { name: 'УАЗ МВД', geo: uazGeo(), top: 30, armor: .7, chill: true }
+    uaz: { name: 'УАЗ МВД', geo: uazGeo(), top: 30, armor: .7, chill: true },
+    polo: { name: 'Поло Азиза', geo: carGeo('#d8dade'), top: 33, armor: 1, school: true },
+    granta: { name: 'Гранту Азиза', geo: carGeo('#4a2a5a'), top: 31, armor: 1.05, school: true }
   };
+  const uMat = (() => { const c = canvas(72, 72), t = texture(c); drawIcon(c.getContext('2d'), 'uschool', 36, 36, 72); t.magFilter = THREE.NearestFilter; return new THREE.MeshBasicMaterial({ map: t, transparent: true, side: THREE.DoubleSide }); })();
   const car = spec => {
     const mesh = new THREE.Mesh(spec.geo, mat), lights = [];
     mesh.rotation.order = 'YXZ';
+    if (spec.school) { const u = new THREE.Mesh(new THREE.PlaneGeometry(.9, .9), uMat); u.position.set(0, 2.25, -.25); mesh.add(u); }
     mesh.add(new THREE.Mesh(shadowGeo, shadowMat)).children[0].position.y = .05;
     if (spec.cop) for (const k of [0, 1]) { const l = new THREE.Mesh(BOX, lightMats[k]); l.scale.set(.6, .22, .4); l.position.set(k ? .4 : -.4, 1.9, -.25); mesh.add(l); lights.push(l); }
     return { spec, mesh, lights, r: 1.9, m: 1, hp: 100, gunCD: rand(1, 2), pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0, lean: 0, stuck: 0, reverse: 0, wn: -1 };
@@ -832,6 +876,8 @@ function create(data) {
   const myCar = park(specs.nine, world.spawn.x, world.spawn.z, world.spawn.heading);
   for (const [x, z, h] of world.cops) park(specs.cop, x, z, h);
   world.parked.forEach(([x, z, h], k) => park(k ? pick(specs.civ) : specs.sport2, x, z, h));
+  world.aziz.forEach(([x, z, h], k) => park(k ? specs.granta : specs.polo, x, z, h));
+  if (world.blockade) for (const [x, z, h] of world.blockade.cars) park(specs.uaz, x, z, h);
   const hero = Object.assign(person(mat, { top: '#ff4fb8', stripe: '#ffffff', skin: '#e8b894', hat: '#151515', legs: '#22222e' }), { spec: { name: 'ты', armor: 1 }, foot: true, r: .6, m: .15, t: 0, pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0 });
   const doors = world.doors, crews = world.crews, ringGeo = new THREE.CylinderGeometry(1.7, 1.7, 1, 28, 1, true);
   const iconSprite = key => {
@@ -885,7 +931,7 @@ function create(data) {
     hemi.intensity = (PAL.night.hi * wn + PAL.dusk.hi * wd + PAL.day.hi * wy) * (.45 + .55 * L) + flash * 4;
     if (sunUp > .5) { sunLight.position.copy(sunDir).multiplyScalar(100); blend(sunLight.color, 'sc', 0, wd, wy); sunLight.intensity = (PAL.dusk.si * wd + PAL.day.si * wy) / Math.max(wd + wy, .01) * sunUp * L; }
     else { sunLight.position.copy(sunDir).multiplyScalar(-100); sunLight.color.copy(PAL.night.sc); sunLight.intensity = PAL.night.si * (1 - sunUp) * L; }
-    sun.visible = e > -.1; sun.material.opacity = L > .9 ? 1 : .35;
+    sun.visible = e > -.1; sun.material.color.setScalar(L > .9 ? 1 : .45);
     moon.visible = e < .1;
     for (const m of world.winMats) m.emissiveIntensity = .2 + 1.3 * wn + .7 * wd;
     const lights = !player.foot && zone !== 'inside' && state !== 'title' && (wn > .3 || L < .7);
@@ -935,7 +981,7 @@ function create(data) {
       walk(d, 1, 0, dt, 1.2);
       place(d, dt);
       d.mesh.rotation.z = Math.sin(d.t * 2.2 + d.seed) * .22;
-      if (state === 'play' && !player.foot && Math.abs(player.speed) > 5 && Math.hypot(player.pos.x - d.pos.x, player.pos.z - d.pos.z) < 2.6) {
+      if (live() && !player.foot && Math.abs(player.speed) > 5 && Math.hypot(player.pos.x - d.pos.x, player.pos.z - d.pos.z) < 2.6) {
         d.down = 6; spray(d.pos, ['#3a3a2a', '#7a0f1a'], 8, 6); play('scream1', .6);
         hint(pick(['Мужик даже не проснулся', 'Встанет, он из Добрянки', 'Это был Батя из «Пенного»', 'Он так каждую пятницу']), 2);
         heat = Math.min(5, heat + .2); lastKill = now;
@@ -963,11 +1009,12 @@ function create(data) {
     k.mesh = new THREE.InstancedMesh(k.geo, mat, k.count); k.mesh.frustumCulled = false; scene.add(k.mesh);
     for (let i = 0; i < k.count; i++) crowd.push({ k, i, pos: V(0, 0, 0), vel: V(0, 0, 0), heading: rand(0, 6.3), t: rand(0, 9), seed: rand(0, 9), dead: false, respawn: 0 });
   }
-  const rooms = {}, ROOM_KINDS = ['shawarma', 'tire', 'crypto', 'pawn', 'guns', 'pharmacy', 'mvd', 'strip'];
+  const rooms = {}, ROOM_KINDS = ['shawarma', 'tire', 'crypto', 'pawn', 'guns', 'pharmacy', 'mvd', 'strip', 'hospital', 'autoschool', 'yantar', 'kb', 'hotel', 'ozon', 'wb'];
   const neonMat = color => new THREE.MeshBasicMaterial({ color });
   ROOM_KINDS.forEach((kind, k) => {
     const ox = 8000 + k * 60, oz = 8000, W = 12, D = 9, H = 6, b = new Batch(), def = SHOPDEF[kind], anim = [];
-    const pal = { shawarma: ['#7a5a3a', '#e8c890'], tire: ['#3a3a3e', '#7a7a80'], crypto: ['#3a1030', '#5a1a4a'], pawn: ['#5a4a3a', '#8a7a60'], guns: ['#4a3a2a', '#5e4a32'], pharmacy: ['#c9d3ce', '#f2f5f3'], mvd: ['#6a6a5a', '#c8c8b0'], strip: ['#1a0a1a', '#2a0a2a'] }[kind];
+    const pal = { shawarma: ['#7a5a3a', '#e8c890'], tire: ['#3a3a3e', '#7a7a80'], crypto: ['#3a1030', '#5a1a4a'], pawn: ['#5a4a3a', '#8a7a60'], guns: ['#4a3a2a', '#5e4a32'], pharmacy: ['#c9d3ce', '#f2f5f3'], mvd: ['#6a6a5a', '#c8c8b0'], strip: ['#1a0a1a', '#2a0a2a'], hospital: ['#b8c4c0', '#e8eeec'], autoschool: ['#3a3a44', '#d8d0c0'], yantar: ['#5a4a3a', '#c8a070'], kb: ['#4a1a1a', '#f0e8e0'], hotel: ['#5a3a2a', '#d8c8a8'], ozon: ['#2a3a6a', '#dde6ff'], wb: ['#3a1a4a', '#f0e0f8'] }[kind];
+    const SHELF = { pharmacy: ['#c0392b', '#3a6cf4', '#1f9a6a', '#ffd24a'], yantar: ['#6a4a1a', '#2f7a3a', '#c8a070', '#d4a017'], kb: ['#c0302a', '#f2f2f2', '#6a1a1a', '#d4a017'] }[kind];
     const bx = (x0, x1, z0, z1, h = 9) => world.box(ox + x0, ox + x1, oz + z0, oz + z1, h);
     const at = (mesh, x, y, z, ry = 0) => { mesh.position.set(ox + x, y, oz + z); mesh.rotation.y = ry; scene.add(mesh); return mesh; };
     b.add(BOX, pal[0], M(ox, -.1, oz, 0, 0, 0, W * 2, .2, D * 2));
@@ -1013,7 +1060,11 @@ function create(data) {
       }
       if (kind === 'pawn') { at(new THREE.Mesh(specs.priora.geo, mat), -6, 0, -1, .6); bx(-8, -4, -3.5, 1.5, 2); for (let i = 0; i < 5; i++) b.add(BOX, pick(['#c0392b', '#d4a017', '#3a6cf4', '#888']), M(ox + 6 + rand(-2, 2), 1.4 + (i % 2), oz - 4 + i, 0, rand(0, 3), 0, .8, .6, .8)); b.add(BOX, '#5e3819', M(ox + 6, 1, oz - 2, 0, 0, 0, 1, 2, 6)); bx(5.4, 6.6, -5, 1, 2); }
       if (kind === 'guns') { for (let i = 0; i < 6; i++) b.add(BOX, '#1a1a1a', M(ox - 7.5 + i * 3, 3, oz + D - .4, 0, 0, .1 * (i % 2 ? 1 : -1), 2.2, .25, .2)); b.add(BOX, '#7a4a26', M(ox - 9, 4.2, oz - D + .5, 0, 0, 0, .7, .8, .9)); for (const s of [-1, 1]) b.limb('#d9c9a0', V(ox - 9 + s * .2, 4.6, oz - D + .6), V(ox - 9 + s * .8, 5.4, oz - D + .4), .1); at(new THREE.Mesh(new THREE.CircleGeometry(1, 20), neonMat('#ffffff')), 10, 2.5, -4, -Math.PI / 2); at(new THREE.Mesh(new THREE.CircleGeometry(.5, 20), neonMat('#c0392b')), 9.98, 2.5, -4, -Math.PI / 2); }
-      if (kind === 'pharmacy') { for (const x of [-9, 9]) { b.add(BOX, '#ffffff', M(ox + x, 1.5, oz, 0, 0, 0, 1.2, 3, 8)); for (let i = 0; i < 12; i++) b.add(BOX, pick(['#c0392b', '#3a6cf4', '#1f9a6a', '#ffd24a']), M(ox + x - Math.sign(x) * .7, .6 + (i % 4) * .7, oz - 3 + Math.floor(i / 4) * 3, 0, 0, 0, .3, .4, .6)); } bx(-9.6, -8.4, -4, 4, 3); bx(8.4, 9.6, -4, 4, 3); for (const [w, h] of [[2, .6], [.6, 2]]) at(new THREE.Mesh(BOX, neonMat('#1fd17a')), 0, 5.2, D - .3).scale.set(w, h, .1); }
+      if (SHELF) { for (const x of [-9, 9]) { b.add(BOX, '#ffffff', M(ox + x, 1.5, oz, 0, 0, 0, 1.2, 3, 8)); for (let i = 0; i < 12; i++) b.add(BOX, pick(SHELF), M(ox + x - Math.sign(x) * .7, .6 + (i % 4) * .7, oz - 3 + Math.floor(i / 4) * 3, 0, 0, 0, .3, .4, .6)); } bx(-9.6, -8.4, -4, 4, 3); bx(8.4, 9.6, -4, 4, 3); }
+      if (kind === 'pharmacy' || kind === 'hospital') for (const [w, h] of [[2, .6], [.6, 2]]) at(new THREE.Mesh(BOX, neonMat(kind === 'pharmacy' ? '#1fd17a' : '#ff2030')), 0, 5.2, D - .3).scale.set(w, h, .1);
+      if (kind === 'hospital' || kind === 'hotel') for (const x of [-8, 8]) { b.add(BOX, '#f2f2f2', M(ox + x, .55, oz - 2, 0, 0, 0, 2.2, .6, 4.2)); b.add(BOX, kind === 'hotel' ? '#7a2e4a' : '#9ab0c8', M(ox + x, .9, oz - 3.4, 0, 0, 0, 2.1, .2, 1.2)); bx(x - 1.2, x + 1.2, -4.2, .2, 1); }
+      if (kind === 'ozon' || kind === 'wb') for (let i = 0; i < 14; i++) { const x = (i % 2 ? 1 : -1) * rand(6, 10), z = rand(-5, 2); b.add(BOX, kind === 'ozon' ? pick(['#2f6fff', '#5a8aff', '#c8a070']) : pick(['#b03ad0', '#d070f0', '#c8a070']), M(ox + x, .5 + (i % 3) * .9, oz + z, 0, rand(0, 1), 0, 1.4, .9, 1.1)); }
+      if (kind === 'autoschool') { at(new THREE.Mesh(specs.polo.geo, mat), -6.5, 0, -1, .5); bx(-8.6, -4.4, -3.6, 1.6, 2); for (let i = 0; i < 5; i++) b.add(CONE, '#ff8a2a', M(ox + 3 + i * 1.6, .45, oz - 2, 0, 0, 0, .6, .9, .6)); }
       if (kind === 'mvd') { for (const [c, y] of [['#ffffff', 5.3], ['#2a5fd0', 4.9], ['#c0392b', 4.5]]) b.add(BOX, c, M(ox - 9, y, oz + D - .3, 0, 0, 0, 2.4, .4, .1)); for (let i = 0; i < 9; i++) b.add(BOX, '#555', M(ox + 6.5 + i * .5, 2.5, oz - 4, 0, 0, 0, .08, 5, .08)); for (let i = 0; i < 9; i++) b.add(BOX, '#555', M(ox + 6.3, 2.5, oz - 4 + i * .5, 0, 0, 0, .08, 5, .08)); bx(6.2, 12, -4.2, 0, 6); const [file, name] = pick(WANTED); at(poster(file, name), -6, 2.8, D - .3, Math.PI).scale.setScalar(.6); }
     }
     for (const r of rings) r.ring.position.set(r.x, .5, r.z);
@@ -1052,6 +1103,106 @@ function create(data) {
   const gateY = groundY(raceGate.x, raceGate.z), roadside = (p, k) => [p.x + Math.sin(p.ang) * k, p.z + Math.cos(p.ang) * k];
   raceGate.ring.position.set(raceGate.x, gateY + .5, raceGate.z); raceGate.ring.scale.set(2.2, 1, 2.2); raceGate.icon.position.set(raceGate.x, gateY + 5, raceGate.z); raceGate.icon.scale.set(4, 4, 1);
   let race = null;
+  const block = world.blockade, blockDoor = block && { kind: 'block', x: block.x, z: block.z, ang: block.ang }, EX = world.exit, exitY = groundY(EX[0], EX[1]);
+  const exitRing = ring('#ffd24a'), exitIcon = iconSprite('sunset');
+  exitRing.position.set(EX[0], exitY + .5, EX[1]); exitRing.scale.set(3.4, 1, 3.4); exitIcon.position.set(EX[0], exitY + 6, EX[1]); exitIcon.scale.set(4, 4, 1);
+  let exam = null, rock = null, schoolAt = 0, exitHintAt = 0, barkAt = 0;
+  const examRing = ring('#5ff2ff'), examIcon = iconSprite('flag');
+  examRing.scale.set(2.6, 1, 2.6); examRing.visible = examIcon.visible = false;
+  function startExam() {
+    leaveShop(); exitRoom();
+    const [sx, sz] = roadside(P.autoschool, 9), start = nav.nearest(sx, sz), cps = [];
+    for (let k = 0, cur = start; k < 5; k++) {
+      const f = nav.field(cur), opts = [];
+      for (let n = 0; n < nav.NN; n++) if (f[n] > 90 && f[n] < 170 && !cps.includes(n) && groundY(nav.NX[n], nav.NZ[n]) > .5) opts.push(n);
+      if (opts.length) cps.push(cur = pick(opts));
+    }
+    const c = car(specs.granta), e = nav.adj[start][0];
+    c.pos.set(nav.NX[start], 0, nav.NZ[start]); c.heading = Math.atan2(nav.NX[e.to] - nav.NX[start], nav.NZ[e.to] - nav.NZ[start]); c.stolen = true;
+    scene.add(c.mesh); cars.push(c); place(c);
+    hero.mesh.visible = false; player = c; chase(0, true);
+    exam = { cps, i: 0, until: run.time + 80, car: c };
+    ann('ЭКЗАМЕН', 'gold'); hint('Азиз: «Пять флажков, восемьдесят секунд, пауков не дави, брат»', 3.5);
+    examNext();
+  }
+  function examNext() { const n = exam.cps[exam.i]; setGps(nav.NX[n], nav.NZ[n], 'flag', `Экзамен ${exam.i + 1}/${exam.cps.length}`); }
+  function examEnd(ok, why) {
+    examRing.visible = examIcon.visible = false; exam = null; gps = null;
+    if (ok) { run.license = true; ann('ПРАВА ПОЛУЧЕНЫ', 'gold'); hint('Азиз: «Молодец, брат. Гранту оставь себе до вечера»', 3); }
+    else { ann('ЭКЗАМЕН ПРОВАЛЕН'); hint(why, 3); }
+  }
+  function examStep() {
+    if (!exam) return;
+    if (player !== exam.car) { examEnd(false, 'Азиз: «Ты зачем из машины вышел? Приходи завтра»'); return; }
+    if (run.time > exam.until) { examEnd(false, 'Азиз: «Медленно, брат. Как Гранта в гору»'); return; }
+    const n = exam.cps[exam.i], x = nav.NX[n], z = nav.NZ[n], y = groundY(x, z);
+    examRing.visible = examIcon.visible = true; examRing.position.set(x, y + .5, z); examIcon.position.set(x, y + 5 + Math.sin(now * 3) * .3, z); examIcon.scale.set(3.2, 3.2, 1);
+    if (Math.hypot(player.pos.x - x, player.pos.z - z) < 7) { exam.i++; play('coins', .6); if (exam.i >= exam.cps.length) examEnd(true); else examNext(); }
+  }
+  function openBlock(how) {
+    leaveShop(); run.blockOpen = how; block.solid.gone = true; block.boom.rotation.z = 1.35;
+    ann('ПРОЕЗЖАЙ', 'gold'); hint(`Шлагбаум поднят. ${ico('sunset')} Выезд из Добрянки — по навигатору`, 3);
+    setGps(EX[0], EX[1], 'sunset', 'Выезд из Добрянки');
+  }
+  function breakBlock() {
+    run.blockOpen = 'ram'; block.solid.gone = true; block.boom.visible = false;
+    spray(tmp2.set(block.bx, groundY(block.bx, block.bz), block.bz), ['#e0302a', '#ffffff', '#ffd24a'], 40, 12); play('crash', 1) || noise(.5, 300, .9, 'lowpass');
+    heat = 5; lastKill = now; shakeAmt = 1.4; ann('ПРОРЫВ'); hint(`Блокпост снесён! Гони к выезду ${ico('sunset')}, менты на хвосте`, 3);
+    setGps(EX[0], EX[1], 'sunset', 'Выезд из Добрянки');
+  }
+  function parcel() {
+    const r = Math.random();
+    if (r < .35) return 'Внутри: ' + pick(['чехол на айфон 6', 'носки с Пуджем', 'коврик для мыши 3×4 метра', 'пустая коробка от другой коробки', 'брелок «Добрянка — сердце Прикамья»']);
+    if (r < .6) { const g = pick([500, 777, 1000, 1337]); run.gold += g; return `Внутри конверт: +${g}. Кто-то перепутал адрес`; }
+    if (r < .75) { const k = pick(Object.keys(GUNS)); run.guns[k] = (run.guns[k] || 0) + GUNS[k].refill; run.gun = k; return `Внутри ${GUNS[k].name}. В описании было «игрушка»`; }
+    if (r < .85) { site.loot.cheese++; site.saveLoot(); return 'Внутри сыр. Пахнет Рошаном'; }
+    if (r < .9) { site.loot.aegis++; site.saveLoot(); return 'Внутри Аегис! Курьер Доты перепутал заказ'; }
+    for (const c of crowd.filter(c => c.k.kind === 'spider').slice(0, 4)) { c.dead = false; c.pos.set(player.pos.x + rand(-3, 3), 0, player.pos.z + rand(-3, 3)); }
+    play('scream1', .8);
+    return 'Внутри пауки. Живые. Беги';
+  }
+  const rockMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(6, 1), new THREE.MeshLambertMaterial({ color: '#9fe0ff', emissive: '#4ab8ff', emissiveIntensity: .8, flatShading: true }));
+  rockMesh.visible = false; scene.add(rockMesh);
+  function meteor() {
+    leaveShop(); exitRoom();
+    const a = rand(0, 6.283), x = player.pos.x + Math.sin(a) * 45, z = player.pos.z + Math.cos(a) * 45;
+    rock = { x, z, y: groundY(x, z), t: 0 }; rockMesh.visible = true;
+    ann('БЕПИС ЖМЁТ УЛЬТУ', 'gold'); hint('Бепис (он же ЦМка) заказал метеорит. Смотри в небо', 3);
+  }
+  function rockStep(dt) {
+    if (!rock) return;
+    rock.t += dt;
+    const k = Math.min(1, rock.t / 3);
+    rockMesh.position.set(rock.x + 260 * (1 - k), rock.y + 320 * (1 - k), rock.z - 120 * (1 - k)); rockMesh.rotation.x += dt * 3; rockMesh.rotation.y += dt * 2;
+    if (Math.random() < .5) spray(rockMesh.position, ['#e8f6ff', '#9fe0ff'], 2, 3);
+    if (k < 1) return;
+    rockMesh.visible = false; shakeAmt = 2.5; flash = 1;
+    play('boom', 1) || noise(1.6, 90, 1, 'lowpass');
+    spray(tmp2.set(rock.x, rock.y, rock.z), ['#e8f6ff', '#9fe0ff', '#ffffff', '#4ab8ff'], 90, 22);
+    for (const c of crowd) if (!c.dead && Math.hypot(c.pos.x - rock.x, c.pos.z - rock.z) < 70) squash(c);
+    while (cops.length) blowCop(cops[0]);
+    heat = 0; beat.active = false; beat.mesh.visible = false; rock = null;
+    setWeather(WEATHER[3]); Object.assign(wcur, { rain: 0, snow: 1 });
+    ann('FREEZING FIELD', 'gold'); hint('Бепис доволен. Добрянка заморожена, МВД во льду', 3.5);
+  }
+  const loiterers = world.loiter.map(([x, z]) => {
+    const l = Object.assign(person(mat, { top: pick(['#1a1a24', '#2a2a3a', '#3a2a1a', '#1e2f7a']), stripe: '#f2f2f2', skin: '#e3b08c', hat: '#111', legs: '#1a1a24' }), { x, z, down: 0, seed: rand(0, 9), pos: V(x, 0, z) });
+    l.mesh.position.set(x, groundY(x, z), z); l.mesh.rotation.y = P.yantar.ang + rand(-.8, .8); scene.add(l.mesh);
+    return l;
+  });
+  function loiterStep(dt) {
+    for (const l of loiterers) {
+      if (l.down > 0) { l.down -= dt; l.mesh.rotation.x = l.down > 0 ? -1.45 : 0; continue; }
+      l.mesh.rotation.z = Math.sin(now * 1.3 + l.seed) * .06; l.arms[0].rotation.x = -1.1 + Math.sin(now * 2 + l.seed) * .25;
+      if (!live() || zone !== 'city') continue;
+      const d = Math.hypot(player.pos.x - l.x, player.pos.z - l.z);
+      if (!player.foot && Math.abs(player.speed) > 5 && d < 2.4) {
+        l.down = 8; spray(l.pos, ['#1a1a24', '#7a0f1a'], 8, 6); play('scream1', .6); heat = Math.min(5, heat + .3); lastKill = now;
+        hint(pick(['Пацаны у «Янтаря» запомнили номер', 'Встанет. Он и не такое видел', 'Это был Колян. Колян вернётся']), 2);
+      }
+      if (player.foot && d < 6 && now > barkAt && !run.respect) { barkAt = now + 5; hint(pick(['«Э, братан, есть сотка?»', '«Ты с какого района?»', '«Сига есть?»', '«Дай позвонить, мне только мамке»', '«Слышь, а чё такой нарядный?»']), 2.5); }
+    }
+  }
   function trackKeep(c, full) {
     let best = c.ti || 0, bd = Infinity;
     const span = full ? TR.NS : 14;
@@ -1209,7 +1360,7 @@ function create(data) {
   }
   const SFX = ['shot', 'shotgun', 'scream1', 'scream2', 'crash', 'boom', 'cash', 'slotspin', 'slotwin', 'splat', 'engine', 'siren', 'rain', 'firstblood', 'doublekill', 'triplekill', 'ultrakill', 'rampage', 'roshan', 'freshmeat', 'getoverhere', 'brood', 'courier', 'coins', 'aegis'];
   const bufs = {}, loops = {};
-  const ANN_SFX = { 'FIRST BLOOD': 'firstblood', 'DOUBLE KILL': 'doublekill', 'TRIPLE KILL': 'triplekill', 'ULTRA KILL': 'ultrakill', 'RAMPAGE': 'rampage', 'КУРЬЕР УБИТ': 'courier', 'АЕГИС СРАБОТАЛ': 'aegis', 'УЧАСТКОВЫЙ В БОЛЬНИЦЕ': 'scream1', 'ПРОПИСКА ПОЛУЧЕНА': 'roshan', 'УГНАЛ ТАЧКУ МВД': 'getoverhere', 'THE BATTLE BEGINS': 'brood', 'ДЖЕКПОТ': 'slotwin', 'ПОБЕДА': 'rampage', 'МВД В ЯРОСТИ': 'boom', 'ТАЧКА ТВОЯ': 'cash' };
+  const ANN_SFX = { 'FIRST BLOOD': 'firstblood', 'DOUBLE KILL': 'doublekill', 'TRIPLE KILL': 'triplekill', 'ULTRA KILL': 'ultrakill', 'RAMPAGE': 'rampage', 'КУРЬЕР УБИТ': 'courier', 'АЕГИС СРАБОТАЛ': 'aegis', 'УЧАСТКОВЫЙ В БОЛЬНИЦЕ': 'scream1', 'УЕХАЛ В ЗАКАТ': 'roshan', 'ПРАВА ПОЛУЧЕНЫ': 'cash', 'ПРОРЫВ': 'boom', 'FREEZING FIELD': 'roshan', 'ПРОЕЗЖАЙ': 'cash', 'УГНАЛ ТАЧКУ МВД': 'getoverhere', 'THE BATTLE BEGINS': 'brood', 'ДЖЕКПОТ': 'slotwin', 'ПОБЕДА': 'rampage', 'МВД В ЯРОСТИ': 'boom', 'ТАЧКА ТВОЯ': 'cash' };
   function seamless(buf) {
     const sr = buf.sampleRate, pad = Math.floor(.06 * sr), n = buf.length - 2 * pad, f = Math.floor(Math.min(.12, n / sr / 4) * sr);
     const src = buf.getChannelData(0).subarray(pad, pad + n), out = ac.createBuffer(1, n - f, sr), o = out.getChannelData(0);
@@ -1265,7 +1416,7 @@ function create(data) {
   }
   function hint(text, sec) { hintEl.innerHTML = text; hintUntil = now + sec; }
   function floatText(text, pos) {
-    tmp.set(pos.x, pos.y + 3, pos.z).project(camera);
+    tmp.set(pos.x, Math.max(pos.y, groundY(pos.x, pos.z)) + 3, pos.z).project(camera);
     if (tmp.z > 1) return;
     const el = document.createElement('div');
     el.className = 'g-float'; el.textContent = text;
@@ -1277,7 +1428,7 @@ function create(data) {
       const g = gibs[i];
       if (g.life > 0) continue;
       n--; g.life = rand(.8, 1.5); g.spin = rand(-12, 12);
-      g.pos.set(pos.x, pos.y + 1, pos.z); g.vel.set(rand(-1, 1) * power, rand(.6, 1.4) * power, rand(-1, 1) * power);
+      g.pos.set(pos.x, Math.max(pos.y, groundY(pos.x, pos.z)) + 1, pos.z); g.vel.set(rand(-1, 1) * power, rand(.6, 1.4) * power, rand(-1, 1) * power);
       gibMesh.setColorAt(i, c.set(pick(colors)));
     }
     gibMesh.instanceColor.needsUpdate = true;
@@ -1361,11 +1512,11 @@ function create(data) {
   }
   function jobStep() {
     const j = run.job;
+    if (!j && gps && gps.icon === 'chest') gps = null;
     if (!j) return;
     const done = j.kill ? run.spiders + run.couriers - j.base >= j.need : Math.hypot(player.pos.x - drop.x, player.pos.z - drop.z) < 4.5;
     if (done) { run.gold += 1337; run.jobs++; ann('ТРИАДА ДОВОЛЬНА', 'gold'); hint('+1337 от Триады', 2.5); run.job = null; }
     else if (run.time > j.until) { ann('ТРИАДА РАЗОЧАРОВАНА'); hint('Не успел. Триада запомнила', 2.5); run.job = null; }
-    if (!run.job && gps && gps.name === 'Передачка') gps = null;
   }
   function beatStep(dt) {
     beat.cd -= dt;
@@ -1459,6 +1610,7 @@ function create(data) {
     for (const e of nav.adj[c.wn]) { const d = f[e.to] + rand(0, 4); if (d < bd) { bd = d; best = e.to; } }
     c.wn = best;
   }
+  const live = () => state === 'play' && !menu && !mapOpen;
   const surrender = () => player.foot || Math.abs(player.speed) < 4 || (!on('up') && !on('down') && Math.abs(player.speed) < 15);
   function copThink(c, dt) {
     const d = c.pos.distanceTo(player.pos), top = 22 + Math.ceil(heat) * 3;
@@ -1470,8 +1622,12 @@ function create(data) {
     }
     const diff = wrap(Math.atan2(tx - c.pos.x, tz - c.pos.z) - c.heading);
     let gas = Math.abs(diff) > 1.3 && c.speed > 15 ? -.5 : 1, steer = clamp(diff * 2.2, -1, 1);
-    if (d < 40 && surrender()) { const want = Math.max(0, (d - 7) * 1.1); gas = c.speed > want + 1 ? -1 : c.speed < want - 1 ? .5 : 0; c.stuck = 0; }
-    else if (c.reverse > 0) { c.reverse -= dt; gas = -1; steer = -steer; }
+    if (c.reverse > 0) { c.reverse -= dt; gas = -1; steer = -steer; }
+    else if (d < 40 && surrender()) {
+      const want = Math.max(0, (d - 7) * 1.1);
+      gas = c.speed > want + 1 ? -1 : c.speed < want - 1 ? .5 : 0;
+      if (want > 4 && Math.abs(c.speed) < 1 && (c.stuck += dt) > 1.5) { c.reverse = .9; c.stuck = 0; }
+    }
     else if (Math.abs(c.speed) < 2 && (c.stuck += dt) > 1) { c.reverse = .9; c.stuck = 0; }
     else if (Math.abs(c.speed) >= 2) c.stuck = 0;
     drive(c, gas, steer, Math.abs(diff) > 1.8 && c.speed > 8, dt, top);
@@ -1509,6 +1665,7 @@ function create(data) {
     setTimeout(() => { if (state === 'over' && opened) screen(overHtml(record)); }, 1300);
   }
   function respawn() {
+    if (exam) examEnd(false, 'Азиз: «Экзамен окончен. В ЦРБ передачки не носим»');
     zone = 'city'; room = null; mapC.hidden = false;
     const lost = Math.floor(run.gold * (cause === 'triada' ? .6 : cause === 'bust' ? .2 : run.bahily ? .15 : .3)), m = cause === 'bust' ? P.mvd : P.hospital;
     run.gold -= lost; run.deaths++; if (cause !== 'bust') run.bahily = false;
@@ -1561,8 +1718,8 @@ function create(data) {
     const hits = aimTargets(g).slice(0, g.spread || 1);
     if (!hits.length) tracer(from, tmp.set(h.pos.x + Math.sin(h.heading) * g.range, from.y, h.pos.z + Math.cos(h.heading) * g.range), '#ffe9a0');
     for (const { e, kind } of hits) {
-      tracer(from, tmp.set(e.pos.x, (e.y || 0) + 1, e.pos.z), '#ffe9a0');
-      if (kind === 'crowd') squash(e);
+      tracer(from, tmp.set(e.pos.x, groundY(e.pos.x, e.pos.z) + 1, e.pos.z), '#ffe9a0');
+      if (kind === 'crowd') squash(e, .5);
       else if (kind === 'triada') killTriada(e);
       else if (kind === 'beat') beatDown();
       else { e.hp -= g.dmg; spray(e.pos, ['#ffb347', '#fff3a0'], 5, 5); if (e.hp <= 0) blowCop(e); }
@@ -1570,8 +1727,9 @@ function create(data) {
     play(run.gun === 'sg' ? 'shotgun' : 'shot', run.gun === 'ak' ? .55 : .9, run.gun === 'ak' ? 1.2 : rand(.95, 1.05)) || noise(run.gun === 'sg' ? .35 : .14, run.gun === 'sg' ? 900 : 1600, run.gun === 'sg' ? .9 : .6, 'bandpass');
     if (heat < .6) { heat = .6; lastKill = now; }
   }
-  function squash(s) {
-    const courier = s.k.kind === 'courier', gold = courier ? 1337 : pick([228, 322, 69, 420, 1337, 228]);
+  function squash(s, cut = 1) {
+    const courier = s.k.kind === 'courier', gold = Math.round((courier ? 1337 : pick([228, 322, 69, 420, 1337, 228])) * cut);
+    if (exam) { exam.until -= 8; hint('Азиз: «Паука задавил! Минус восемь секунд»', 2); }
     s.dead = true; s.respawn = rand(5, 9);
     run.gold += gold; courier ? run.couriers++ : run.spiders++;
     streak = now - lastKill < 3 ? streak + 1 : 1; lastKill = now;
@@ -1598,7 +1756,10 @@ function create(data) {
     beat.active = false; beat.mesh.visible = false; beat.cd = 0; reviveTriada();
     gps = null; copField = null; mapOpen = false; fullEl.hidden = true;
     hp = 100; heat = 0; bust = 0; invuln = 0; streak = 0; lastKill = -99; firstBlood = true; spawnCD = 0; shakeAmt = 0;
-    run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0, deaths: 0, guns: {}, gun: null, drunk: 0, energy: 0, bahily: false };
+    run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0, deaths: 0, guns: {}, gun: null, drunk: 0, energy: 0, bahily: false, license: false, spravka: false, passport: false, blockOpen: false, shoes: false, respect: false };
+    exam = null; rock = null; examRing.visible = examIcon.visible = false; rockMesh.visible = false;
+    if (block) { block.solid.gone = false; block.boom.visible = true; block.boom.rotation.z = 0; block.asked = false; }
+    for (const l of loiterers) { l.down = 0; l.mesh.rotation.x = 0; }
     heroGun.visible = false;
     stamina = 1; hour = 18.8; setWeather();
     for (const d of drunks) { d.active = false; d.mesh.visible = false; }
@@ -1617,7 +1778,7 @@ function create(data) {
     if (player.foot) {
       const sprint = (on('sprint') || (touch && on('down'))) && stamina > .03;
       stamina = clamp(stamina + (sprint && !run.energy ? -.22 : .16) * dt, 0, 1);
-      walk(player, on('up') || sprint ? 1 : !touch && on('down') ? -1 : 0, steer, dt, sprint ? (run.energy ? 13 : 11) : 7);
+      walk(player, on('up') || sprint ? 1 : !touch && on('down') ? -1 : 0, steer, dt, (sprint ? (run.energy ? 13 : 11) : 7) + (run.shoes ? 2 : 0));
       fireCD -= dt; aimT -= dt;
       heroGun.visible = !!run.gun;
       if (run.gun && (on('fire') || on('mouse')) && fireCD <= 0) fire();
@@ -1625,7 +1786,12 @@ function create(data) {
     } else {
       const gas = (on('up') ? 1 : 0) - (on('down') ? 1 : 0), before = Math.abs(player.speed), imp = drive(player, gas, steer, on('hand') || on('sprint'), dt, player.spec.top + run.engine * 4);
       if (imp > 6) { play('crash', Math.min(1, imp / 18)) || noise(.35, 500, Math.min(.8, imp / 20), 'lowpass'); spray(tmp.copy(player.pos).addScaledVector(fwd, 2), ['#ffb347', '#fff3a0'], 6, 5); }
-      if (imp > 14 && before > 14) hurt((imp - 14) * 1.2, 'wall');
+      const atBlock = imp > 6 && block && !run.blockOpen && Math.hypot(player.pos.x - block.bx, player.pos.z - block.bz) < 10;
+      if (atBlock && before > 27.5 && run.armor) { breakBlock(); hurt(40, 'wall'); player.speed = before * .75; player.vel.set(Math.sin(player.heading) * player.speed, 0, Math.cos(player.heading) * player.speed); }
+      else {
+        if (atBlock && before > 12) hint(run.armor ? 'Мало! Разгонись больше 100 км/ч' : `Шлагбаум МВД крепче тачки. Нужна броня — шиномонтаж ${ico('tire')}`, 2.5);
+        if (imp > 14 && before > 14) hurt((imp - 14) * 1.2, 'wall');
+      }
       player.lean = -steer * Math.min(1, Math.abs(player.speed) / 20) * .06;
     }
     player.mesh.visible = invuln <= 0 || now * 10 % 2 < 1.4;
@@ -1642,6 +1808,20 @@ function create(data) {
       d.inside = inside;
       if (!player.foot && dist < 6) doorNear = d;
     }
+    if (block && !run.blockOpen) {
+      const bd = Math.hypot(player.pos.x - block.x, player.pos.z - block.z);
+      if (bd < 7 && Math.abs(player.speed) < 8 && !block.asked) { block.asked = true; openShop(blockDoor); return; }
+      if (bd > 14) block.asked = false;
+    }
+    if (Math.hypot(player.pos.x - EX[0], player.pos.z - EX[1]) < 9) {
+      if (run.blockOpen) { escape(); return; }
+      if (now > exitHintAt) { exitHintAt = now + 4; hint('Пост ДПС: «Без отметки с моста не выпустим». Блокпост на мосту', 3); }
+    }
+    if (P.school && !player.foot && hour > 7.5 && hour < 15 && now > schoolAt && Math.abs(player.speed) > 16.7 && Math.hypot(player.pos.x - P.school.px, player.pos.z - P.school.pz) < 80) {
+      schoolAt = now + 10; heat = Math.min(5, heat + 1); lastKill = now; run.gold = Math.max(0, run.gold - 228);
+      hint('Камера у школы №1: больше 60 в школьной зоне. Звезда и штраф 228', 2.5);
+    }
+    examStep();
     for (const c of cars) {
       if (c === player) continue;
       if (c.speed || c.vel.lengthSq() > .0025) { c.speed *= Math.exp(-5 * dt); drive(c, 0, 0, false, dt, c.spec.top); if (Math.abs(c.speed) < .05 && c.vel.lengthSq() < .01) { c.speed = 0; c.vel.set(0, 0, 0); } }
@@ -1692,8 +1872,8 @@ function create(data) {
         s.pos.addScaledVector(s.vel, dt);
         if (collide(s, .9) > 0) s.heading += Math.PI * rand(.6, 1.4);
         if (groundY(s.pos.x + s.vel.x * .4, s.pos.z + s.vel.z * .4) < .4) s.heading += Math.PI;
-        if (d > 230) s.pos.copy(spot(70, 180));
-        if (state === 'play' && (player.foot ? d < 1.8 && player.speed > 1 : d < 2.7 && Math.abs(player.speed) > 4)) squash(s);
+        if (d > 230 && zone === 'city') s.pos.copy(spot(70, 180));
+        if (live() && (player.foot ? d < 1.8 && player.speed > 1 : d < 2.7 && Math.abs(player.speed) > 4)) squash(s);
       }
       dummy.position.set(s.pos.x, groundY(s.pos.x, s.pos.z) + Math.abs(Math.sin(s.t * 14)) * .15, s.pos.z);
       dummy.rotation.set(0, s.heading + Math.sin(s.t * 20) * .15, 0);
@@ -1719,10 +1899,9 @@ function create(data) {
       d.ring.material.opacity = .35 + Math.sin(now * 4) * .15;
       d.icon.position.set(d.x, d.y + 3.6 + Math.sin(now * 2.5) * .3, d.z);
     }
-    if (state === 'win' && (winT += dt) > .3) {
+    if (state === 'win' && (winT += dt) > .45) {
       winT = 0;
-      const m = P.mvd;
-      spray(tmp2.set(m.px + rand(-14, 14), groundY(m.px, m.pz) + rand(18, 30), m.pz + rand(-14, 14)), ['#ff4fb8', '#ffd24a', '#39ff6a', '#2a6bff', '#fff'], 22, 9);
+      spray(tmp2.set(player.pos.x + rand(-30, 30), player.y + rand(18, 30), player.pos.z + rand(-30, 30)), ['#ff4fb8', '#ffd24a', '#ff8a5c', '#fff'], 22, 9);
       noise(.5, 160, .35, 'lowpass');
     }
     for (const c of crews) c.icon.position.set(c.cx, c.y + 3.4 + Math.sin(now * 2 + c.x) * .25, c.cz);
@@ -1763,7 +1942,8 @@ function create(data) {
     const want = Math.ceil(heat - 1e-6);
     if (shown.stars !== want) { shown.stars = want; stars.forEach((s, k) => s.classList.toggle('on', k < want)); }
     wantedEl.classList.toggle('cool', want > 0 && now - lastKill > 8);
-    show(`${ico('gold')} ${run.gold || 0} / ${GOAL}`, 'gold', goldEl);
+    show(`${ico('gold')} ${run.gold || 0}`, 'gold', goldEl);
+    show(run.blockOpen ? `${ico('sunset')} к выезду` : `${[['license', 'license'], ['spravka', 'scroll'], ['passport', 'passport']].map(([k, i]) => `<span class="${run[k] ? '' : 'g-off'}">${ico(i)}</span>`).join('')} → ${ico('barrier')}`, 'goal', goalEl);
     show(`${ico('aegis')} ${site.loot.aegis} · ${ico('cheese')} ${site.loot.cheese}${run.drunk ? ` · ${ico('bottle')}` : ''}${run.energy ? ` · ${ico('bolt')}` : ''}`, 'loot', lootEl);
     show(run.gun ? `${ico('gun')} ${GUNS[run.gun].name} · ${run.guns[run.gun]}${Object.keys(run.guns).length > 1 ? ' ⇄' : ''}` : '', 'gun', gunEl);
     const w = Math.round(hp) + '%';
@@ -1782,13 +1962,13 @@ function create(data) {
     const drivingNow = state === 'play' && !player.foot && zone !== 'inside';
     speedEl.hidden = !drivingNow;
     if (drivingNow) show(String(Math.round(Math.abs(player.speed) * 3.6)), 'speed', speedEl.firstChild);
-    show(j ? `${ico('target')} ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
+    show(exam ? `${ico('flag')} Экзамен ${exam.i}/${exam.cps.length} · ${clockStr(Math.max(0, exam.until - run.time))}` : j ? `${ico('target')} ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
     radio.hidden = !(prefs.radio && state === 'play' && !player.foot);
     const ag = state === 'play' && player.foot && run.gun && zone === 'city' && !menu ? GUNS[run.gun] : null;
     aimEl.hidden = !ag;
     if (ag) {
       const t = aimTargets(ag)[0];
-      if (t) tmp.set(t.e.pos.x, (t.e.y || 0) + 1.2, t.e.pos.z); else tmp.set(player.pos.x + Math.sin(player.heading) * 14, player.y + 1.5, player.pos.z + Math.cos(player.heading) * 14);
+      if (t) tmp.set(t.e.pos.x, groundY(t.e.pos.x, t.e.pos.z) + 1.2, t.e.pos.z); else tmp.set(player.pos.x + Math.sin(player.heading) * 14, player.y + 1.5, player.pos.z + Math.cos(player.heading) * 14);
       tmp.project(camera);
       aimEl.style.left = (tmp.x * .5 + .5) * 100 + '%'; aimEl.style.top = (-tmp.y * .5 + .5) * 100 + '%';
       aimEl.classList.toggle('lock', !!t);
@@ -1818,11 +1998,16 @@ function create(data) {
     if (Math.abs(camera.fov - fovT) > .05) { camera.fov += (fovT - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
     if (state === 'play' && !menu && !mapOpen) update(dt);
     else if (state === 'dying' && (dyingT -= dt) <= 0) revive();
-    crowdStep(dt); drunkStep(dt); effects(dt); weatherStep(dt);
+    crowdStep(dt); drunkStep(dt); loiterStep(dt); rockStep(dt); effects(dt); weatherStep(dt);
     const far = Math.max(160, scene.fog.far + 40);
     if (Math.abs(camera.far - far) > 4) { camera.far = far; camera.updateProjectionMatrix(); }
     if (state === 'title') { const C = world.centre, a = now * .06, y = groundY(C.x, C.z); camera.position.set(C.x + Math.sin(a) * 175, y + 80, C.z + Math.cos(a) * 175); camera.lookAt(C.x, y + 6, C.z); }
-    else if (state === 'win') { const m = P.mvd, y = groundY(m.px, m.pz), a = now * .2; camera.position.lerp(tmp.set(m.px + Math.sin(a) * 38, y + 16, m.pz + Math.cos(a) * 38), 1 - Math.exp(-1.5 * dt)); camera.lookAt(m.px, y + 10, m.pz); }
+    else if (state === 'win') {
+      const p = player, fx = Math.sin(p.heading), fz = Math.cos(p.heading), sl = Math.hypot(sunDir.x, sunDir.z) || 1, sx = sunDir.x / sl, sz = sunDir.z / sl;
+      if (!p.foot) { const want = Math.atan2(sx, sz); p.heading += wrap(want - p.heading) * Math.min(1, dt * .8); p.pos.x += fx * dt * 12; p.pos.z += fz * dt * 12; }
+      camera.position.lerp(tmp.set(p.pos.x - sx * 16, p.y + 5, p.pos.z - sz * 16), 1 - Math.exp(-1.5 * dt));
+      camera.lookAt(p.pos.x + sx * 40, p.y + 6, p.pos.z + sz * 40);
+    }
     else if (state === 'over') { const a = now * .25; camera.position.lerp(tmp.set(player.pos.x + Math.sin(a) * 16, player.y + 9, player.pos.z + Math.cos(a) * 16), 1 - Math.exp(-2 * dt)); camera.lookAt(player.pos.x, player.y + 1, player.pos.z); }
     else chase(dt);
     sky.position.copy(camera.position);
@@ -1847,15 +2032,19 @@ function create(data) {
     () => 'Кама сегодня +4. Купаться можно только с Аегисом',
     () => 'Новости спорта: Pis`master снова слил Рошана и винит курьера',
     () => 'Участковый просит вернуть ему фуражку. Сука, верни фуражку',
-    () => `Прописка в Добрянке по-прежнему ${GOAL}. МВД работает без выходных и без совести`,
+    () => `Блокпост на мосту стоит. Без документов — ${NO_DOCS}, МВД работает без выходных и без совести`,
+    () => 'Автошкола Азиза: права за неделю. Или за шесть тысяч за минуту',
+    () => 'Бепис снова просит метеорит. ЦМка, остынь',
+    () => 'У «Янтаря» опять стоят пацаны. Если спросят сотку — у тебя нет',
+    () => 'В КБ акция: коньяк «Три звезды». Звёзды розыска в подарок',
     () => 'Хит недели: «Бруда — паучья любовь». Ставим в третий раз, пока не выучишь',
     () => 'Курьер опять сдох. Кто-то заказал варды прямо в Каму',
     () => 'Триада на районе напоминает: семки — это валюта',
     () => heat > 0 ? `Внимание! Розыск ${ico('star').repeat(Math.ceil(heat))}. Все экипажи МВД выехали, участковый бежит пешком` : 'На дорогах Добрянки спокойно. Подозрительно спокойно'
   ];
   const bestTime = {
-    get() { try { return +localStorage.getItem('gtaBestTime') || 0; } catch (e) { return 0; } },
-    set(v) { try { localStorage.setItem('gtaBestTime', v); } catch (e) {} }
+    get() { try { return +localStorage.getItem('gtaEscape') || 0; } catch (e) { return 0; } },
+    set(v) { try { localStorage.setItem('gtaEscape', v); } catch (e) {} }
   };
   const clockStr = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
   function shopItems(kind) {
@@ -1896,7 +2085,52 @@ function create(data) {
       { name: 'Активированный уголь', note: 'лечит от боярышника. От МВД не лечит', price: 50, buy: () => { run.drunk = 0; return 'Протрезвел. Обидно'; } },
       { name: 'Бахилы', note: 'в ЦРБ после смерти заберут вдвое меньше', price: 15, off: run.bahily, buy: () => { run.bahily = true; return 'Бахилы надеты. ЦРБ уважает'; } }
     ];
-    if (kind === 'race') return [{ name: `Погнали: ${TR.laps} круга против 10 экипажей`, note: 'победа — 3000 и спорткар «Бруда GT», подиум — 1000. F — сдаться', price: 0, buy: () => { startRace(); } }];
+    if (kind === 'race') return [{ name: `Погнали: ${TR.laps} круга против 10 экипажей`, note: 'победа — 3000 и спорткар «Бруда GT», подиум — 1000. F — сдаться', price: 300, buy: () => { startRace(); } }];
+    if (kind === 'hospital') return [
+      { name: 'Справка «Годен»', note: run.spravka ? 'уже есть, висит на холодильнике' : 'нужна на блокпосту. Терапевт в отпуске, подпишет уборщица', price: 1500, off: run.spravka, buy: () => { run.spravka = true; return 'Справка получена. Печать кривая, но настоящая'; } },
+      { name: 'Полечиться', note: 'полное здоровье, бахилы в подарок', price: 400, buy: () => { hp = 100; run.bahily = true; return 'Медсестра сделала укол и наорала. Как новый'; } },
+      { name: 'Сдать анализы', note: 'просто так, для души', price: 228, buy: () => pick(['Анализы показали Добрянку в крови', 'Сахар в норме. Шаурма нет', 'В селезёнке нашли Аегис. Шутка']) }
+    ];
+    if (kind === 'autoschool') return [
+      { name: 'Экзамен на права', note: run.license ? 'права уже есть' : 'на Гранте Азиза: пять флажков за 80 секунд, пауков не дави', price: 1000, off: run.license, buy: () => { startExam(); } },
+      { name: 'Купить права у Азиза', note: 'Азиз сказал: никому не говори, брат', price: 6000, off: run.license, buy: () => { run.license = true; return 'Азиз выдал права. Фотография чужая, но похож'; } },
+      { name: 'Урок вождения', note: 'Азиз двадцать минут объясняет, почему Поло лучше Гранты', price: 300, buy: () => pick(['Азиз: «Поло — немецкое качество, брат»', 'Азиз: «Гранта тоже машина. Но Поло — машина»', 'Ничего не понял, но кивал']) }
+    ];
+    if (kind === 'yantar') return [
+      { name: 'Пиво «Жигулёвское»', note: '20 секунд всё плывёт', price: 69, buy: () => { run.drunk = Math.max(run.drunk, 20); return 'Пацаны у входа одобрительно кивнули'; } },
+      { name: 'Сухарики «Кириешки»', note: '+25 здоровья', price: 30, buy: () => { hp = Math.min(100, hp + 25); return 'Хрустишь. Жизнь налаживается'; } },
+      { name: 'Энергетик «Адреналин»', note: 'минуту бегаешь быстрее', price: 120, buy: () => { run.energy = 60; stamina = 1; return 'Сердце стучит в ритме «Добрянка FM»'; } },
+      { name: 'Дать пацанам сотку', note: 'всё равно же спросят', price: 100, off: run.respect, buy: () => { run.respect = true; return 'Пацаны: «Уважаемый человек». Больше не спрашивают'; } }
+    ];
+    if (kind === 'kb') return [
+      { name: 'Водка «Пять озёр»', note: 'минуту всё плывёт', price: 228, buy: () => { run.drunk = 60; return 'Пять озёр. Шестое — Кама'; } },
+      { name: 'Коньяк «Три звезды»', note: 'сразу три звезды. Розыска', price: 500, buy: () => { heat = Math.max(heat, 3); lastKill = now; return 'Три звезды, как и обещали. МВД уже едет'; } },
+      { name: 'Пиво по акции', note: '+10 здоровья и 15 секунд весело', price: 49, buy: () => { hp = Math.min(100, hp + 10); run.drunk = Math.max(run.drunk, 15); return 'Акция: второе пиво тоже за деньги'; } },
+      { name: 'Пакет КБ', note: 'теперь ты свой', price: 5, buy: () => 'Пакет с собой. Кассирша узнала тебя в лицо' }
+    ];
+    if (kind === 'hotel') return [
+      { name: 'Переночевать', note: 'до утра: розыск забудут, здоровье полное', price: 400, buy: () => { hour = 8; hp = 100; heat = 0; while (cops.length) dropCop(0); return 'Проснулся в 8 утра. Тараканы помахали лапкой'; } },
+      { name: 'Номер на час', note: 'никто не спрашивает зачем', price: 228, buy: () => { hp = 100; hour = (hour + 1) % 24; return 'Администратор подмигнула. Здоровье полное'; } },
+      { name: 'Шведский стол', note: 'три сосиски и чай из пакетика: минуту бегаешь без устали', price: 150, buy: () => { run.energy = 60; stamina = 1; return 'Сосиски пермские. Сила в ногах'; } }
+    ];
+    if (kind === 'ozon') return [
+      { name: 'Загранпаспорт (б/у)', note: run.passport ? 'уже есть' : 'нужен на блокпосту. Фото переклеишь сам', price: 2500, off: run.passport, buy: () => { run.passport = true; return 'Паспорт выдан. Владелец — Иванов И. И., тебе подходит'; } },
+      { name: 'Посылка-сюрприз', note: 'что внутри — не знает даже Ozon', price: 300, buy: parcel },
+      { name: 'Метеорит', note: 'Бепис попросил добавить. Бепис — это и есть ЦМка: холодный снаружи, ещё холоднее внутри. Прилетит ледяной, как его ульта', price: METEOR, buy: () => { meteor(); } }
+    ];
+    if (kind === 'wb') return [
+      { name: 'Посылка-сюрприз', note: 'продавец пишет «как на фото». Фото нет', price: 228, buy: parcel },
+      { name: 'Кроссовки «Найк»', note: 'бегаешь быстрее до конца заезда', price: 1500, off: run.shoes, buy: () => { run.shoes = true; return 'Кроссовки «Найк» с тремя полосками. Бегут сами'; } },
+      { name: 'Вернуть товар', note: 'очередь сорок минут', price: 0, buy: () => { hour = (hour + .7) % 24; return 'Отстоял очередь. Возврат одобрят через 30 дней. Может быть'; } }
+    ];
+    if (kind === 'block') {
+      const missing = [['license', 'прав'], ['spravka', 'справки'], ['passport', 'паспорта']].filter(([k]) => !run[k]).map(([, t]) => t);
+      return [
+        { name: `Документы и ${BRIBE} сверху`, note: missing.length ? `нет ${missing.join(', ')}. Права — автошкола Азиза, справка — ЦРБ, паспорт — Ozon` : 'всё на месте. Сержант пересчитывает купюры', price: BRIBE, off: missing.length > 0, buy: () => { openBlock('docs'); } },
+        { name: 'Без документов', note: 'из уважения к Добрянке. Прописку больше не продаём', price: NO_DOCS, buy: () => { openBlock('bribe'); } },
+        { name: 'Прорваться', note: run.armor ? 'отъедь, разгонись больше 100 и тарань. Минус 40 здоровья и пять звёзд' : 'без брони из шиномонтажа шлагбаум не пробить', price: 0, buy: () => { leaveShop(); hint(run.armor ? 'Отъедь и разгонись больше 100 км/ч. Тарань' : `Сначала броня: шиномонтаж ${ico('tire')}`, 3); } }
+      ];
+    }
     if (kind === 'pawn') return [['sport', 'Спорткар «Бруда GT»', 6000, 'скорость 46, держит дорогу как клей'], ['priora', 'Белая приора', 1500, 'скорость 38, гнётся от взгляда'], ['cart', 'Телега Батрайдера', 2280, 'медленная, но урон в 2 раза меньше'], ['uaz', 'Списанный УАЗ МВД', 3220, 'менты думают, что свой: розыск спадает в 2 раза быстрее']].map(([key, name, price, note]) => ({
       name, note, price, buy: () => {
         leaveShop(); exitRoom();
@@ -1908,7 +2142,7 @@ function create(data) {
     }));
     return [
       { name: 'Взятка участковому', note: stars ? 'розыск снимут, менты отстанут' : 'розыска нет, иди с богом', price: 300 * Math.max(1, stars), off: !stars, buy: () => { heat = 0; while (cops.length) dropCop(0); return 'Участковый взял и отвернулся. Розыск снят'; } },
-      { name: 'Прописка в Добрянке', note: 'финал: Триада примет тебя как своего', price: GOAL, buy: () => { win(); } }
+      { name: 'Справка о несудимости', note: 'дежурный хохочет минуту, потом выгоняет', price: 0, buy: () => 'Дежурный: «Ты? Несудимый? Иди отсюда»' }
     ];
   }
   function tipDancers(n) {
@@ -1980,19 +2214,21 @@ function create(data) {
     const msg = it.buy();
     if (state === 'shop') screen(shopHtml(msg), `[data-buy="${k}"]:not(:disabled)`);
   }
-  function win() {
-    leaveShop(); exitRoom(); state = 'win'; winT = 0;
+  function escape() {
+    state = 'win'; winT = 0; hour = 19.2; gps = null; setWeather(WEATHER[0]); Object.assign(wcur, { rain: 0, snow: 0, f0: 70, f1: 320, light: 1 });
     while (cops.length) dropCop(0);
-    ann('ПРОПИСКА ПОЛУЧЕНА', 'gold');
+    ann('УЕХАЛ В ЗАКАТ', 'gold');
     const prev = bestTime.get(), record = !prev || run.time < prev;
     if (record) bestTime.set(run.time);
-    setTimeout(() => { if (state === 'win' && opened) screen(winHtml(record, prev)); }, 3800);
+    setTimeout(() => { if (state === 'win' && opened) screen(winHtml(record, prev)); }, 5200);
   }
-  const winHtml = (record, prev) => `<p class="g-kicker">Прописка получена</p><h2 class="g-dead g-win">ТРИАДА ПРИНИМАЕТ ТЕБЯ</h2><p>Теперь ты официально житель Добрянки. Участковый жмёт руку, Pis\`master наливает, Азалина подписалась.</p><ul class="g-recap"><li>Время: <b>${clockStr(run.time)}</b>${record ? ' — рекорд!' : ` · рекорд ${clockStr(prev)}`}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Золота осталось: <b>${run.gold}</b></li><li>Смертей по дороге: <b>${run.deaths}</b></li></ul><div class="g-btns"><button type="button" data-go="play">ЕЩЁ РАЗ</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
+  const winHtml = (record, prev) => `<p class="g-kicker">${ico('sunset')} Конец</p><h2 class="g-dead g-win">УЕХАЛ ИЗ ДОБРЯНКИ</h2><p>${{ docs: 'Документы в порядке, сержант козырнул и пересчитал.', bribe: `Сержант пересчитал ${NO_DOCS} и отдал честь.`, ram: 'Шлагбаум снесён, МВД до сих пор ищет его в Каме.' }[run.blockOpen] || ''} Добрянка в зеркале, впереди Пермь и закат. Через неделю вернёшься: в Перми шаурма хуже.</p><ul class="g-recap"><li>Время: <b>${clockStr(run.time)}</b>${record ? ' — рекорд!' : ` · рекорд ${clockStr(prev)}`}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Золота с собой: <b>${run.gold}</b></li><li>Смертей по дороге: <b>${run.deaths}</b></li></ul><div class="g-btns"><button type="button" data-go="play">ЕЩЁ РАЗ</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
   const mapC = $('.g-map'), mx = mapC.getContext('2d'), MS = mapC.width;
   const marks = [
     ...doors.map(d => ({ x: d.x, z: d.z, icon: SHOPDEF[d.kind].icon, name: SHOPDEF[d.kind].title })),
     { x: raceGate.x, z: raceGate.z, icon: 'race', name: SHOPDEF.race.title },
+    ...(block ? [{ x: block.x, z: block.z, icon: 'barrier', name: 'Блокпост на мосту' }] : []),
+    { x: EX[0], z: EX[1], icon: 'sunset', name: 'Выезд из Добрянки' },
     ...crews.map(c => ({ x: c.x, z: c.z, icon: 'skull', name: 'Триада' })),
     ...Object.keys(PLACE_SIGNS).filter(k => P[k]).map(k => ({ x: P[k].x, z: P[k].z, icon: PLACE_SIGNS[k][0], name: PLACE_SIGNS[k][1] }))
   ];
@@ -2119,10 +2355,10 @@ function create(data) {
     if (menuBack) { scr.firstElementChild.innerHTML = menuBack; const b = scr.querySelector('[data-go]'); if (b) b.focus(); }
     else { screen(''); dlg.focus(); }
   }
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль и прыжок (в тачке — ручник), справа газ, тормоз (пешком — бег) и кнопка действия: выйти, угнать, стрелять. Тап по миникарте — карта и маршрут.' : 'WASD или стрелки, Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, M — карта и маршрут, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД ${ico('mvd')}. Ларьки ${['shawarma', 'tire', 'car', 'pharmacy', 'gun'].map(ico).join(' ')}, казино ${ico('cards')} и стрипуха ${ico('strip')} на карте — заходи пешком внутрь. Триада ${ico('skull')} даёт работу, на ${ico('race')} — гонка с МВД.</p><p class="g-inv">${ico('aegis')} Аегис: ${site.loot.aegis} · ${ico('cheese')} Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль и прыжок (в тачке — ручник), справа газ, тормоз (пешком — бег) и кнопка действия: выйти, угнать, стрелять. Тап по миникарте — карта и маршрут.' : 'WASD или стрелки, Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, M — карта и маршрут, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: свалить из Добрянки в закат. Мост на Пермь перекрыл блокпост МВД ${ico('barrier')}. Собери документы — права в автошколе Азиза ${ico('uschool')}, справку в ЦРБ ${ico('cross')}, загранпаспорт на Ozon ${ico('ozon')} — и сунь сержанту ${BRIBE}. Или снеси шлагбаум на броне.</p><p>Магазины на карте — заходи пешком в кольцо. Триада ${ico('skull')} даёт работу, на ${ico('race')} — гонка с МВД.</p><p class="g-inv">${ico('aegis')} Аегис: ${site.loot.aegis} · ${ico('cheese')} Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд побега ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
-    return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b> / ${GOAL}${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${ico('star').repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
+    return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b>${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${ico('star').repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
   };
   function screen(html, focus) {
     scr.hidden = !html;
@@ -2245,7 +2481,8 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-hp i{display:block;height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--green) 0 10px,#1d8a2d 10px 12px)}
 .g-stam{width:156px;height:8px;border:var(--box);background:#0d1e3b}
 .g-stam i{display:block;height:100%;background:var(--cyan)}
-.g-loot,.g-weather{font-size:15px}
+.g-loot,.g-weather,.g-goals{font-size:15px}
+#gta .g-off{opacity:.35;filter:grayscale(1)}
 .g-job{font-size:15px;color:var(--gold)}
 .g-job:empty,.g-gun:empty,.g-race:empty{display:none}
 .g-gun{pointer-events:auto;color:#fff;font:500 15px var(--px);text-shadow:var(--o);cursor:pointer}
