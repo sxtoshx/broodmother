@@ -1,5 +1,6 @@
 import * as THREE from './three.min.js';
 
+const BUILD = new URL(import.meta.url).searchParams.get('v') || 'dev', asset = path => `${path}?v=${BUILD}`;
 const CELL = 50, ROAD = 14, N = 6, HALF = N * CELL / 2, EDGE = HALF + ROAD / 2, RIVER = EDGE + 10;
 const BOX = new THREE.BoxGeometry(1, 1, 1), CYL = new THREE.CylinderGeometry(.5, .5, 1, 10), SPH = new THREE.SphereGeometry(.5, 8, 6);
 const ICO = new THREE.IcosahedronGeometry(.5, 0), CONE = new THREE.ConeGeometry(.5, 1, 7), PYR = new THREE.ConeGeometry(.5, 1, 4);
@@ -779,7 +780,7 @@ function create() {
     return out;
   }
   function loadSfx() {
-    for (const [k, url] of SFX.map(k => [k, `sfx/g/${k}.mp3`]).concat([['thunder', 'sfx/thunder1.mp3']])) {
+    for (const [k, url] of SFX.map(k => [k, asset(`sfx/g/${k}.mp3`)]).concat([['thunder', asset('sfx/thunder1.mp3')]])) {
       fetch(url).then(r => r.ok ? r.arrayBuffer() : Promise.reject(r.status)).then(b => ac.decodeAudioData(b)).then(buf => {
         bufs[k] = buf;
         if (k === 'engine' || k === 'siren' || k === 'rain') {
@@ -1562,7 +1563,7 @@ function create() {
     mx.restore();
   }
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль и прыжок (в тачке — ручник), справа газ, тормоз (пешком — бег) и кнопка действия: выйти, угнать, стрелять.' : 'WASD или стрелки, Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 🚗 💊 🔫, казино 🎰 и стрипуха 💃 на карте — заходи пешком внутрь. Триада 🗣️ даёт работу, на 🏁 — гонка с МВД.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div>`;
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль и прыжок (в тачке — ручник), справа газ, тормоз (пешком — бег) и кнопка действия: выйти, угнать, стрелять.' : 'WASD или стрелки, Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: накопи ${GOAL} золота и купи прописку в МВД 🚔. Ларьки 🌯 🔧 🚗 💊 🔫, казино 🎰 и стрипуха 💃 на карте — заходи пешком внутрь. Триада 🗣️ даёт работу, на 🏁 — гонка с МВД.</p><p class="g-inv">🛡 Аегис: ${site.loot.aegis} · 🧀 Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд прописки ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
     return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b> / ${GOAL}${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${'🚨'.repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
@@ -1649,8 +1650,8 @@ function create() {
 }
 
 const CSS = `
-@font-face{font-family:GCraft;src:url(fonts/monocraft-regular.woff2) format("woff2");font-weight:400;font-display:swap}
-@font-face{font-family:GCraft;src:url(fonts/monocraft-bold.woff2) format("woff2");font-weight:700;font-display:swap}
+@font-face{font-family:GCraft;src:url(fonts/monocraft-regular.woff2?v=${BUILD}) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:GCraft;src:url(fonts/monocraft-bold.woff2?v=${BUILD}) format("woff2");font-weight:700;font-display:swap}
 body.gta{overflow:hidden}
 #gta{--px:GCraft,ui-monospace,monospace;--pp:GCraft,ui-monospace,monospace;--panel:rgba(14,7,30,.9);--pink:#ff4fb8;--gold:#ffd24a;--cyan:#5ff2ff;--green:#39ff6a;--red:#ff3b3b;--o:2px 0 0 #000,-2px 0 0 #000,0 2px 0 #000,0 -2px 0 #000,2px 2px 0 #000;--box:3px solid #000;--sh:4px 4px 0 #000;position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:#120826;color:#fff;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;font:500 17px/1.3 var(--px);outline:0;-webkit-font-smoothing:none}
 #gta *{border-radius:0!important}
@@ -1710,6 +1711,7 @@ body.gta{overflow:hidden}
 .g-inv.g-inv{color:var(--gold)}
 .g-tip.g-tip{color:var(--cyan);font-size:15px}
 .g-goal.g-goal{color:#fff}
+.g-build.g-build{font-size:12px;color:#8a7aa8}
 .g-msg.g-msg{color:var(--gold)}
 .g-dead{margin:0;font:700 clamp(1.8rem,8vw,3.2rem)/1.05 var(--px);text-transform:uppercase;color:var(--red);text-shadow:4px 4px 0 #000}
 .g-win{color:var(--gold)}
