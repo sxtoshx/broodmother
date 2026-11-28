@@ -500,10 +500,7 @@ function city(scene, D) {
       x.stroke();
     }
     if (look.house) for (const b of B) { x.fillStyle = b.code === 'h' || b.code === 'g' ? look.house : look.block; path(x, b.p, s); x.fill(); }
-    if (look.edge) {
-      const f = 160 * s, W = c.width, Hh = c.height, edge = (x0, y0, x1, y1, rx, ry, rw, rh) => { const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, look.edge); g.addColorStop(1, 'rgba(45,90,143,0)'); x.fillStyle = g; x.fillRect(rx, ry, rw, rh); };
-      edge(0, 0, f, 0, 0, 0, f, Hh); edge(W, 0, W - f, 0, W - f, 0, f, Hh); edge(0, 0, 0, f, 0, 0, W, f); edge(0, Hh, 0, Hh - f, 0, Hh - f, W, f);
-    }
+    if (look.edge) feather(x, 0, 0, c.width, c.height, 160 * s, look.edge);
     return c;
   }
 
@@ -802,6 +799,10 @@ let styled;
 let mapData;
 let atlas;
 const ico = k => `<i class="gi gi-${k}"></i>`;
+function feather(x, X, Y, W, H, f, color) {
+  const edge = (x0, y0, x1, y1, rx, ry, rw, rh) => { const g = x.createLinearGradient(x0, y0, x1, y1); g.addColorStop(0, color); g.addColorStop(1, 'rgba(45,90,143,0)'); x.fillStyle = g; x.fillRect(rx, ry, rw, rh); };
+  edge(X, Y, X + f, Y, X, Y, f, H); edge(X + W, Y, X + W - f, Y, X + W - f, Y, f, H); edge(X, Y, X, Y + f, X, Y, W, f); edge(X, Y + H, X, Y + H - f, X, Y + H - f, W, f);
+}
 function drawIcon(x, key, cx, cy, size) {
   const i = ICONS.indexOf(key);
   if (i < 0 || !atlas) return;
@@ -841,7 +842,7 @@ function create(data) {
   renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY[prefs.quality] || 1));
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hurt"></div><div class="g-flash"></div><div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><button type="button" class="g-gear" aria-label="Настройки">${ico('gear')}</button><div class="g-quest" role="button" aria-label="Цель и маршрут"></div><div class="g-aim" hidden></div><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${`<span>${ico('star')}</span>`.repeat(5)}</div><div class="g-gold"></div><div class="g-hprow">${ico('heart')}<div class="g-hp"><i></i></div></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button></div><div class="g-radio" hidden></div><div class="g-mapbox"><div class="g-weather"></div><canvas class="g-map" width="400" height="400" role="button" aria-label="Карта и навигация"></canvas></div><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div class="g-joy"></div><div class="g-stick"><i></i></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-full" hidden><canvas></canvas><div class="g-ftip" hidden></div><div class="g-fz"><button type="button" data-z="in" aria-label="Приблизить">+</button><button type="button" data-z="out" aria-label="Отдалить">−</button><button type="button" data-z="me" aria-label="К себе">${ico('pin')}</button></div><button type="button" class="g-fx" aria-label="Закрыть карту">X</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hurt"></div><div class="g-flash"></div><div class="g-pad"><div class="g-joy"></div><div class="g-stick"><i></i></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><button type="button" class="g-gear" aria-label="Настройки">${ico('gear')}</button><div class="g-quest" role="button" aria-label="Цель и маршрут"></div><button type="button" class="g-nav" hidden aria-label="Карта и навигация"><canvas width="44" height="44"></canvas><span></span></button><div class="g-aim" hidden></div><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${`<span>${ico('star')}</span>`.repeat(5)}</div><div class="g-gold"></div><div class="g-hprow">${ico('heart')}<div class="g-hp"><i></i></div></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button></div><div class="g-radio" hidden></div><div class="g-mapbox"><div class="g-weather"></div><canvas class="g-map" width="400" height="400" role="button" aria-label="Карта и навигация"></canvas></div><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-full" hidden><canvas></canvas><div class="g-ftip" hidden></div><div class="g-fz"><button type="button" data-z="in" aria-label="Приблизить">+</button><button type="button" data-z="out" aria-label="Отдалить">−</button><button type="button" data-z="me" aria-label="К себе">${ico('pin')}</button></div><button type="button" class="g-fx" aria-label="Закрыть карту">X</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
@@ -2026,7 +2027,7 @@ function create(data) {
   function show(text, key, el) { if (shown[key] !== text) { shown[key] = text; el.innerHTML = text; } }
   function drawHud() {
     const want = Math.ceil(heat - 1e-6);
-    if (shown.stars !== want) { shown.stars = want; stars.forEach((s, k) => s.classList.toggle('on', k < want)); }
+    if (shown.stars !== want) { shown.stars = want; stars.forEach((s, k) => s.classList.toggle('on', k < want)); wantedEl.classList.toggle('zero', !want); }
     wantedEl.classList.toggle('cool', want > 0 && now - lastKill > 8);
     show(`${ico('gold')} ${run.gold || 0}`, 'gold', goldEl);
     const q = goal();
@@ -2048,8 +2049,8 @@ function create(data) {
       if (shown.raceHtml !== html) { shown.raceHtml = html; raceEl.innerHTML = html; }
     } else if (!race && shown.raceHtml) { shown.raceHtml = ''; raceEl.innerHTML = ''; }
     const drivingNow = state === 'play' && !player.foot && zone !== 'inside';
-    speedEl.hidden = !drivingNow;
-    if (drivingNow) show(String(Math.round(Math.abs(player.speed) * 3.6)), 'speed', speedEl.firstChild);
+    speedEl.hidden = touch || !drivingNow;
+    if (!speedEl.hidden) show(String(Math.round(Math.abs(player.speed) * 3.6)), 'speed', speedEl.firstChild);
     show(exam ? `${ico('flag')} Экзамен ${exam.i}/${exam.cps.length} · ${clockStr(Math.max(0, exam.until - run.time))}` : j ? `${ico('target')} ${j.kill ? `Пауки ${Math.min(j.need, run.spiders + run.couriers - j.base)}/${j.need}` : 'Передачка на ГРЭС'} · ${clockStr(Math.max(0, j.until - run.time))}` : '', 'job', jobEl);
     radio.hidden = !(prefs.fm && state === 'play' && !player.foot);
     const ag = state === 'play' && player.foot && run.gun && zone === 'city' && !menu ? GUNS[run.gun] : null;
@@ -2071,9 +2072,9 @@ function create(data) {
     if (shown.stam !== sw) { shown.stam = sw; stamEl.firstChild.style.width = sw; }
     if (state === 'play' && bust > .3) show(player.foot ? 'МВД принимает… беги!' : 'МВД принимает… газуй!', 'hint', hintEl);
     else if (now <= hintUntil) shown.hint = hintEl.innerHTML;
-    else if (doorNear && state === 'play') show(`Вылези из тачки (${touch ? 'кнопка сверху' : 'F'}) и зайди в кольцо: ${SHOPDEF[doorNear.kind].title}`, 'hint', hintEl);
+    else if (doorNear && state === 'play') show(`Вылези из тачки (${touch ? 'кнопка ВЫЙТИ' : 'F'}) и зайди в кольцо: ${SHOPDEF[doorNear.kind].title}`, 'hint', hintEl);
     else show(crew && !touch ? 'F — побазарить с Триадой' : near && !touch ? `F — ${near === myCar ? 'сесть в свою девятку' : 'угнать ' + near.spec.name}` : '', 'hint', hintEl);
-    drawMap();
+    if (touch) drawNav(); else drawMap();
   }
   function frame(t) {
     const dt = Math.min(.05, (t - last) / 1000 || 0);
@@ -2390,6 +2391,8 @@ function create(data) {
   }
   const winHtml = (record, prev) => `<p class="g-kicker">${ico('sunset')} Конец</p><h2 class="g-dead g-win">УЕХАЛ ИЗ ДОБРЯНКИ</h2><p>${{ docs: 'Документы в порядке, сержант козырнул и пересчитал.', bribe: `Сержант пересчитал ${NO_DOCS} и отдал честь.`, ram: 'Шлагбаум снесён, МВД до сих пор ищет его в Каме.' }[run.blockOpen] || ''} Добрянка в зеркале, впереди Пермь и закат. Через неделю вернёшься: в Перми шаурма хуже.</p><ul class="g-recap"><li>Время: <b>${clockStr(run.time)}</b>${record ? ' — рекорд!' : ` · рекорд ${clockStr(prev)}`}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Золота с собой: <b>${run.gold}</b></li><li>Смертей по дороге: <b>${run.deaths}</b></li></ul><div class="g-btns"><button type="button" data-go="play">ЕЩЁ РАЗ</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
   const mapC = $('.g-map'), mx = mapC.getContext('2d'), MS = mapC.width;
+  const navEl = $('.g-nav'), navC = navEl.firstElementChild, navX = navC.getContext('2d'), navTxt = navEl.lastElementChild;
+  mapC.parentElement.hidden = touch;
   const marks = [
     ...doors.map(d => ({ x: d.x, z: d.z, icon: SHOPDEF[d.kind].icon, name: SHOPDEF[d.kind].title })),
     { x: raceGate.x, z: raceGate.z, icon: 'race', name: SHOPDEF.race.title },
@@ -2498,6 +2501,18 @@ function create(data) {
   tb2.fillStyle = '#24361f'; tb2.fillRect(0, 0, MS, MS); tb2.strokeStyle = '#3a3444'; tb2.lineWidth = TR.halfW * 2 * tsc + 2; tb2.lineJoin = 'round';
   tb2.beginPath(); tp.forEach((p, i) => { const [x, y] = toTrack(p.x, p.z); i ? tb2.lineTo(x, y) : tb2.moveTo(x, y); }); tb2.closePath(); tb2.stroke();
   { const [x, y] = toTrack(tp[0].x, tp[0].z); drawIcon(tb2, 'race', x, y, 36); }
+  function drawNav() {
+    navEl.hidden = state !== 'play' || zone !== 'city';
+    if (navEl.hidden) return;
+    show(gps ? `${dist(gps.left)} ${ico(gps.icon)}` : `${ico('pin')} КАРТА`, 'nav', navTxt);
+    navC.hidden = !gps;
+    if (!gps) return;
+    camera.getWorldDirection(rd);
+    const th = Math.PI + Math.atan2(rd.x, rd.z), cs = Math.cos(th), sn = Math.sin(th), dx = gps.x - player.pos.x, dz = gps.z - player.pos.z;
+    const ang = Math.round(Math.atan2(dx * sn + dz * cs, dx * cs - dz * sn) * 24) / 24;
+    if (shown.navAng === ang) return;
+    shown.navAng = ang; navX.clearRect(0, 0, navC.width, navC.height); arrow(navX, navC.width / 2, navC.height / 2, navC.width / 4, ang);
+  }
   function drawMap() {
     if (zone === 'race') {
       mx.drawImage(trackBase, 0, 0);
@@ -2546,7 +2561,7 @@ function create(data) {
   const fv = { cx: 0, cz: 0, s: .55, dirty: true };
   const fullSize = () => [fullC.clientWidth || 1, fullC.clientHeight || 1];
   const BD = [world.bounds[0] + 40, world.bounds[1] + 40, world.bounds[2] - 40, world.bounds[3] - 40];
-  const minS = () => { const [w, h] = fullSize(); return Math.min(w / (BD[2] - BD[0]), h / (BD[3] - BD[1])) * .92; };
+  const minS = () => { const [w, h] = fullSize(); return Math.min(w / (BD[2] - BD[0]), h / (BD[3] - BD[1])) * .5; };
   function clampView() {
     const [w, h] = fullSize();
     fv.s = clamp(fv.s, minS(), 6);
@@ -2571,6 +2586,7 @@ function create(data) {
     const [bx, by] = fullTo(b.x0, b.z0);
     fx.imageSmoothingEnabled = true;
     fx.drawImage(b.canvas, bx, by, b.canvas.width / b.s * fv.s, b.canvas.height / b.s * fv.s);
+    feather(fx, bx, by, b.canvas.width / b.s * fv.s, b.canvas.height / b.s * fv.s, 400 * fv.s, '#2d5a8f');
     const [x0, z0] = fullFrom(0, 0), [x1, z1] = fullFrom(w, h);
     if (fv.s > .7) {
       for (const B of world.vec.B) {
@@ -2649,6 +2665,7 @@ function create(data) {
   function closeMap() { if (!mapOpen) return; mapOpen = false; fullEl.hidden = true; tipEl.hidden = true; dlg.focus(); lock(); }
   $('.g-fx').addEventListener('click', closeMap);
   mapC.addEventListener('click', openMap);
+  navEl.addEventListener('click', openMap);
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
   let menu = false;
   const menuStack = [];
@@ -2675,6 +2692,7 @@ function create(data) {
   function openPause() { if (!menu && state === 'play') { pausedAt = performance.now(); overlay(pauseHtml()); } }
   function confirmExit() { if (scr.hidden || !scr.querySelector('[data-go="exit"]')) overlay(confirmHtml()); }
   function onEsc() { if (performance.now() - pausedAt < 400) return; if (mapOpen) closeMap(); else if (menu) back(); else if (state === 'shop') leaveShop(); else if (state === 'play') openPause(); else confirmExit(); }
+  const homeTip = touch && !document.fullscreenEnabled && !(navigator.standalone || matchMedia('(display-mode: standalone)').matches);
   function lock() { if (!canLock || locked || !opened || state !== 'play' || menu || mapOpen || !scr.hidden) return; try { const r = renderer.domElement.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
   function unlock() { if (locked) { selfUnlock = true; document.exitPointerLock(); } }
   document.addEventListener('pointerlockchange', () => {
@@ -2685,7 +2703,7 @@ function create(data) {
   });
   dlg.addEventListener('mousemove', e => { if (!locked) return; camYaw -= e.movementX * prefs.sens; camPitch = clamp(camPitch + e.movementY * prefs.sens, -.45, 1.05); lastLook = now; });
   renderer.domElement.addEventListener('click', lock);
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева джойстик: в тачке руль и газ (вниз — тормоз), пешком ходьба, до упора — бег. Справа свайп крутит камеру, кнопки — действие и прыжок (в тачке ручник). Тап по миникарте — карта, тап по цели — маршрут.' : 'WASD или стрелки, мышь — камера (клик по игре захватывает курсор), Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, M — карта, G — маршрут к цели, Esc — пауза.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: свалить из Добрянки в закат. Мост на Пермь перекрыл блокпост МВД ${ico('barrier')}. Собери документы — права в автошколе Азиза ${ico('uschool')}, справку в ЦРБ ${ico('cross')}, загранпаспорт на Ozon ${ico('ozon')} — и сунь сержанту ${BRIBE}. Или снеси шлагбаум на броне.</p><p>Магазины на карте — заходи пешком в кольцо. Триада ${ico('skull')} даёт работу, на ${ico('race')} — гонка с МВД.</p><p class="g-inv">${ico('aegis')} Аегис: ${site.loot.aegis} · ${ico('cheese')} Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд побега ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева джойстик: в тачке руль и газ (вниз — тормоз), пешком ходьба, до упора — бег. Справа свайп крутит камеру, кнопки — действие и прыжок (в тачке ручник). Тап по плашке сверху — карта, тап по цели — маршрут.' : 'WASD или стрелки, мышь — камера (клик по игре захватывает курсор), Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, M — карта, G — маршрут к цели, Esc — пауза.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: свалить из Добрянки в закат. Мост на Пермь перекрыл блокпост МВД ${ico('barrier')}. Собери документы — права в автошколе Азиза ${ico('uschool')}, справку в ЦРБ ${ico('cross')}, загранпаспорт на Ozon ${ico('ozon')} — и сунь сержанту ${BRIBE}. Или снеси шлагбаум на броне.</p><p>Магазины на карте — заходи пешком в кольцо. Триада ${ico('skull')} даёт работу, на ${ico('race')} — гонка с МВД.</p><p class="g-inv">${ico('aegis')} Аегис: ${site.loot.aegis} · ${ico('cheese')} Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд побега ${clockStr(bestTime.get())}` : ''}</p>${tip()}${homeTip ? '<p class="g-tip">Полный экран на iPhone: «Поделиться» → «На экран Домой», и запускай с иконки.</p>' : ''}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
     return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b>${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${ico('star').repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
@@ -2869,6 +2887,9 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-quest .g-bar u{display:block;height:100%;background:var(--gold)}
 .g-quest small{color:#b9a8d8;font-size:11px}
 .g-quest:hover{border-color:var(--pink)}
+.g-nav{pointer-events:auto;position:absolute;left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:5px;height:34px;padding:0 9px 0 6px;border:var(--box);background:var(--panel);box-shadow:var(--sh);color:#fff;font:700 14px var(--px);text-shadow:var(--o);white-space:nowrap;cursor:pointer;box-sizing:border-box}
+.g-nav canvas{display:block;width:22px;height:22px}
+.g-nav:active{translate:calc(-50% + 2px) 2px;box-shadow:2px 2px 0 #000}
 .g-hurt,.g-flash{position:absolute;inset:0;pointer-events:none;opacity:0}
 .g-hurt{background:radial-gradient(ellipse at center,transparent 38%,rgba(200,0,24,.8) 100%)}
 .g-flash{background:radial-gradient(ellipse at center,rgba(255,240,170,.2) 25%,rgba(255,210,74,.85) 100%)}
@@ -2959,6 +2980,6 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 @media (max-height:520px){.g-screen>div{gap:8px;padding:12px}.g-title{font-size:2rem}.g-dead{font-size:1.5rem}.g-recap{grid-template-columns:1fr 1fr;column-gap:18px}}
 @media (hover:hover) and (pointer:fine){.g-pad{display:none}.g-radio{bottom:14px;max-width:min(640px,calc(100% - 500px))}.g-hint{bottom:64px;left:240px;right:240px}}
 @media (max-width:560px) and (pointer:fine){.g-mapbox{width:150px}.g-map{width:150px;height:150px}.g-speed{left:12px;translate:none;top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:72px}.g-radio{bottom:calc(230px + env(safe-area-inset-bottom,0px))}.g-hint{left:12px;right:12px;bottom:calc(290px + env(safe-area-inset-bottom,0px))}.g-quest{width:calc(100% - 190px)}}
-@media (pointer:coarse){#gta .g-stick{display:block}.g-x{left:calc(10px + env(safe-area-inset-left,0px))}.g-gear{left:calc(62px + env(safe-area-inset-left,0px))}.g-stats{right:calc(10px + env(safe-area-inset-right,0px));gap:4px}.g-gold{font-size:16px}.g-hp{width:120px}.g-loot{font-size:13px}.g-quest{left:calc(10px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px));width:min(250px,calc(100% - 180px));background:none;border:0;box-shadow:none;padding:2px 0;font-size:13px;text-shadow:var(--o)}.g-quest .g-steps,.g-quest small,.g-quest .g-bar{display:none}.g-mapbox{right:calc(10px + env(safe-area-inset-right,0px));bottom:calc(126px + env(safe-area-inset-bottom,0px));width:136px;gap:4px}.g-map{width:136px;height:136px}.g-weather{font-size:12px;padding:2px 6px}.g-speed{left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));bottom:auto;min-width:60px;padding:4px 6px}.g-speed b{font-size:22px}.g-hint{left:12px;right:12px;top:calc(150px + env(safe-area-inset-top,0px));bottom:auto;font-size:14px}.g-radio{top:calc(190px + env(safe-area-inset-top,0px));bottom:auto;font-size:12px}.g-ann{top:32%}}
-@media (pointer:coarse) and (max-height:520px){.g-quest{top:calc(8px + env(safe-area-inset-top,0px));left:calc(116px + env(safe-area-inset-left,0px));width:min(300px,36%)}.g-mapbox{right:auto;left:50%;translate:-50% 0;bottom:calc(6px + env(safe-area-inset-bottom,0px));width:104px}.g-map{width:104px;height:104px}.g-weather{display:none}.g-speed{top:auto;bottom:calc(116px + env(safe-area-inset-bottom,0px))}.g-hint{top:calc(58px + env(safe-area-inset-top,0px));left:30%;right:30%}.g-radio{display:none}.g-ann{top:22%}#gta .g-stick{width:96px;height:96px;margin:-48px 0 0 -48px;bottom:calc(52px + env(safe-area-inset-bottom,0px))}.g-pad .g-joy{height:80%;width:42%}}
+@media (pointer:coarse){#gta .g-stick{display:block}.g-x{left:calc(10px + env(safe-area-inset-left,0px))}.g-gear{left:calc(62px + env(safe-area-inset-left,0px))}.g-stats{right:calc(10px + env(safe-area-inset-right,0px));gap:4px;max-width:152px}.g-gold{font-size:16px}.g-hp,.g-stam{width:120px}.g-job{font-size:13px;text-align:right}.g-loot{font-size:13px}.g-quest{left:calc(10px + env(safe-area-inset-left,0px));top:calc(62px + env(safe-area-inset-top,0px));width:min(250px,calc(100% - 180px));background:none;border:0;box-shadow:none;padding:2px 0;font-size:13px;text-shadow:var(--o)}.g-quest .g-steps,.g-quest small,.g-quest .g-bar{display:none}.g-wanted.zero{display:none}.g-fz [data-z=in],.g-fz [data-z=out]{display:none}.g-hint{left:12px;right:12px;top:auto;bottom:calc(150px + env(safe-area-inset-bottom,0px));font-size:14px}.g-radio{top:calc(190px + env(safe-area-inset-top,0px));bottom:auto;font-size:12px}.g-ann{top:32%}}
+@media (pointer:coarse) and (max-height:520px){.g-stats{max-width:none}.g-quest{width:min(280px,calc(50% - 90px - env(safe-area-inset-left,0px)))}.g-hint{left:calc(170px + env(safe-area-inset-left,0px));right:calc(200px + env(safe-area-inset-right,0px));bottom:calc(10px + env(safe-area-inset-bottom,0px));font-size:13px}.g-radio{display:none}.g-ann{top:47%;font-size:2.6rem}#gta .g-stick{width:96px;height:96px;margin:-48px 0 0 -48px;bottom:calc(52px + env(safe-area-inset-bottom,0px))}.g-pad .g-joy{height:80%;width:42%}}
 `;
