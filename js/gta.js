@@ -1416,7 +1416,7 @@ function create(data) {
   }
   const SFX = ['shot', 'shotgun', 'scream1', 'scream2', 'crash', 'boom', 'cash', 'slotspin', 'slotwin', 'splat', 'engine', 'siren', 'rain', 'firstblood', 'doublekill', 'triplekill', 'ultrakill', 'rampage', 'roshan', 'freshmeat', 'getoverhere', 'brood', 'courier', 'coins', 'aegis'];
   const bufs = {}, loops = {};
-  const ANN_SFX = { 'FIRST BLOOD': 'firstblood', 'DOUBLE KILL': 'doublekill', 'TRIPLE KILL': 'triplekill', 'ULTRA KILL': 'ultrakill', 'RAMPAGE': 'rampage', 'КУРЬЕР УБИТ': 'courier', 'АЕГИС СРАБОТАЛ': 'aegis', 'УЧАСТКОВЫЙ В БОЛЬНИЦЕ': 'scream1', 'УЕХАЛ В ЗАКАТ': 'roshan', 'ПРАВА ПОЛУЧЕНЫ': 'cash', 'ПРОРЫВ': 'boom', 'FREEZING FIELD': 'roshan', 'ПРОЕЗЖАЙ': 'cash', 'УГНАЛ ТАЧКУ МВД': 'getoverhere', 'THE BATTLE BEGINS': 'brood', 'ДЖЕКПОТ': 'slotwin', 'ПОБЕДА': 'rampage', 'МВД В ЯРОСТИ': 'boom', 'ТАЧКА ТВОЯ': 'cash' };
+  const ANN_SFX = { 'ЧИТ ПРИНЯТ': 'cash', 'FIRST BLOOD': 'firstblood', 'DOUBLE KILL': 'doublekill', 'TRIPLE KILL': 'triplekill', 'ULTRA KILL': 'ultrakill', 'RAMPAGE': 'rampage', 'КУРЬЕР УБИТ': 'courier', 'АЕГИС СРАБОТАЛ': 'aegis', 'УЧАСТКОВЫЙ В БОЛЬНИЦЕ': 'scream1', 'УЕХАЛ В ЗАКАТ': 'roshan', 'ПРАВА ПОЛУЧЕНЫ': 'cash', 'ПРОРЫВ': 'boom', 'FREEZING FIELD': 'roshan', 'ПРОЕЗЖАЙ': 'cash', 'УГНАЛ ТАЧКУ МВД': 'getoverhere', 'THE BATTLE BEGINS': 'brood', 'ДЖЕКПОТ': 'slotwin', 'ПОБЕДА': 'rampage', 'МВД В ЯРОСТИ': 'boom', 'ТАЧКА ТВОЯ': 'cash' };
   function seamless(buf) {
     const sr = buf.sampleRate, pad = Math.floor(.06 * sr), n = buf.length - 2 * pad, f = Math.floor(Math.min(.12, n / sr / 4) * sr);
     const src = buf.getChannelData(0).subarray(pad, pad + n), out = ac.createBuffer(1, n - f, sr), o = out.getChannelData(0);
@@ -2669,7 +2669,7 @@ function create(data) {
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
   let menu = false;
   const menuStack = [];
-  const settingsHtml = () => `<p class="g-kicker">${ico('gear')} Настройки</p><div class="g-set">${[['vol', 'Общая громкость'], ['sfx', 'Стволы, удары, анонсер'], ['weather', 'Дождь и гром'], ['car', 'Мотор и сирены']].map(([k, t]) => `<label>${t}<input type="range" min="0" max="1" step="0.05" value="${prefs[k]}" data-pref="${k}"></label>`).join('')}<label>Обзор (FOV): <b>${prefs.fov}</b><input type="range" min="50" max="90" step="1" value="${prefs.fov}" data-pref="fov"></label>${canLock ? `<label>Чувствительность мыши<input type="range" min="0.0006" max="0.006" step="0.0002" value="${prefs.sens}" data-pref="sens"></label>` : ''}<label class="g-check"><input type="checkbox" data-pref="speedFov"${prefs.speedFov ? ' checked' : ''}>FOV растёт на скорости</label><label class="g-check"><input type="checkbox" data-pref="post"${prefs.post ? ' checked' : ''}>Эффекты: зерно, блюр, свечение</label><label class="g-check"><input type="checkbox" data-pref="fm"${prefs.fm ? ' checked' : ''}>Добрянка FM</label><label>Графика<select data-pref="quality">${[['low', 'Тапок'], ['mid', 'Норм'], ['high', 'Красиво']].map(([v, t]) => `<option value="${v}"${prefs.quality === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></div><div class="g-btns"><button type="button" data-go="back">ГОТОВО</button></div>`;
+  const settingsHtml = () => `<p class="g-kicker">${ico('gear')} Настройки</p><div class="g-set">${[['vol', 'Общая громкость'], ['sfx', 'Стволы, удары, анонсер'], ['weather', 'Дождь и гром'], ['car', 'Мотор и сирены']].map(([k, t]) => `<label>${t}<input type="range" min="0" max="1" step="0.05" value="${prefs[k]}" data-pref="${k}"></label>`).join('')}<label>Обзор (FOV): <b>${prefs.fov}</b><input type="range" min="50" max="90" step="1" value="${prefs.fov}" data-pref="fov"></label>${canLock ? `<label>Чувствительность мыши<input type="range" min="0.0006" max="0.006" step="0.0002" value="${prefs.sens}" data-pref="sens"></label>` : ''}<label class="g-check"><input type="checkbox" data-pref="speedFov"${prefs.speedFov ? ' checked' : ''}>FOV растёт на скорости</label><label class="g-check"><input type="checkbox" data-pref="post"${prefs.post ? ' checked' : ''}>Эффекты: зерно, блюр, свечение</label><label class="g-check"><input type="checkbox" data-pref="fm"${prefs.fm ? ' checked' : ''}>Добрянка FM</label>${state === 'play' ? '<label>Чит-код<input type="text" data-cheat maxlength="12" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="done"></label>' : ''}<label>Графика<select data-pref="quality">${[['low', 'Тапок'], ['mid', 'Норм'], ['high', 'Красиво']].map(([v, t]) => `<option value="${v}"${prefs.quality === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></div><div class="g-btns"><button type="button" data-go="back">ГОТОВО</button></div>`;
   const pauseHtml = () => `<p class="g-kicker">Пауза</p><h2 class="g-dead g-win">ПАУЗА</h2><p>Мышь отпущена. Жми «Дальше» — и снова в Добрянку.</p><div class="g-btns"><button type="button" data-go="back">ДАЛЬШЕ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button><button type="button" class="g-out" data-go="out">ВЫЙТИ</button></div>`;
   const confirmHtml = () => `<p class="g-kicker">Выход</p><h2 class="g-dead">ТОЧНО ВЫЙТИ?</h2><p>${state === 'title' ? 'Вернёшься на сайт.' : 'Заезд не сохранится: золото, документы и розыск пропадут. Аегис и сыр останутся.'}</p><div class="g-btns"><button type="button" data-go="back">ОСТАТЬСЯ</button><button type="button" class="g-out" data-go="exit">ВЫЙТИ</button></div>`;
   function overlay(html, focus) {
@@ -2749,6 +2749,8 @@ function create(data) {
   dlg.addEventListener('cancel', e => { e.preventDefault(); onEsc(); });
   $('.g-gear').addEventListener('click', openSettings);
   scr.addEventListener('input', e => {
+    const code = e.target.closest('[data-cheat]');
+    if (code) { const w = cheatIn(code.value.toUpperCase()); if (w) { code.value = ''; back(); cheat(w); } return; }
     const el = e.target.closest('[data-pref]');
     if (!el) return;
     prefs[el.dataset.pref] = el.type === 'checkbox' ? el.checked : el.type === 'range' ? +el.value : el.value;
@@ -2810,8 +2812,20 @@ function create(data) {
   pad.addEventListener('contextmenu', e => e.preventDefault());
   const KEYS = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'hand', ShiftLeft: 'sprint', ShiftRight: 'sprint', ControlLeft: 'fire', ControlRight: 'fire', KeyX: 'fire' };
   const driving = () => opened && !menu && !mapOpen && (state === 'play' || state === 'dying');
+  const RU_KEYS = Object.fromEntries([...'QWERTYUIOPASDFGHJKLZXCVBNM'].map((c, i) => ['Key' + c, 'ЙЦУКЕНГШЩЗФЫВАПРОЛДЯЧСМИТЬ'[i]]).concat([['Comma', 'Б'], ['Period', 'Ю'], ['BracketLeft', 'Х'], ['BracketRight', 'Ъ'], ['Semicolon', 'Ж'], ['Quote', 'Э']]));
+  const CHEATS = {
+    АЗИЗ: ['Азиз: «Права твои, брат. Экзамен потом как-нибудь»', () => { run.license = true; }],
+    ТРИАДА: ['Триада занесла 5000. Вернёшь натурой', () => { run.gold += 5000; }],
+    КРЫША: ['Кум из МВД позвонил кому надо. Розыска нет', () => { heat = 0; bust = 0; while (cops.length) dropCop(0); }],
+    БЕПИС: ['', () => meteor()],
+    КАМА: ['С Камы пришла гроза. Ночь, ни зги', () => { hour = 23; setWeather(WEATHER[2]); }]
+  };
+  const cheatIn = text => Object.keys(CHEATS).find(w => text.endsWith(w));
+  function cheat(word) { ann('ЧИТ ПРИНЯТ', 'gold'); hint(CHEATS[word][0], 3.5); CHEATS[word][1](); }
+  let typed = '';
   addEventListener('keydown', e => {
     if (e.key === 'Escape' && opened) { e.preventDefault(); if (!e.repeat) onEsc(); return; }
+    if (RU_KEYS[e.code] && state === 'play' && driving() && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) { typed = (typed + RU_KEYS[e.code]).slice(-6); const w = cheatIn(typed); if (w) { typed = ''; cheat(w); } }
     if ((e.code === 'KeyF' || e.code === 'KeyE') && driving()) { e.preventDefault(); if (!e.repeat) act(); return; }
     if (e.code === 'KeyQ' && driving()) { e.preventDefault(); if (!e.repeat) switchGun(); return; }
     if (e.code === 'KeyM' && opened && !e.repeat && (mapOpen || driving())) { e.preventDefault(); mapOpen ? closeMap() : openMap(); return; }
@@ -2949,6 +2963,8 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-set input[type=range]{width:100%;accent-color:var(--pink);touch-action:pan-x}
 .g-set input[type=checkbox]{width:22px;height:22px;accent-color:var(--pink)}
 .g-set select{font:700 16px var(--px);padding:6px;border:var(--box);background:#22143a;color:#fff}
+#gta .g-set input[type=text]{font:700 16px var(--px);padding:6px 8px;border:var(--box);background:#22143a;color:#fff;text-transform:uppercase;-webkit-user-select:text;user-select:text;touch-action:manipulation}
+#gta .g-set input[type=text]:focus{outline:0;border-color:var(--pink)}
 .g-msg.g-msg{color:var(--gold)}
 .g-dead{margin:0;font:700 clamp(1.8rem,8vw,3.2rem)/1.05 var(--px);text-transform:uppercase;color:var(--red);text-shadow:4px 4px 0 #000}
 .g-win{color:var(--gold)}
