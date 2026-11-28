@@ -2336,7 +2336,7 @@ body{overflow-x:clip}
   var gtaBtn=document.getElementById('gtaBtn');
   gtaBtn.addEventListener('click',function(){
     gtaBtn.disabled=true;
-    import('./js/gta.js?v=bbf0f0eb').then(function(m){return m.open({loot:loot,saveLoot:saveLoot})})
+    import('./js/gta.js?v=5993d40b').then(function(m){return m.open({loot:loot,saveLoot:saveLoot})})
       .catch(function(e){console.error(e);toast('GTA VI опять перенесли: видюха не тянет')})
       .then(function(){gtaBtn.disabled=false});
   });
