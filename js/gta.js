@@ -19,6 +19,7 @@ const fwd = V(0, 0, 0), tmp = V(0, 0, 0), tmp2 = V(0, 0, 0), dummy = new THREE.O
 const DEATHS = {
   cop: ['ТЕБЯ ДОБИЛ МВД ДОБРЯНКИ', 'Участковый доволен. Очнёшься в Добрянской ЦРБ, врачи возьмут 30% золота за бахилы'],
   wall: ['ВЪЕХАЛ В ХРУЩЁВКУ', 'Хрущёвка стоит, ты нет. В ЦРБ возьмут 30% золота за бахилы'],
+  block: ['ВЪЕХАЛ В ШЛАГБАУМ', 'Шлагбаум МВД стоит, ты нет. Сержант даже не встал со стула. В ЦРБ возьмут 30% золота'],
   kama: ['УТОНУЛ В КАМЕ', 'Выловили рыбаки. 30% золота забрали себе за улов'],
   triada: ['ТРИАДА ТЕБЯ НАШЛА', 'Пизда. Триада не прощает, Аегис не помог. В ЦРБ заберут 60% золота и почку'],
   bust: ['ПРИНЯЛИ', 'Low priority: 5 игр. МВД конфискует 20% золота и шнурки. Аегис от ментов не спасает']
@@ -705,10 +706,10 @@ function city(scene, D) {
     const [ax, az, bx, bz] = D.bridge, fe = field(nearestNode(D.exit[0], D.exit[1]));
     const [tx, tz, ox, oz] = fe[nearestNode(ax, az)] > fe[nearestNode(bx, bz)] ? [ax, az, bx, bz] : [bx, bz, ax, az];
     const len = Math.hypot(ox - tx, oz - tz), dx = (ox - tx) / len, dz = (oz - tz) / len, px = -dz, pz = dx, x = tx + dx * 3, z = tz + dz * 3, g = Math.max(groundY(x, z), .4), ang = Math.atan2(dx, dz);
-    const sb = batch(x, z, solidMat), slab = (a, b, s) => outward([x + px * s * a - dx * .5, z + pz * s * a - dz * .5, x + px * s * b - dx * .5, z + pz * s * b - dz * .5, x + px * s * b + dx * .5, z + pz * s * b + dz * .5, x + px * s * a + dx * .5, z + pz * s * a + dz * .5]);
+    const sb = batch(x, z, solidMat), slab = (a, b, s, t) => outward([x + px * s * a - dx * t, z + pz * s * a - dz * t, x + px * s * b - dx * t, z + pz * s * b - dz * t, x + px * s * b + dx * t, z + pz * s * b + dz * t, x + px * s * a + dx * t, z + pz * s * a + dz * t]);
     for (const s of [-1, 1]) {
       for (let k = 8.4; k < 46; k += 2.4) { const cx = x + px * s * k, cz = z + pz * s * k; sb.add(BOX, k % 4.8 < 2.4 ? '#a8a8b0' : '#e0302a', M(cx, Math.max(groundY(cx, cz), -.8) + .55, cz, 0, ang, 0, 2.3, 1.3, .9)); }
-      solid(slab(7.3, 46, s), g + 1.3);
+      solid(slab(7.3, 46, s, 2), g + 1.3);
       sb.add(BOX, '#2a2a36', M(x + px * s * 7.6, g + .75, z + pz * s * 7.6, 0, 0, 0, .35, 1.5, .35));
     }
     const bb = new Batch();
@@ -717,7 +718,7 @@ function city(scene, D) {
     boom.rotation.order = 'YXZ'; boom.position.set(x - px * 7.4, g + 1.1, z - pz * 7.4); boom.rotation.y = Math.atan2(-pz, px); scene.add(boom);
     const stop = label('СТОП · МВД', 3.4, 1.1, '#e0302a', '#fff');
     stop.position.set(x - px * 7.6 - dx * .3, g + 2.1, z - pz * 7.6 - dz * .3); stop.rotation.y = ang + Math.PI; scene.add(stop);
-    blockade = { x: x - dx * 9, z: z - dz * 9, ang: ang + Math.PI, bx: x, bz: z, dx, dz, boom, solid: solid(slab(-7.3, 7.3, 1), g + 1.3), cars: [[x - dx * 11 + px * 5.6, z - dz * 11 + pz * 5.6, ang + Math.PI], [x - dx * 16 - px * 5.6, z - dz * 16 - pz * 5.6, ang]] };
+    blockade = { x: x - dx * 9, z: z - dz * 9, ang: ang + Math.PI, bx: x, bz: z, dx, dz, boom, solid: solid(slab(-7.3, 7.3, 1, 3), g + 1.3), cars: [[x - dx * 11 + px * 5.6, z - dz * 11 + pz * 5.6, ang + Math.PI], [x - dx * 16 - px * 5.6, z - dz * 16 - pz * 5.6, ang]] };
     const c = canvas(512, 160), cx2 = c.getContext('2d');
     cx2.fillStyle = '#fff'; cx2.fillRect(0, 0, 512, 160); cx2.strokeStyle = '#111'; cx2.lineWidth = 10; cx2.strokeRect(8, 8, 496, 144);
     cx2.fillStyle = '#111'; fitText(cx2, 'ДОБРЯНКА', 256, 84, 420, 84, 900);
@@ -867,7 +868,8 @@ function create(data) {
     const mesh = new THREE.Mesh(spec.geo, mat), lights = [];
     mesh.rotation.order = 'YXZ';
     if (spec.school) { const u = new THREE.Mesh(new THREE.PlaneGeometry(.9, .9), uMat); u.position.set(0, 2.25, -.25); mesh.add(u); }
-    mesh.add(new THREE.Mesh(shadowGeo, shadowMat)).children[0].position.y = .05;
+    const shadow = new THREE.Mesh(shadowGeo, shadowMat);
+    shadow.position.y = .05; mesh.add(shadow);
     if (spec.cop) for (const k of [0, 1]) { const l = new THREE.Mesh(BOX, lightMats[k]); l.scale.set(.6, .22, .4); l.position.set(k ? .4 : -.4, 1.9, -.25); mesh.add(l); lights.push(l); }
     return { spec, mesh, lights, r: 1.9, m: 1, hp: 100, gunCD: rand(1, 2), pos: V(0, 0, 0), vel: V(0, 0, 0), heading: 0, speed: 0, y: 0, lean: 0, stuck: 0, reverse: 0, wn: -1 };
   };
@@ -911,7 +913,7 @@ function create(data) {
   }
   function atmosphere(dt) {
     hour = (hour + dt / 40) % 24;
-    if (state === 'play' && now > weatherAt) { let n = weather; while (n === weather) n = pick(WEATHER); setWeather(n); hint(`Погода меняется: ${n.icon} ${n.name.toLowerCase()}`, 2.5); }
+    if (state === 'play' && now > weatherAt) { let n = weather; while (n === weather) n = pick(WEATHER); setWeather(n); hint(`Погода меняется: ${ico(n.icon)} ${n.name.toLowerCase()}`, 2.5); }
     const k = Math.min(1, dt / 5), W = weather;
     wcur.rain += ((W.rain || 0) - wcur.rain) * k; wcur.snow += ((W.snow ? 1 : 0) - wcur.snow) * k;
     wcur.f0 += (W.fog[0] - wcur.f0) * k; wcur.f1 += (W.fog[1] - wcur.f1) * k; wcur.light += (W.light - wcur.light) * k; wcur.grip += (W.grip - wcur.grip) * k;
@@ -1121,13 +1123,13 @@ function create(data) {
     c.pos.set(nav.NX[start], 0, nav.NZ[start]); c.heading = Math.atan2(nav.NX[e.to] - nav.NX[start], nav.NZ[e.to] - nav.NZ[start]); c.stolen = true;
     scene.add(c.mesh); cars.push(c); place(c);
     hero.mesh.visible = false; player = c; chase(0, true);
-    exam = { cps, i: 0, until: run.time + 80, car: c };
+    exam = { cps, i: 0, until: run.time + 80, car: c, prev: gps };
     ann('ЭКЗАМЕН', 'gold'); hint('Азиз: «Пять флажков, восемьдесят секунд, пауков не дави, брат»', 3.5);
     examNext();
   }
   function examNext() { const n = exam.cps[exam.i]; setGps(nav.NX[n], nav.NZ[n], 'flag', `Экзамен ${exam.i + 1}/${exam.cps.length}`); }
   function examEnd(ok, why) {
-    examRing.visible = examIcon.visible = false; exam = null; gps = null;
+    examRing.visible = examIcon.visible = false; gps = exam.prev; exam = null;
     if (ok) { run.license = true; ann('ПРАВА ПОЛУЧЕНЫ', 'gold'); hint('Азиз: «Молодец, брат. Гранту оставь себе до вечера»', 3); }
     else { ann('ЭКЗАМЕН ПРОВАЛЕН'); hint(why, 3); }
   }
@@ -1156,9 +1158,10 @@ function create(data) {
     if (r < .6) { const g = pick([100, 150, 228, 322]); run.gold += g; return `Внутри конверт: +${g}. Кто-то перепутал адрес`; }
     if (r < .75) { const k = pick(Object.keys(GUNS)); run.guns[k] = (run.guns[k] || 0) + GUNS[k].refill; run.gun = k; return `Внутри ${GUNS[k].name}. В описании было «игрушка»`; }
     if (r < .8) { site.loot.cheese++; site.saveLoot(); return 'Внутри сыр. Пахнет Рошаном'; }
-    for (const c of crowd.filter(c => c.k.kind === 'spider').slice(0, 4)) { c.dead = false; c.pos.set(player.pos.x + rand(-3, 3), 0, player.pos.z + rand(-3, 3)); }
+    const at = room ? room.door : { x: player.pos.x, z: player.pos.z };
+    for (const c of crowd.filter(c => c.k.kind === 'spider').slice(0, 4)) { c.dead = false; c.pos.set(at.x + rand(-4, 4), 0, at.z + rand(-4, 4)); }
     play('scream1', .8);
-    return 'Внутри пауки. Живые. Беги';
+    return 'Внутри пауки. Живые. Ждут у входа';
   }
   const rockMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(6, 1), new THREE.MeshLambertMaterial({ color: '#9fe0ff', emissive: '#4ab8ff', emissiveIntensity: .8, flatShading: true }));
   rockMesh.visible = false; scene.add(rockMesh);
@@ -1169,7 +1172,7 @@ function create(data) {
     ann('БЕПИС ЖМЁТ УЛЬТУ', 'gold'); hint('Бепис (он же ЦМка) заказал метеорит. Смотри в небо', 3);
   }
   function rockStep(dt) {
-    if (!rock) return;
+    if (!rock || !live()) return;
     rock.t += dt;
     const k = Math.min(1, rock.t / 3);
     rockMesh.position.set(rock.x + 260 * (1 - k), rock.y + 320 * (1 - k), rock.z - 120 * (1 - k)); rockMesh.rotation.x += dt * 3; rockMesh.rotation.y += dt * 2;
@@ -1625,7 +1628,8 @@ function create(data) {
     else if (d < 40 && surrender()) {
       const want = Math.max(0, (d - 7) * 1.1);
       gas = c.speed > want + 1 ? -1 : c.speed < want - 1 ? .5 : 0;
-      if (want > 4 && Math.abs(c.speed) < 1 && (c.stuck += dt) > 1.5) { c.reverse = .9; c.stuck = 0; }
+      if (want <= 4 || Math.abs(c.speed) >= 1) c.stuck = 0;
+      else if ((c.stuck += dt) > 1.5) { c.reverse = .9; c.stuck = 0; }
     }
     else if (Math.abs(c.speed) < 2 && (c.stuck += dt) > 1) { c.reverse = .9; c.stuck = 0; }
     else if (Math.abs(c.speed) >= 2) c.stuck = 0;
@@ -1789,11 +1793,12 @@ function create(data) {
       if (atBlock && before > 27.5 && run.armor) { breakBlock(); hurt(40, 'wall'); player.speed = before * .75; player.vel.set(Math.sin(player.heading) * player.speed, 0, Math.cos(player.heading) * player.speed); }
       else {
         if (atBlock && before > 12) hint(run.armor ? 'Мало! Разгонись больше 100 км/ч' : `Шлагбаум МВД крепче тачки. Нужна броня — шиномонтаж ${ico('tire')}`, 2.5);
-        if (imp > 14 && before > 14) hurt((imp - 14) * 1.2, 'wall');
+        if (imp > 14 && before > 14) hurt((imp - 14) * 1.2, atBlock ? 'block' : 'wall');
       }
       player.lean = -steer * Math.min(1, Math.abs(player.speed) / 20) * .06;
     }
     player.mesh.visible = invuln <= 0 || now * 10 % 2 < 1.4;
+    if (state !== 'play') return;
     if (zone === 'inside') { roomStep(); return; }
     if (zone === 'race') { raceStep(dt); return; }
     if (groundY(player.pos.x, player.pos.z) < -.7) { die('kama'); return; }
@@ -2290,7 +2295,7 @@ function create(data) {
     if (beat.active) { const [x, y] = toMap(beat.pos.x, beat.pos.z); mx.fillStyle = '#8fd0ff'; mx.fillRect(x - MS / 60, y - MS / 60, MS / 30, MS / 30); }
     arrow(mx, MS / 2, MS / 2, MS / 22);
     if (gps) {
-      mx.font = `700 ${Math.round(MS / 13)}px GCraft,monospace`; mx.textBaseline = 'bottom'; mx.lineWidth = MS / 50; mx.strokeStyle = '#000'; mx.fillStyle = '#fff';
+      mx.font = `700 ${Math.round(MS / 13)}px GCraft,monospace`; mx.textAlign = 'center'; mx.textBaseline = 'bottom'; mx.lineWidth = MS / 50; mx.strokeStyle = '#000'; mx.fillStyle = '#fff';
       const t = dist(gps.left), w = mx.measureText(t).width, x = MS / 2 + 20;
       drawIcon(mx, gps.icon, x - w / 2 - 22, MS - 22, 36);
       mx.strokeText(t, x, MS - 6); mx.fillText(t, x, MS - 6);
