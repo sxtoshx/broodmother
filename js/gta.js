@@ -39,7 +39,7 @@ const GUNS = {
   sg: { name: 'Обрез', dmg: 70, rate: .85, range: 20, cone: .7, ammo: 10, price: 1200, refill: 10, spread: 4 },
   ak: { name: 'Калаш', dmg: 22, rate: .1, range: 55, cone: .35, ammo: 90, price: 2500, refill: 60 }
 };
-const BRIBE = 2000, NO_DOCS = 13370, METEOR = 100000;
+const BRIBE = 3000, NO_DOCS = 13370, METEOR = 100000;
 const SHOPDEF = {
   shawarma: { sign: 'ШАУРМА 24', color: '#ff4fb8', icon: 'shawarma', title: 'Шаурма 24', sub: 'Мы не знаем, что внутри. И ты не узнаешь' },
   tire: { sign: 'ШИНОМОНТАЖ', color: '#3a6cf4', icon: 'tire', title: 'Шиномонтаж «У Палыча»', sub: 'Поставим движок от комбайна, без вопросов' },
@@ -1106,7 +1106,7 @@ function create(data) {
   const block = world.blockade, blockDoor = block && { kind: 'block', x: block.x, z: block.z, ang: block.ang }, EX = world.exit, exitY = groundY(EX[0], EX[1]);
   const exitRing = ring('#ffd24a'), exitIcon = iconSprite('sunset');
   exitRing.position.set(EX[0], exitY + .5, EX[1]); exitRing.scale.set(3.4, 1, 3.4); exitIcon.position.set(EX[0], exitY + 6, EX[1]); exitIcon.scale.set(4, 4, 1);
-  let exam = null, rock = null, schoolAt = 0, exitHintAt = 0, barkAt = 0;
+  let exam = null, rock = null, schoolAt = 0, exitHintAt = 0, barkAt = 0, winAt = 0;
   const examRing = ring('#5ff2ff'), examIcon = iconSprite('flag');
   examRing.scale.set(2.6, 1, 2.6); examRing.visible = examIcon.visible = false;
   function startExam() {
@@ -1152,11 +1152,10 @@ function create(data) {
   }
   function parcel() {
     const r = Math.random();
-    if (r < .35) return 'Внутри: ' + pick(['чехол на айфон 6', 'носки с Пуджем', 'коврик для мыши 3×4 метра', 'пустая коробка от другой коробки', 'брелок «Добрянка — сердце Прикамья»']);
-    if (r < .6) { const g = pick([500, 777, 1000, 1337]); run.gold += g; return `Внутри конверт: +${g}. Кто-то перепутал адрес`; }
+    if (r < .4) return 'Внутри: ' + pick(['чехол на айфон 6', 'носки с Пуджем', 'коврик для мыши 3×4 метра', 'пустая коробка от другой коробки', 'брелок «Добрянка — сердце Прикамья»', 'Аегис из Китая. Сломался по дороге']);
+    if (r < .6) { const g = pick([100, 150, 228, 322]); run.gold += g; return `Внутри конверт: +${g}. Кто-то перепутал адрес`; }
     if (r < .75) { const k = pick(Object.keys(GUNS)); run.guns[k] = (run.guns[k] || 0) + GUNS[k].refill; run.gun = k; return `Внутри ${GUNS[k].name}. В описании было «игрушка»`; }
-    if (r < .85) { site.loot.cheese++; site.saveLoot(); return 'Внутри сыр. Пахнет Рошаном'; }
-    if (r < .9) { site.loot.aegis++; site.saveLoot(); return 'Внутри Аегис! Курьер Доты перепутал заказ'; }
+    if (r < .8) { site.loot.cheese++; site.saveLoot(); return 'Внутри сыр. Пахнет Рошаном'; }
     for (const c of crowd.filter(c => c.k.kind === 'spider').slice(0, 4)) { c.dead = false; c.pos.set(player.pos.x + rand(-3, 3), 0, player.pos.z + rand(-3, 3)); }
     play('scream1', .8);
     return 'Внутри пауки. Живые. Беги';
@@ -1242,12 +1241,12 @@ function create(data) {
     zone = 'city';
     const [ox, oz] = roadside(raceGate, 8);
     rc.pos.set(ox, 0, oz); rc.heading = raceGate.ang + Math.PI / 2; rc.speed = 0; rc.vel.set(0, 0, 0); rc.lap = 0;
-    if (rank === 1) { cars.push(rc); player = rc; place(rc, 1); run.gold += 3000; ann('ПОБЕДА', 'gold'); hint(`Время ${took}. +3000 и спорткар «Бруда GT» твой`, 4); }
+    if (rank === 1) { cars.push(rc); player = rc; place(rc, 1); run.gold += 2000; ann('ПОБЕДА', 'gold'); hint(`Время ${took}. +2000 и спорткар «Бруда GT» твой`, 4); }
     else {
       scene.remove(rc.mesh);
       const [hx, hz] = roadside(raceGate, 3);
       hero.pos.set(hx, 0, hz); hero.heading = raceGate.ang; hero.mesh.visible = true; player = hero; place(hero, 1);
-      if (rank && rank <= 3) { run.gold += 1000; ann(`${rank} МЕСТО`, 'gold'); hint(`Время ${took}. +1000 за подиум. Спорткар МВД забрало обратно`, 4); }
+      if (rank && rank <= 3) { run.gold += 700; ann(`${rank} МЕСТО`, 'gold'); hint(`Время ${took}. +700 за подиум. Спорткар МВД забрало обратно`, 4); }
       else hint(rank ? `${rank} место из 11, время ${took}. Спорткар МВД забрало обратно` : 'Сдался. МВД забрало спорткар', 4);
     }
     raceGate.inside = true; race = null; chase(0, true);
@@ -1728,7 +1727,7 @@ function create(data) {
     if (heat < .6) { heat = .6; lastKill = now; }
   }
   function squash(s, cut = 1) {
-    const courier = s.k.kind === 'courier', gold = Math.round((courier ? 1337 : pick([228, 322, 69, 420, 1337, 228])) * cut);
+    const courier = s.k.kind === 'courier', gold = Math.round((courier ? 1337 : pick([69, 69, 228, 228, 322, 420])) * cut);
     if (exam) { exam.until -= 8; hint('Азиз: «Паука задавил! Минус восемь секунд»', 2); }
     s.dead = true; s.respawn = rand(5, 9);
     run.gold += gold; courier ? run.couriers++ : run.spiders++;
@@ -2004,7 +2003,7 @@ function create(data) {
     if (state === 'title') { const C = world.centre, a = now * .06, y = groundY(C.x, C.z); camera.position.set(C.x + Math.sin(a) * 175, y + 80, C.z + Math.cos(a) * 175); camera.lookAt(C.x, y + 6, C.z); }
     else if (state === 'win') {
       const p = player, fx = Math.sin(p.heading), fz = Math.cos(p.heading), sl = Math.hypot(sunDir.x, sunDir.z) || 1, sx = sunDir.x / sl, sz = sunDir.z / sl;
-      if (!p.foot) { const want = Math.atan2(sx, sz); p.heading += wrap(want - p.heading) * Math.min(1, dt * .8); p.pos.x += fx * dt * 12; p.pos.z += fz * dt * 12; }
+      if (!p.foot && now - winAt < 6) { const want = Math.atan2(sx, sz); p.heading += wrap(want - p.heading) * Math.min(1, dt * .8); p.pos.x += fx * dt * 12; p.pos.z += fz * dt * 12; }
       camera.position.lerp(tmp.set(p.pos.x - sx * 16, p.y + 5, p.pos.z - sz * 16), 1 - Math.exp(-1.5 * dt));
       camera.lookAt(p.pos.x + sx * 40, p.y + 6, p.pos.z + sz * 40);
     }
@@ -2085,14 +2084,14 @@ function create(data) {
       { name: 'Активированный уголь', note: 'лечит от боярышника. От МВД не лечит', price: 50, buy: () => { run.drunk = 0; return 'Протрезвел. Обидно'; } },
       { name: 'Бахилы', note: 'в ЦРБ после смерти заберут вдвое меньше', price: 15, off: run.bahily, buy: () => { run.bahily = true; return 'Бахилы надеты. ЦРБ уважает'; } }
     ];
-    if (kind === 'race') return [{ name: `Погнали: ${TR.laps} круга против 10 экипажей`, note: 'победа — 3000 и спорткар «Бруда GT», подиум — 1000. F — сдаться', price: 300, buy: () => { startRace(); } }];
+    if (kind === 'race') return [{ name: `Погнали: ${TR.laps} круга против 10 экипажей`, note: 'победа — 2000 и спорткар «Бруда GT», подиум — 700. F — сдаться', price: 300, buy: () => { startRace(); } }];
     if (kind === 'hospital') return [
-      { name: 'Справка «Годен»', note: run.spravka ? 'уже есть, висит на холодильнике' : 'нужна на блокпосту. Терапевт в отпуске, подпишет уборщица', price: 1500, off: run.spravka, buy: () => { run.spravka = true; return 'Справка получена. Печать кривая, но настоящая'; } },
+      { name: 'Справка «Годен»', note: run.spravka ? 'уже есть, висит на холодильнике' : 'нужна на блокпосту. Терапевт в отпуске, подпишет уборщица', price: 2500, off: run.spravka, buy: () => { run.spravka = true; return 'Справка получена. Печать кривая, но настоящая'; } },
       { name: 'Полечиться', note: 'полное здоровье, бахилы в подарок', price: 400, buy: () => { hp = 100; run.bahily = true; return 'Медсестра сделала укол и наорала. Как новый'; } },
       { name: 'Сдать анализы', note: 'просто так, для души', price: 228, buy: () => pick(['Анализы показали Добрянку в крови', 'Сахар в норме. Шаурма нет', 'В селезёнке нашли Аегис. Шутка']) }
     ];
     if (kind === 'autoschool') return [
-      { name: 'Экзамен на права', note: run.license ? 'права уже есть' : 'на Гранте Азиза: пять флажков за 80 секунд, пауков не дави', price: 1000, off: run.license, buy: () => { startExam(); } },
+      { name: 'Экзамен на права', note: run.license ? 'права уже есть' : 'на Гранте Азиза: пять флажков за 80 секунд, пауков не дави', price: 1500, off: run.license, buy: () => { startExam(); } },
       { name: 'Купить права у Азиза', note: 'Азиз сказал: никому не говори, брат', price: 6000, off: run.license, buy: () => { run.license = true; return 'Азиз выдал права. Фотография чужая, но похож'; } },
       { name: 'Урок вождения', note: 'Азиз двадцать минут объясняет, почему Поло лучше Гранты', price: 300, buy: () => pick(['Азиз: «Поло — немецкое качество, брат»', 'Азиз: «Гранта тоже машина. Но Поло — машина»', 'Ничего не понял, но кивал']) }
     ];
@@ -2114,7 +2113,7 @@ function create(data) {
       { name: 'Шведский стол', note: 'три сосиски и чай из пакетика: минуту бегаешь без устали', price: 150, buy: () => { run.energy = 60; stamina = 1; return 'Сосиски пермские. Сила в ногах'; } }
     ];
     if (kind === 'ozon') return [
-      { name: 'Загранпаспорт (б/у)', note: run.passport ? 'уже есть' : 'нужен на блокпосту. Фото переклеишь сам', price: 2500, off: run.passport, buy: () => { run.passport = true; return 'Паспорт выдан. Владелец — Иванов И. И., тебе подходит'; } },
+      { name: 'Загранпаспорт (б/у)', note: run.passport ? 'уже есть' : 'нужен на блокпосту. Фото переклеишь сам', price: 4000, off: run.passport, buy: () => { run.passport = true; return 'Паспорт выдан. Владелец — Иванов И. И., тебе подходит'; } },
       { name: 'Посылка-сюрприз', note: 'что внутри — не знает даже Ozon', price: 300, buy: parcel },
       { name: 'Метеорит', note: 'Бепис попросил добавить. Бепис — это и есть ЦМка: холодный снаружи, ещё холоднее внутри. Прилетит ледяной, как его ульта', price: METEOR, buy: () => { meteor(); } }
     ];
@@ -2215,7 +2214,7 @@ function create(data) {
     if (state === 'shop') screen(shopHtml(msg), `[data-buy="${k}"]:not(:disabled)`);
   }
   function escape() {
-    state = 'win'; winT = 0; hour = 19.2; gps = null; setWeather(WEATHER[0]); Object.assign(wcur, { rain: 0, snow: 0, f0: 70, f1: 320, light: 1 });
+    state = 'win'; winT = 0; winAt = now; hour = 18.65; gps = null; setWeather(WEATHER[0]); Object.assign(wcur, { rain: 0, snow: 0, f0: 70, f1: 320, light: 1 });
     while (cops.length) dropCop(0);
     ann('УЕХАЛ В ЗАКАТ', 'gold');
     const prev = bestTime.get(), record = !prev || run.time < prev;
