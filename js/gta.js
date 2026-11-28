@@ -145,11 +145,13 @@ function cottage(wall, lit) {
   if (lit) { g.fillStyle = '#ffb347'; g.fillRect(22, 25, 20, 20); }
   return new THREE.MeshLambertMaterial({ map: texture(base, true), emissive: '#ffffff', emissiveMap: texture(glow, true), emissiveIntensity: .9 });
 }
+const GLOW = [];
+function glow(mat, lamp = false) { mat.userData.base = mat.color.clone(); mat.userData.lamp = lamp; GLOW.push(mat); return mat; }
 function label(text, w, h, bg, fg) {
   const c = canvas(512, Math.round(512 * h / w)), x = c.getContext('2d');
   if (bg) { x.fillStyle = bg; x.fillRect(0, 0, c.width, c.height); }
   x.fillStyle = fg; fitText(x, text, c.width / 2, c.height / 2, c.width * .9, c.height * .62, 900);
-  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: texture(c), transparent: !bg }));
+  return new THREE.Mesh(new THREE.PlaneGeometry(w, h), glow(new THREE.MeshBasicMaterial({ map: texture(c), transparent: !bg })));
 }
 function poster(file, name) {
   const c = canvas(256, 340), x = c.getContext('2d'), t = texture(c);
@@ -448,6 +450,15 @@ function city(scene, D) {
     }
     return dist;
   }
+  const estamp = new Uint32Array(edges.length);
+  let ecount = 0;
+  function edgesIn(x0, z0, x1, z1, fn) {
+    ecount++;
+    for (let i = Math.floor(x0 / NG); i <= Math.floor(x1 / NG); i++) for (let j = Math.floor(z0 / NG); j <= Math.floor(z1 / NG); j++) {
+      const list = ecells.get(ckey(i, j));
+      if (list) for (const k of list) if (estamp[k] !== ecount) { estamp[k] = ecount; const e = edges[k]; fn(NX[e.u], NZ[e.u], NX[e.v], NZ[e.v], e.w); }
+    }
+  }
   const downhill = (f, n) => { let best = n; for (const e of adj[n]) if (f[e.to] < f[best]) best = e.to; return best; };
 
   const B = [];
@@ -730,6 +741,28 @@ function city(scene, D) {
   const along = (p, side, k, back) => [p.x + Math.cos(p.ang) * side * k + p.rx * back, p.z - Math.sin(p.ang) * side * k + p.rz * back];
   const aziz = P.autoschool ? [-1, 1].map(s => [...along(P.autoschool, s, 7, 2.5), P.autoschool.ang + Math.PI / 2]) : [];
   const loiter = P.yantar ? [-4.2, -3, -1.6, 2.4, 3.6].map((k, i) => along(P.yantar, 1, k, i % 2 ? -1.6 : -.6)) : [];
+  const lampMat = glow(new THREE.MeshBasicMaterial({ color: '#ffd890' }), true), pools = [];
+  for (const e of edges) {
+    if (e.w < 9 || e.len < 20 || pools.length > 900) continue;
+    const dx = (NX[e.v] - NX[e.u]) / e.len, dz = (NZ[e.v] - NZ[e.u]) / e.len;
+    for (let t = 10, side = 1; t < e.len - 5; t += 42, side = -side) {
+      const off = e.w / 2 + 1.2, x = NX[e.u] + dx * t - dz * off * side, z = NZ[e.u] + dz * t + dx * off * side, ax = dz * side, az = -dx * side;
+      if (blocked(x, z, .7) || groundY(x, z) < .5) continue;
+      const g = groundY(x, z), ry = Math.atan2(ax, az);
+      batch(x, z, solidMat).add(BOX, '#3a3a44', M(x, g + 3, z, 0, 0, 0, .16, 6, .16)).add(BOX, '#3a3a44', M(x + ax * .9, g + 5.95, z + az * .9, 0, ry, 0, .12, .12, 1.8));
+      batch(x, z, lampMat).add(BOX, '#ffffff', M(x + ax * 1.7, g + 5.85, z + az * 1.7, 0, ry, 0, .55, .14, .8));
+      pools.push(x + ax * 1.7, z + az * 1.7);
+    }
+  }
+  const poolC = canvas(64, 64), pg = poolC.getContext('2d'), grad = pg.createRadialGradient(32, 32, 0, 32, 32, 32);
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(.45, 'rgba(255,255,255,.45)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  pg.fillStyle = grad; pg.fillRect(0, 0, 64, 64);
+  const poolMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(12, 12).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ map: texture(poolC), color: '#ffcf80', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -8, polygonOffsetUnits: -8 }), pools.length / 2);
+  for (let i = 0; i < pools.length; i += 2) {
+    const x = pools[i], z = pools[i + 1], up = V(groundY(x - 1, z) - groundY(x + 1, z), 2, groundY(x, z - 1) - groundY(x, z + 1)).normalize();
+    dummy.position.set(x, groundY(x, z) + .12, z); dummy.quaternion.setFromUnitVectors(V(0, 1, 0), up); dummy.scale.setScalar(1); dummy.updateMatrix(); poolMesh.setMatrixAt(i / 2, dummy.matrix);
+  }
+  poolMesh.renderOrder = 1; scene.add(poolMesh);
   const m = 20;
   box(X0 - 60, X0 + m, Z0 - 60, Z1 + 60, 999); box(X1 - m, X1 + 60, Z0 - 60, Z1 + 60, 999);
   box(X0 - 60, X1 + 60, Z0 - 60, Z0 + m, 999); box(X0 - 60, X1 + 60, Z1 - m, Z1 + 60, 999);
@@ -750,7 +783,7 @@ function city(scene, D) {
   const e0 = adj[sn].reduce((a, e) => e.w * e.len > a.w * a.len ? e : a);
   const centre = P.market || { px: 0, pz: 0 };
   return {
-    collide, hitT, blocked, solid, box, onRoad, doors, crews, smoke, parked, cops, P, solidMat, blockade, aziz, loiter,
+    collide, hitT, blocked, solid, box, onRoad, edgesIn, vec: { B }, pools: poolMesh, doors, crews, smoke, parked, cops, P, solidMat, blockade, aziz, loiter,
     winMats: Object.values(mats).flat(),
     nav: { NN, NX, NZ, adj, nearest: nearestNode, field, downhill },
     map: { canvas: mapCanvas, s: MAPS, x0: X0, z0: Z0 },
@@ -798,16 +831,16 @@ export async function open(site) {
 
 function create(data) {
   const renderer = new THREE.WebGLRenderer({ antialias: devicePixelRatio < 2, powerPreference: 'high-performance' });
-  const prefs = Object.assign({ vol: .8, sfx: 1, weather: .45, car: .7, radio: true, fov: 62, speedFov: true, quality: 'mid' }, (() => { try { return JSON.parse(localStorage.getItem('gtaPrefs')) || {}; } catch (e) { return {}; } })());
+  const prefs = Object.assign({ vol: .8, sfx: 1, weather: .45, car: .7, radio: true, fov: 62, speedFov: true, quality: 'mid', sens: .0022, post: true }, (() => { try { return JSON.parse(localStorage.getItem('gtaPrefs')) || {}; } catch (e) { return {}; } })());
   const QUALITY = { low: .6, mid: 1, high: 1.5 };
   renderer.setPixelRatio(Math.min(devicePixelRatio, QUALITY[prefs.quality] || 1));
   const dlg = document.createElement('dialog');
   dlg.id = 'gta'; dlg.tabIndex = -1; dlg.setAttribute('aria-label', 'GTA VI: Добрянка');
-  dlg.innerHTML = `<div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><button type="button" class="g-gear" aria-label="Настройки">${ico('gear')}</button><div class="g-aim" hidden></div><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${`<span>${ico('star')}</span>`.repeat(5)}</div><div class="g-gold"></div><div class="g-goals"></div><div class="g-hp"><i></i></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button><div class="g-weather"></div></div><div class="g-radio" hidden></div><canvas class="g-map" width="300" height="300" role="button" aria-label="Карта и навигация"></canvas><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-full" hidden><canvas></canvas><button type="button" class="g-fx" aria-label="Закрыть карту">X</button></div><div class="g-screen"><div></div></div>`;
+  dlg.innerHTML = `<div class="g-hurt"></div><div class="g-flash"></div><div class="g-hud"><button type="button" class="g-x" aria-label="Выйти на сайт">X</button><button type="button" class="g-gear" aria-label="Настройки">${ico('gear')}</button><div class="g-quest" role="button" aria-label="Цель и маршрут"></div><div class="g-aim" hidden></div><div class="g-stats"><div class="g-wanted" aria-label="Розыск">${`<span>${ico('star')}</span>`.repeat(5)}</div><div class="g-gold"></div><div class="g-hprow">${ico('heart')}<div class="g-hp"><i></i></div></div><div class="g-stam" hidden><i></i></div><div class="g-loot"></div><div class="g-race"></div><div class="g-job"></div><button type="button" class="g-gun" aria-label="Сменить ствол"></button></div><div class="g-radio" hidden></div><div class="g-mapbox"><div class="g-weather"></div><canvas class="g-map" width="400" height="400" role="button" aria-label="Карта и навигация"></canvas></div><div class="g-speed" hidden><b>0</b><small>КМ/Ч</small></div><div class="g-ann" aria-live="polite"></div><div class="g-hint"></div></div><div class="g-pad"><div><button type="button" data-k="left" aria-label="Влево">◀</button><button type="button" data-k="right" aria-label="Вправо">▶</button></div><div><button type="button" data-k="down">ТОРМОЗ</button><button type="button" class="g-gas" data-k="up">ГАЗ</button></div><button type="button" class="g-act" data-act>ВЫЙТИ</button><button type="button" class="g-jump" data-k="hand">ПРЫЖОК</button></div><div class="g-full" hidden><canvas></canvas><div class="g-ftip" hidden></div><div class="g-fz"><button type="button" data-z="in" aria-label="Приблизить">+</button><button type="button" data-z="out" aria-label="Отдалить">−</button><button type="button" data-z="me" aria-label="К себе">${ico('pin')}</button></div><button type="button" class="g-fx" aria-label="Закрыть карту">X</button></div><div class="g-screen"><div></div></div>`;
   dlg.prepend(renderer.domElement);
   document.body.append(dlg);
   const $ = s => dlg.querySelector(s), annEl = $('.g-ann'), hintEl = $('.g-hint'), scr = $('.g-screen'), hud = $('.g-hud');
-  const aimEl = $('.g-aim'), jumpEl = $('.g-jump'), speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), goalEl = $('.g-goals'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
+  const aimEl = $('.g-aim'), jumpEl = $('.g-jump'), speedEl = $('.g-speed'), raceEl = $('.g-race'), gunEl = $('.g-gun'), weatherEl = $('.g-weather'), stamEl = $('.g-stam'), downEl = $('[data-k="down"]'), actEl = $('.g-act'), jobEl = $('.g-job'), radio = $('.g-radio'), wantedEl = $('.g-wanted'), stars = [...wantedEl.children], goldEl = $('.g-gold'), questEl = $('.g-quest'), hurtEl = $('.g-hurt'), flashEl = $('.g-flash'), hpEl = $('.g-hp i'), lootEl = $('.g-loot');
 
   const scene = new THREE.Scene(), camera = new THREE.PerspectiveCamera(62, 1, .5, 1000);
   scene.fog = new THREE.Fog('#c9527f', 70, 320);
@@ -889,7 +922,7 @@ function create(data) {
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthWrite: false }));
     sp.scale.set(2.4, 2.4, 1); scene.add(sp); return sp;
   };
-  const ring = color => { const r = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .5, side: THREE.DoubleSide, depthWrite: false })); scene.add(r); return r; };
+  const ring = color => { const r = new THREE.Mesh(ringGeo, glow(new THREE.MeshBasicMaterial({ color, transparent: true, opacity: .5, side: THREE.DoubleSide, depthWrite: false }))); scene.add(r); return r; };
   for (const d of doors) { d.ring = ring(SHOPDEF[d.kind].color); d.icon = iconSprite(SHOPDEF[d.kind].icon); d.y = groundY(d.x, d.z); d.ring.position.set(d.x, d.y + .5, d.z); }
   for (const c of crews) { c.icon = iconSprite('skull'); c.y = groundY(c.cx, c.cz); c.pos = V(c.cx, 0, c.cz); }
   const drop = { x: P.gres.x, z: P.gres.z, y: groundY(P.gres.x, P.gres.z), ring: ring('#ffd24a'), icon: iconSprite('chest') };
@@ -901,7 +934,7 @@ function create(data) {
   const rainGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(rainPos, 3));
   const snowGeo = new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
   const rainMesh = new THREE.LineSegments(rainGeo, new THREE.LineBasicMaterial({ color: '#a9bfe0', transparent: true, opacity: .55, fog: false }));
-  const snowMesh = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: '#ffffff', size: .3, transparent: true, opacity: .9 }));
+  const snowMesh = new THREE.Points(snowGeo, new THREE.PointsMaterial({ color: '#ffffff', size: .22, transparent: true, opacity: .9 }));
   rainMesh.frustumCulled = snowMesh.frustumCulled = false; scene.add(rainMesh, snowMesh);
   let weather = WEATHER[0], temp = 15, flash = 0, boltAt = 0, grip = 9, stamina = 1, hour = 18.8, weatherAt = 0, dayW = { n: 0, d: 1, y: 0 };
   const wcur = { rain: 0, snow: 0, f0: 70, f1: 320, light: 1, grip: 9 };
@@ -935,7 +968,10 @@ function create(data) {
     else { sunLight.position.copy(sunDir).multiplyScalar(-100); sunLight.color.copy(PAL.night.sc); sunLight.intensity = PAL.night.si * (1 - sunUp) * L; }
     sun.visible = e > -.1; sun.material.color.setScalar(L > .9 ? 1 : .45);
     moon.visible = e < .1;
-    for (const m of world.winMats) m.emissiveIntensity = .2 + 1.3 * wn + .7 * wd;
+    for (const m of world.winMats) m.emissiveIntensity = .2 + 1.6 * wn + .7 * wd;
+    const gk = 1 + 1.5 * wn, lk = .3 + 2.8 * wn;
+    for (const m of GLOW) m.color.copy(m.userData.base).multiplyScalar(m.userData.lamp ? lk : gk);
+    world.pools.material.opacity = .3 * wn;
     const lights = !player.foot && zone !== 'inside' && state !== 'title' && (wn > .3 || L < .7);
     headLight.intensity = lights ? 160 * Math.max(wn, 1 - L) : 0;
     if (lights) { const h = player.heading; headLight.position.set(player.pos.x + Math.sin(h) * 2.2, player.y + 1, player.pos.z + Math.cos(h) * 2.2); headLight.target.position.set(player.pos.x + Math.sin(h) * 22, player.y, player.pos.z + Math.cos(h) * 22); }
@@ -943,6 +979,7 @@ function create(data) {
   function weatherStep(dt) {
     atmosphere(dt);
     rainMesh.visible = wcur.rain > .02 && zone === 'city'; snowMesh.visible = wcur.snow > .02 && zone === 'city';
+    rainMesh.material.color.set('#a9bfe0').multiplyScalar(1 - .55 * dayW.n); snowMesh.material.color.setScalar(1 - .5 * dayW.n);
     rainGeo.setDrawRange(0, Math.floor(PN * Math.min(1, wcur.rain)) * 2); snowGeo.setDrawRange(0, Math.floor(PN * wcur.snow));
     if (zone === 'inside' && room) {
       for (const f of room.anim) f(dt);
@@ -957,6 +994,7 @@ function create(data) {
         if (drops[k + 1] < c.y - 12) drops[k + 1] += 36;
         if (drops[k + 1] > c.y + 24) drops[k + 1] -= 36;
         if (snowing) drops[k] += Math.sin(now + i) * .6 * dt;
+        if (Math.abs(drops[k] - c.x) < 2.5 && Math.abs(drops[k + 2] - c.z) < 2.5) drops[k] += 5;
         const x = drops[k] = wrapc(drops[k], c.x, 35), z = drops[k + 2] = wrapc(drops[k + 2], c.z, 35), y = drops[k + 1], j = i * 6;
         snowPos[k] = x; snowPos[k + 1] = y; snowPos[k + 2] = z;
         rainPos[j] = x; rainPos[j + 1] = y; rainPos[j + 2] = z; rainPos[j + 3] = x + .12; rainPos[j + 4] = y + 1.1; rainPos[j + 5] = z + .08;
@@ -1012,7 +1050,7 @@ function create(data) {
     for (let i = 0; i < k.count; i++) crowd.push({ k, i, pos: V(0, 0, 0), vel: V(0, 0, 0), heading: rand(0, 6.3), t: rand(0, 9), seed: rand(0, 9), dead: false, respawn: 0 });
   }
   const rooms = {}, ROOM_KINDS = ['shawarma', 'tire', 'crypto', 'pawn', 'guns', 'pharmacy', 'mvd', 'strip', 'hospital', 'autoschool', 'yantar', 'kb', 'hotel', 'ozon', 'wb'];
-  const neonMat = color => new THREE.MeshBasicMaterial({ color });
+  const neonMat = color => new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(2.4) });
   ROOM_KINDS.forEach((kind, k) => {
     const ox = 8000 + k * 60, oz = 8000, W = 12, D = 9, H = 6, b = new Batch(), def = SHOPDEF[kind], anim = [];
     const pal = { shawarma: ['#7a5a3a', '#e8c890'], tire: ['#3a3a3e', '#7a7a80'], crypto: ['#3a1030', '#5a1a4a'], pawn: ['#5a4a3a', '#8a7a60'], guns: ['#4a3a2a', '#5e4a32'], pharmacy: ['#c9d3ce', '#f2f5f3'], mvd: ['#6a6a5a', '#c8c8b0'], strip: ['#1a0a1a', '#2a0a2a'], hospital: ['#b8c4c0', '#e8eeec'], autoschool: ['#3a3a44', '#d8d0c0'], yantar: ['#5a4a3a', '#c8a070'], kb: ['#4a1a1a', '#f0e8e0'], hotel: ['#5a3a2a', '#d8c8a8'], ozon: ['#2a3a6a', '#dde6ff'], wb: ['#3a1a4a', '#f0e0f8'] }[kind];
@@ -1169,7 +1207,7 @@ function create(data) {
     leaveShop(); exitRoom();
     const a = rand(0, 6.283), x = player.pos.x + Math.sin(a) * 45, z = player.pos.z + Math.cos(a) * 45;
     rock = { x, z, y: groundY(x, z), t: 0 }; rockMesh.visible = true;
-    ann('БЕПИС ЖМЁТ УЛЬТУ', 'gold'); hint('Бепис (он же ЦМка) заказал метеорит. Смотри в небо', 3);
+    ann('БЕПИС ЖМЁТ УЛЬТУ', 'gold'); hint('Бепис заказал метеорит. Смотри в небо', 3);
   }
   function rockStep(dt) {
     if (!rock || !live()) return;
@@ -1327,6 +1365,9 @@ function create(data) {
   const cops = [], keys = {}, held = { up: new Set(), down: new Set(), left: new Set(), right: new Set(), fire: new Set(), hand: new Set() }, shown = {};
   const touch = matchMedia('(pointer:coarse)').matches;
   const on = k => keys[k] || (held[k] ? held[k].size > 0 : false);
+  let camYaw = 0, camPitch = 0, lastLook = -9, locked = false, selfUnlock = false, hurtFx = 0, flashFx = 0, lastGoalN = 0;
+  const rd = V(0, 0, 1), canLock = !touch && !!renderer.domElement.requestPointerLock;
+  const free = () => locked && zone !== 'inside';
 
   let ac, master, eng, engGain, sir, sirGain, noiseBuf;
   const bus = {};
@@ -1465,10 +1506,10 @@ function create(data) {
     for (const c of [a, b]) if (!c.foot) c.speed = clamp(c.vel.dot(fwd.set(Math.sin(c.heading), 0, Math.cos(c.heading))), -20, 50);
     return -rel;
   }
-  function walk(h, gas, steer, dt, top = 7) {
+  function walk(h, gas, steer, dt, top = 7, dir = h.heading) {
     h.heading += steer * 3 * dt;
     h.speed = gas > 0 ? top : gas < 0 ? -3 : 0;
-    fwd.set(Math.sin(h.heading), 0, Math.cos(h.heading));
+    fwd.set(Math.sin(dir), 0, Math.cos(dir));
     h.vel.copy(fwd).multiplyScalar(h.speed);
     h.pos.addScaledVector(h.vel, dt);
     collide(h, h.r);
@@ -1651,7 +1692,7 @@ function create(data) {
 
   function hurt(n, why) {
     if (state !== 'play' || invuln > 0) return;
-    hp -= n * player.spec.armor * (run.armor && !player.foot ? .6 : 1); cause = why; lastHurt = now; shakeAmt = Math.min(1.6, shakeAmt + n * .05);
+    hp -= n * player.spec.armor * (run.armor && !player.foot ? .6 : 1); cause = why; lastHurt = now; shakeAmt = Math.min(1.6, shakeAmt + n * .05); hurtFx = Math.min(1, hurtFx + .3 + n / 30);
     if (hp < 30 && hp > 0 && site.loot.cheese > 0) { site.loot.cheese--; site.saveLoot(); hp = 100; ann('СЫР!', 'gold'); hint('Сожрал сыр с Рошана, здоровье полное', 2.5); }
     if (hp <= 0) { hp = 0; die(why); }
   }
@@ -1682,12 +1723,13 @@ function create(data) {
     hint(lost ? `−${lost} золота. Осталось ${run.gold}` : 'Золота и так не было', 3);
   }
   function revive() {
-    state = 'play'; dlg.classList.remove('dying'); hp = 100; invuln = 2.5; bust = 0;
+    state = 'play'; dlg.classList.remove('dying'); hp = 100; stamina = 1; invuln = 2.5; bust = 0; flashFx = 1; hurtFx = 0;
+    floatText('+100', player.pos);
     if (cause === 'kama') { const n = nav.nearest(player.pos.x, player.pos.z), e = nav.adj[n][0]; player.pos.set(nav.NX[n], 0, nav.NZ[n]); player.heading = Math.atan2(nav.NX[e.to] - nav.NX[n], nav.NZ[e.to] - nav.NZ[n]); }
     player.speed = 0; player.vel.set(0, 0, 0);
     for (let k = cops.length - 1; k >= 0; k--) if (cops[k].pos.distanceTo(player.pos) < 30) dropCop(k);
     spray(player.pos, ['#ffd24a', '#fff3a0', '#ff4fb8'], 30, 10);
-    hint('Аегис потрачен. Менты разбежались', 2.5);
+    hint('Аегис потрачен: здоровье полное, менты разбежались', 2.5);
   }
   function blowCop(c) {
     const k = cops.indexOf(c);
@@ -1712,14 +1754,29 @@ function create(data) {
     if (beat.active) look(beat, 'beat');
     return found.sort((a, b) => a.score - b.score);
   }
+  function rayTargets(g) {
+    camera.getWorldDirection(rd);
+    const o = camera.position, found = [];
+    const look = (e, kind, rad, y) => {
+      const ex = e.pos.x - o.x, ey = y - o.y, ez = e.pos.z - o.z, t = ex * rd.x + ey * rd.y + ez * rd.z;
+      if (t <= 0) return;
+      const miss = Math.hypot(ex - rd.x * t, ey - rd.y * t, ez - rd.z * t), d = Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z);
+      if (miss < rad * (g.spread ? 2 : 1) && d < g.range && clear(player.pos, e.pos)) found.push({ e, kind, score: t });
+    };
+    for (const c of crowd) if (!c.dead) look(c, 'crowd', 1.3, groundY(c.pos.x, c.pos.z) + .7);
+    for (const c of cops) look(c, 'cop', 2.2, c.y + 1);
+    for (const c of crews) if (c.alive) look(c, 'triada', 2, c.y + 1.2);
+    if (beat.active) look(beat, 'beat', .9, beat.y + 1.2);
+    return found.sort((a, b) => a.score - b.score);
+  }
   function fire() {
     const g = GUNS[run.gun];
     fireCD = g.rate;
     if (!run.guns[run.gun]) { hint(`Патроны кончились — Охота и рыбалка ${ico('gun')}`, 1.5); noise(.05, 3000, .2, 'highpass'); return; }
     run.guns[run.gun]--; aimT = .35;
     const h = player, from = V(h.pos.x + Math.sin(h.heading) * .9 - Math.cos(h.heading) * .5, h.y + 1.55, h.pos.z + Math.cos(h.heading) * .9 + Math.sin(h.heading) * .5);
-    const hits = aimTargets(g).slice(0, g.spread || 1);
-    if (!hits.length) tracer(from, tmp.set(h.pos.x + Math.sin(h.heading) * g.range, from.y, h.pos.z + Math.cos(h.heading) * g.range), '#ffe9a0');
+    const fr = free(), hits = (fr ? rayTargets(g) : aimTargets(g)).slice(0, g.spread || 1);
+    if (!hits.length) tracer(from, fr ? tmp.copy(camera.position).addScaledVector(rd, g.range + 8) : tmp.set(h.pos.x + Math.sin(h.heading) * g.range, from.y, h.pos.z + Math.cos(h.heading) * g.range), '#ffe9a0');
     for (const { e, kind } of hits) {
       tracer(from, tmp.set(e.pos.x, groundY(e.pos.x, e.pos.z) + 1, e.pos.z), '#ffe9a0');
       if (kind === 'crowd') squash(e, .5);
@@ -1757,7 +1814,7 @@ function create(data) {
     if (race) { for (const c of race.cars) scene.remove(c.mesh); race = null; }
     player = myCar; hero.mesh.visible = false; zone = 'city'; room = null; mapC.hidden = false; raceGate.inside = false;
     beat.active = false; beat.mesh.visible = false; beat.cd = 0; reviveTriada();
-    gps = null; copField = null; mapOpen = false; fullEl.hidden = true;
+    gps = null; copField = null; mapOpen = false; fullEl.hidden = true; lastGoalN = 0; hurtFx = flashFx = 0;
     hp = 100; heat = 0; bust = 0; invuln = 0; streak = 0; lastKill = -99; firstBlood = true; spawnCD = 0; shakeAmt = 0;
     run = { gold: 0, spiders: 0, couriers: 0, stars: 0, time: 0, engine: 0, armor: false, seeds: 0, job: null, jobs: 0, deaths: 0, guns: {}, gun: null, drunk: 0, energy: 0, bahily: false, license: false, spravka: false, passport: false, blockOpen: false, shoes: false, respect: false };
     exam = null; rock = null; examRing.visible = examIcon.visible = false; rockMesh.visible = false;
@@ -1781,7 +1838,13 @@ function create(data) {
     if (player.foot) {
       const sprint = (on('sprint') || (touch && on('down'))) && stamina > .03;
       stamina = clamp(stamina + (sprint && !run.energy ? -.22 : .16) * dt, 0, 1);
-      walk(player, on('up') || sprint ? 1 : !touch && on('down') ? -1 : 0, steer, dt, (sprint ? (run.energy ? 13 : 11) : 7) + (run.shoes ? 2 : 0));
+      const top = (sprint ? (run.energy ? 13 : 11) : 7) + (run.shoes ? 2 : 0);
+      if (free()) {
+        const fz = (on('up') || (sprint && !on('down')) ? 1 : 0) - (on('down') ? 1 : 0), fx = (on('right') ? 1 : 0) - (on('left') ? 1 : 0), aiming = run.gun && (on('fire') || on('mouse') || aimT > 0);
+        const want = Math.atan2(Math.sin(camYaw) * fz - Math.cos(camYaw) * fx, Math.cos(camYaw) * fz + Math.sin(camYaw) * fx) + (run.drunk ? Math.sin(now * 2.1) * .4 : 0);
+        player.heading += wrap((aiming ? camYaw : fz || fx ? want : player.heading) - player.heading) * Math.min(1, dt * 14);
+        walk(player, fz || fx ? 1 : 0, 0, dt, top, want);
+      } else walk(player, on('up') || sprint ? 1 : !touch && on('down') ? -1 : 0, steer, dt, top);
       fireCD -= dt; aimT -= dt;
       heroGun.visible = !!run.gun;
       if (run.gun && (on('fire') || on('mouse')) && fireCD <= 0) fire();
@@ -1856,7 +1919,9 @@ function create(data) {
       play('shot', .3, .85) || noise(.12, 1400, .35, 'bandpass');
       if (hit) { hurt(player.foot ? 9 : 6, 'cop'); if (player.foot && Math.random() < .4) play(pick(['scream1', 'scream2']), .7); }
     }
-    const grabbed = beatStep(dt); jobStep(); gpsStep();
+    const grabbed = beatStep(dt); jobStep(); gpsStep(dt);
+    const gn = goal().n;
+    if (gn !== lastGoalN) { lastGoalN = gn; if (!exam && !run.job && (!gps || gps.goal)) routeGoal(); }
     if (now - lastKill > 8 && near > 35) heat = Math.max(0, heat - (player.spec.chill ? .6 : .3) * dt);
     if (grabbed || ((player.foot ? Math.abs(player.speed) < 2.5 : surrender()) && near < 10 && invuln <= 0)) bust += dt * (grabbed ? 1.4 : 1); else bust = Math.max(0, bust - dt * 2);
     if (bust > 2.2) die('bust');
@@ -1929,15 +1994,18 @@ function create(data) {
   }
   function chase(dt, snap) {
     const portrait = camera.aspect < .9, v = Math.abs(player.speed), foot = player.foot;
-    const inRoom = zone === 'inside', back = inRoom ? (portrait ? 6 : 5) : foot ? (portrait ? 8 : 6) : (portrait ? 14 : 10) + v * .12, up = inRoom ? 3 : foot ? (portrait ? 5 : 3.2) : (portrait ? 8.5 : 4.8) + v * .05;
-    fwd.set(Math.sin(player.heading), 0, Math.cos(player.heading));
-    tmp.copy(player.pos).addScaledVector(fwd, -back); tmp.y = player.y + up;
+    const inRoom = zone === 'inside', back = inRoom ? (portrait ? 6 : 5) : foot ? (portrait ? 8 : 6) : (portrait ? 14 : 10) + v * .12, up = inRoom ? 3 : foot ? (portrait ? 5 : 3.2) : (portrait ? 8.5 : 4.8) + v * .05, fr = free();
+    if (!fr) { camYaw = player.heading; camPitch = 0; }
+    else if (!foot && now - lastLook > 1.6) camYaw += wrap(player.heading - camYaw) * Math.min(1, 2.2 * dt);
+    fwd.set(Math.sin(camYaw), 0, Math.cos(camYaw));
+    const sh = fr && foot ? .9 : 0;
+    tmp.copy(player.pos).addScaledVector(fwd, -back * Math.cos(camPitch * .9)); tmp.y = player.y + up + back * Math.sin(camPitch * .9); tmp.x -= fwd.z * sh; tmp.z += fwd.x * sh;
     const t = world.hitT(player.pos, tmp, player.y + 1.5, tmp.y);
     if (t < 1) tmp.lerpVectors(tmp2.set(player.pos.x, player.y + 1.5, player.pos.z), tmp, Math.max(.12, t - .06));
     tmp.y = Math.max(tmp.y, groundY(tmp.x, tmp.z) + 1.2);
     camera.position.lerp(tmp, snap ? 1 : 1 - Math.exp(-(t < 1 ? 18 : 5) * dt));
     if (shakeAmt > .01) { camera.position.x += rand(-1, 1) * shakeAmt; camera.position.y += rand(-1, 1) * shakeAmt * .5; shakeAmt *= Math.exp(-7 * dt); }
-    tmp2.copy(player.pos).addScaledVector(fwd, foot ? 3 : 6); tmp2.y = player.y + (foot ? 1.6 : 1.2);
+    tmp2.copy(player.pos).addScaledVector(fwd, foot ? (fr ? 6 : 3) : 6); tmp2.y = player.y + (foot ? 1.6 : 1.2) - (fr ? Math.sin(camPitch * .9) * 3 : 0); tmp2.x -= fwd.z * sh; tmp2.z += fwd.x * sh;
     camera.lookAt(tmp2);
     if (run.drunk) { camera.rotation.z += Math.sin(now * 1.3) * .09; camera.position.y += Math.sin(now * 1.7) * .25; }
   }
@@ -1947,7 +2015,9 @@ function create(data) {
     if (shown.stars !== want) { shown.stars = want; stars.forEach((s, k) => s.classList.toggle('on', k < want)); }
     wantedEl.classList.toggle('cool', want > 0 && now - lastKill > 8);
     show(`${ico('gold')} ${run.gold || 0}`, 'gold', goldEl);
-    show(run.blockOpen ? `${ico('sunset')} к выезду` : `${[['license', 'license'], ['spravka', 'scroll'], ['passport', 'passport']].map(([k, i]) => `<span class="${run[k] ? '' : 'g-off'}">${ico(i)}</span>`).join('')} → ${ico('barrier')}`, 'goal', goalEl);
+    const q = goal();
+    questEl.hidden = state === 'title' || zone === 'race';
+    show(`<b>ЦЕЛЬ ${q.n}/5</b><span>${ico(q.icon)} ${q.text}</span>${q.price && run.gold < q.price ? `<i class="g-bar"><u style="width:${Math.floor(Math.min(1, run.gold / q.price) * 100)}%"></u></i>` : ''}<span class="g-steps">${[['license', 'license'], ['spravka', 'scroll'], ['passport', 'passport'], ['blockOpen', 'barrier']].map(([k, i]) => `<span class="${run[k] ? '' : 'g-off'}">${ico(i)}</span>`).join('')}<span class="g-off">${ico('sunset')}</span></span><small>${gps && gps.goal ? 'маршрут проложен' : touch ? 'тап — проложить маршрут' : 'G или клик — проложить маршрут'}</small>`, 'quest', questEl);
     show(`${ico('aegis')} ${site.loot.aegis} · ${ico('cheese')} ${site.loot.cheese}${run.drunk ? ` · ${ico('bottle')}` : ''}${run.energy ? ` · ${ico('bolt')}` : ''}`, 'loot', lootEl);
     show(run.gun ? `${ico('gun')} ${GUNS[run.gun].name} · ${run.guns[run.gun]}${Object.keys(run.guns).length > 1 ? ' ⇄' : ''}` : '', 'gun', gunEl);
     const w = Math.round(hp) + '%';
@@ -1970,7 +2040,8 @@ function create(data) {
     radio.hidden = !(prefs.radio && state === 'play' && !player.foot);
     const ag = state === 'play' && player.foot && run.gun && zone === 'city' && !menu ? GUNS[run.gun] : null;
     aimEl.hidden = !ag;
-    if (ag) {
+    if (ag && free()) { aimEl.style.left = aimEl.style.top = '50%'; aimEl.classList.toggle('lock', !!rayTargets(ag)[0]); }
+    else if (ag) {
       const t = aimTargets(ag)[0];
       if (t) tmp.set(t.e.pos.x, groundY(t.e.pos.x, t.e.pos.z) + 1.2, t.e.pos.z); else tmp.set(player.pos.x + Math.sin(player.heading) * 14, player.y + 1.5, player.pos.z + Math.cos(player.heading) * 14);
       tmp.project(camera);
@@ -2001,8 +2072,13 @@ function create(data) {
     const fovT = prefs.fov + (camera.aspect < .9 ? 18 : 0) + (prefs.speedFov && state === 'play' && !player.foot ? Math.min(1, Math.abs(player.speed) / 46) * 14 : 0);
     if (Math.abs(camera.fov - fovT) > .05) { camera.fov += (fovT - camera.fov) * Math.min(1, dt * 4); camera.updateProjectionMatrix(); }
     if (state === 'play' && !menu && !mapOpen) update(dt);
+    if (mapOpen && fv.dirty) drawFull();
     else if (state === 'dying' && (dyingT -= dt) <= 0) revive();
-    crowdStep(dt); drunkStep(dt); loiterStep(dt); rockStep(dt); effects(dt); weatherStep(dt);
+    crowdStep(dt); drunkStep(dt); loiterStep(dt); rockStep(dt); effects(dt); weatherStep(dt); routeStep(dt); ambientStep(dt);
+    hurtFx *= Math.exp(-2.2 * dt); flashFx *= Math.exp(-1.8 * dt);
+    const low = state === 'play' && hp < 30 ? (.25 + Math.sin(now * 6) * .12) * (1 - hp / 30) : 0, ho = Math.max(hurtFx, low).toFixed(2), fo = flashFx.toFixed(2);
+    if (shown.hurt !== ho) { shown.hurt = ho; hurtEl.style.opacity = ho; }
+    if (shown.flash !== fo) { shown.flash = fo; flashEl.style.opacity = fo; }
     const far = Math.max(160, scene.fog.far + 40);
     if (Math.abs(camera.far - far) > 4) { camera.far = far; camera.updateProjectionMatrix(); }
     if (state === 'title') { const C = world.centre, a = now * .06, y = groundY(C.x, C.z); camera.position.set(C.x + Math.sin(a) * 175, y + 80, C.z + Math.cos(a) * 175); camera.lookAt(C.x, y + 6, C.z); }
@@ -2018,9 +2094,81 @@ function create(data) {
     sun.position.copy(camera.position).addScaledVector(sunDir, 92); sun.lookAt(camera.position);
     moon.position.copy(camera.position).addScaledVector(sunDir, -92); moon.lookAt(camera.position);
     sound(); drawHud();
-    renderer.render(scene, camera);
+    present();
   }
 
+  const post = (() => {
+    const VS = 'varying vec2 vUv;\nvoid main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+    const mk = (fs, uniforms) => new THREE.ShaderMaterial({ uniforms, vertexShader: VS, fragmentShader: fs, depthTest: false, depthWrite: false });
+    const geo = new THREE.BufferGeometry(), sc = new THREE.Scene(), cam = new THREE.Camera(), quad = new THREE.Mesh(geo);
+    geo.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3)); geo.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 2, 0, 0, 2], 2));
+    quad.frustumCulled = false; sc.add(quad);
+    const opt = { type: THREE.HalfFloatType }, main = new THREE.WebGLRenderTarget(1, 1, { ...opt, samples: 4 }), a = new THREE.WebGLRenderTarget(1, 1, opt), b = new THREE.WebGLRenderTarget(1, 1, opt);
+    const bright = mk('uniform sampler2D t; uniform float th; uniform vec2 px; varying vec2 vUv;\nvoid main() {\n vec3 c = (texture2D(t, vUv + px).rgb + texture2D(t, vUv - px).rgb + texture2D(t, vUv + vec2(px.x, -px.y)).rgb + texture2D(t, vUv - vec2(px.x, -px.y)).rgb) * .25;\n float l = max(c.r, max(c.g, c.b));\n gl_FragColor = vec4(c * smoothstep(th, th + .35, l), 1.0);\n}', { t: { value: null }, th: { value: .8 }, px: { value: new THREE.Vector2() } });
+    const blur = mk('uniform sampler2D t; uniform vec2 d; varying vec2 vUv;\nvoid main() {\n vec3 c = texture2D(t, vUv).rgb * .227;\n c += (texture2D(t, vUv + d).rgb + texture2D(t, vUv - d).rgb) * .195;\n c += (texture2D(t, vUv + d * 2.0).rgb + texture2D(t, vUv - d * 2.0).rgb) * .122;\n c += (texture2D(t, vUv + d * 3.0).rgb + texture2D(t, vUv - d * 3.0).rgb) * .054;\n c += (texture2D(t, vUv + d * 4.0).rgb + texture2D(t, vUv - d * 4.0).rgb) * .016;\n gl_FragColor = vec4(c, 1.0);\n}', { t: { value: null }, d: { value: new THREE.Vector2() } });
+    const final = mk('uniform sampler2D t, b; uniform float time, grain, ca, blur, bloom, vig; uniform vec2 res; varying vec2 vUv;\nfloat hash(vec2 p) { p = fract(p * vec2(443.897, 441.423)); p += dot(p, p.yx + 19.19); return fract((p.x + p.y) * p.x); }\nvoid main() {\n vec2 d = vUv - .5; float r = length(d);\n vec2 o = d * ca * (.5 + r * 2.0);\n vec3 c = vec3(0.0);\n for (int i = 0; i < 6; i++) {\n  vec2 uv = vUv - d * blur * float(i) / 5.0;\n  c += vec3(texture2D(t, uv + o).r, texture2D(t, uv).g, texture2D(t, uv - o).b);\n }\n c = c / 6.0 + texture2D(b, vUv).rgb * bloom;\n c *= 1.0 - vig * dot(d, d) * 1.8;\n c += (hash(vUv * res + fract(time * 7.3) * 91.0) - .5) * grain;\n gl_FragColor = vec4(max(c, 0.0), 1.0);\n #include <colorspace_fragment>\n}', { t: { value: null }, b: { value: null }, time: { value: 0 }, grain: { value: .018 }, ca: { value: .002 }, blur: { value: 0 }, bloom: { value: .5 }, vig: { value: .35 }, res: { value: new THREE.Vector2() } });
+    const size = new THREE.Vector2(), pass = (m, target) => { quad.material = m; renderer.setRenderTarget(target); renderer.render(sc, cam); };
+    return {
+      final, bright,
+      render() {
+        renderer.getDrawingBufferSize(size);
+        if (main.width !== size.x || main.height !== size.y) {
+          main.setSize(size.x, size.y); a.setSize(Math.max(1, size.x >> 2), Math.max(1, size.y >> 2)); b.setSize(a.width, a.height);
+          final.uniforms.res.value.copy(size); bright.uniforms.px.value.set(1 / size.x, 1 / size.y);
+        }
+        renderer.setRenderTarget(main); renderer.render(scene, camera);
+        bright.uniforms.t.value = main.texture; pass(bright, a);
+        blur.uniforms.t.value = a.texture; blur.uniforms.d.value.set(1.4 / a.width, 0); pass(blur, b);
+        blur.uniforms.t.value = b.texture; blur.uniforms.d.value.set(0, 1.4 / a.height); pass(blur, a);
+        final.uniforms.t.value = main.texture; final.uniforms.b.value = a.texture; pass(final, null);
+      }
+    };
+  })();
+  function present() {
+    if (!prefs.post || prefs.quality === 'low') { renderer.setRenderTarget(null); renderer.render(scene, camera); return; }
+    const u = post.final.uniforms, night = zone === 'inside' ? .8 : dayW.n, v = state === 'play' && !player.foot ? Math.abs(player.speed) : 0;
+    u.time.value = now; u.ca.value = .0016 + Math.min(1, v / 46) * .004 + hurtFx * .012;
+    u.blur.value = Math.max(0, (v - 16) / 30) * .04 + (state === 'play' && player.foot && player.speed > 9 ? .008 : 0);
+    u.bloom.value = .3 + .9 * night; post.bright.uniforms.th.value = .95 - .45 * night;
+    post.render();
+  }
+  const MN = 320, motePos = new Float32Array(MN * 3), moteSeed = new Float32Array(MN);
+  for (let i = 0; i < MN; i++) { motePos[i * 3] = rand(-30, 30); motePos[i * 3 + 1] = rand(-2, 10); motePos[i * 3 + 2] = rand(-30, 30); moteSeed[i] = rand(0, 99); }
+  const moteMat = new THREE.PointsMaterial({ color: '#fff4d0', size: .1, transparent: true, opacity: .4, depthWrite: false, blending: THREE.AdditiveBlending });
+  const motes = new THREE.Points(new THREE.BufferGeometry().setAttribute('position', new THREE.BufferAttribute(motePos, 3)), moteMat);
+  motes.frustumCulled = false; scene.add(motes);
+  const birdGeo = new THREE.BufferGeometry();
+  birdGeo.setAttribute('position', new THREE.Float32BufferAttribute([0, 0, .25, -1.1, .35, 0, 0, 0, -.25, 0, 0, .25, 0, 0, -.25, 1.1, .35, 0], 3)); birdGeo.computeVertexNormals();
+  const birds = new THREE.InstancedMesh(birdGeo, new THREE.MeshBasicMaterial({ color: '#1c1a26', side: THREE.DoubleSide }), 16);
+  birds.frustumCulled = false; scene.add(birds);
+  const flocks = [0, 1].map(k => ({ a: k * 3, r: rand(70, 110), h: rand(32, 48), spin: k ? .12 : -.1 }));
+  function ambientStep(dt) {
+    const c = camera.position, night = dayW.n > .5, dry = wcur.rain < .3 && wcur.snow < .3;
+    motes.visible = zone === 'city' && dry && state !== 'title';
+    if (motes.visible) {
+      moteMat.color.set(night ? '#d8ff70' : '#fff4d0').multiplyScalar(night ? 2.2 : 1); moteMat.size = night ? .2 : .09; moteMat.opacity = night ? .55 + .35 * Math.sin(now * 2.7) : .35;
+      for (let i = 0; i < MN; i++) {
+        const k = i * 3, sd = moteSeed[i];
+        motePos[k] = wrapc(motePos[k] + Math.sin(now * .3 + sd) * dt * .7, c.x, 30);
+        motePos[k + 2] = wrapc(motePos[k + 2] + Math.cos(now * .27 + sd) * dt * .7, c.z, 30);
+        const g = groundY(motePos[k], motePos[k + 2]);
+        motePos[k + 1] = clamp(motePos[k + 1] + Math.sin(now * .5 + sd * 3) * dt * .4, g + .3, g + 9);
+      }
+      motes.geometry.attributes.position.needsUpdate = true;
+    }
+    birds.visible = zone === 'city' && dry && hour > 6 && hour < 20;
+    if (!birds.visible) return;
+    flocks.forEach((f, fi) => {
+      f.a += f.spin * dt;
+      const fx = c.x + Math.cos(f.a) * f.r, fz = c.z + Math.sin(f.a) * f.r, fy = groundY(fx, fz) + f.h, head = Math.atan2(-Math.sin(f.a) * f.spin, Math.cos(f.a) * f.spin);
+      for (let i = 0; i < 8; i++) {
+        const row = Math.ceil(i / 2), side = i % 2 ? 1 : -1, bx = -Math.sin(head) * row * 2.2 + Math.cos(head) * side * row * 1.8, bz = -Math.cos(head) * row * 2.2 - Math.sin(head) * side * row * 1.8;
+        dummy.position.set(fx + bx, fy + Math.sin(now * 1.3 + i) * .6, fz + bz); dummy.rotation.set(0, head, 0); dummy.scale.set(1, 1 + Math.sin(now * 11 + i * 1.7) * .9, 1); dummy.updateMatrix();
+        birds.setMatrixAt(fi * 8 + i, dummy.matrix);
+      }
+    });
+    birds.instanceMatrix.needsUpdate = true;
+  }
   const best = {
     get() { try { return +localStorage.getItem('gtaBest') || 0; } catch (e) { return 0; } },
     set(v) { try { localStorage.setItem('gtaBest', v); } catch (e) {} }
@@ -2038,7 +2186,7 @@ function create(data) {
     () => 'Участковый просит вернуть ему фуражку. Сука, верни фуражку',
     () => `Блокпост на мосту стоит. Без документов — ${NO_DOCS}, МВД работает без выходных и без совести`,
     () => 'Автошкола Азиза: права за неделю. Или за шесть тысяч за минуту',
-    () => 'Бепис снова просит метеорит. ЦМка, остынь',
+    () => 'Бепис снова просит метеорит',
     () => 'У «Янтаря» опять стоят пацаны. Если спросят сотку — у тебя нет',
     () => 'В КБ акция: коньяк «Три звезды». Звёзды розыска в подарок',
     () => 'Хит недели: «Бруда — паучья любовь». Ставим в третий раз, пока не выучишь',
@@ -2120,7 +2268,7 @@ function create(data) {
     if (kind === 'ozon') return [
       { name: 'Загранпаспорт (б/у)', note: run.passport ? 'уже есть' : 'нужен на блокпосту. Фото переклеишь сам', price: 4000, off: run.passport, buy: () => { run.passport = true; return 'Паспорт выдан. Владелец — Иванов И. И., тебе подходит'; } },
       { name: 'Посылка-сюрприз', note: 'что внутри — не знает даже Ozon', price: 300, buy: parcel },
-      { name: 'Метеорит', note: 'Бепис попросил добавить. Бепис — это и есть ЦМка: холодный снаружи, ещё холоднее внутри. Прилетит ледяной, как его ульта', price: METEOR, buy: () => { meteor(); } }
+      { name: 'Метеорит', note: 'Бепис попросил добавить', price: METEOR, buy: () => { meteor(); } }
     ];
     if (kind === 'wb') return [
       { name: 'Посылка-сюрприз', note: 'продавец пишет «как на фото». Фото нет', price: 228, buy: parcel },
@@ -2209,7 +2357,7 @@ function create(data) {
     screen(shopHtml(''), '[data-buy]:not(:disabled)');
     noise(.15, 2200, .25, 'bandpass');
   }
-  function leaveShop() { if (state !== 'shop') return; state = 'play'; screen(''); dlg.focus(); }
+  function leaveShop() { if (state !== 'shop') return; state = 'play'; screen(''); dlg.focus(); lock(); }
   function buy(k) {
     const it = shopItems(shopDoor.kind)[k];
     if (!it || it.off || run.gold < it.price) return;
@@ -2237,16 +2385,72 @@ function create(data) {
     ...Object.keys(PLACE_SIGNS).filter(k => P[k]).map(k => ({ x: P[k].x, z: P[k].z, icon: PLACE_SIGNS[k][0], name: PLACE_SIGNS[k][1] }))
   ];
   let gps = null;
-  function setGps(x, z, icon, name) { const n = nav.nearest(x, z); gps = { x, z, icon, name, node: n, f: nav.field(n), path: [], at: 0, left: 0 }; gpsStep(); }
-  function gpsStep() {
-    if (!gps || now < gps.at) return;
-    gps.at = now + .35;
-    let n = nav.nearest(player.pos.x, player.pos.z);
-    const path = [n];
-    for (let k = 0; k < 800 && gps.f[n] > 0; k++) { const m = nav.downhill(gps.f, n); if (m === n) break; path.push(n = m); }
-    gps.path = path;
-    gps.left = gps.f[path[0]] + Math.hypot(nav.NX[path[0]] - player.pos.x, nav.NZ[path[0]] - player.pos.z) + Math.hypot(gps.x - nav.NX[gps.node], gps.z - nav.NZ[gps.node]);
-    if (state === 'play' && Math.hypot(gps.x - player.pos.x, gps.z - player.pos.z) < 22) { hint(`${ico(gps.icon)} ${gps.name}: приехали`, 2); gps = null; }
+  const segT = (px, pz, ax, az, bx, bz) => { const ex = bx - ax, ez = bz - az; return clamp(((px - ax) * ex + (pz - az) * ez) / (ex * ex + ez * ez || 1), 0, 1); };
+  function routeFrom(n) { const path = [n]; for (let k = 0; k < 800 && gps.f[n] > 0; k++) { const m = nav.downhill(gps.f, n); if (m === n) break; path.push(n = m); } return path; }
+  function setGps(x, z, icon, name, goalRoute = false) {
+    const n = nav.nearest(x, z);
+    gps = { x, z, icon, name, goal: goalRoute, node: n, f: nav.field(n), path: [], off: 0, left: 0 };
+    gps.path = routeFrom(nav.nearest(player.pos.x, player.pos.z)); routeAt = 0; gpsStep(0);
+  }
+  function gpsStep(dt) {
+    if (!gps) return;
+    const px = player.pos.x, pz = player.pos.z, path = gps.path, X = nav.NX, Z = nav.NZ;
+    if (state === 'play' && zone === 'city' && Math.hypot(gps.x - px, gps.z - pz) < 22) { hint(`${ico(gps.icon)} ${gps.name}: приехали`, 2); gps = null; return; }
+    let best = Math.hypot(X[path[0]] - px, Z[path[0]] - pz), drop = 0;
+    for (let i = 0, run = 0; i < path.length - 1 && run < 80; i++) {
+      const ax = X[path[i]], az = Z[path[i]], bx = X[path[i + 1]], bz = Z[path[i + 1]], t = segT(px, pz, ax, az, bx, bz), d = Math.hypot(ax + (bx - ax) * t - px, az + (bz - az) * t - pz);
+      if (d < best - .01 && d < 25) { best = d; drop = t > .02 ? i + 1 : i; }
+      run += Math.hypot(bx - ax, bz - az);
+    }
+    if (drop) path.splice(0, drop);
+    gps.off = best > 30 && zone === 'city' ? gps.off + dt : 0;
+    if (gps.off > 2) { gps.off = 0; gps.path = routeFrom(nav.nearest(px, pz)); }
+    const h = gps.path[0];
+    gps.left = Math.hypot(X[h] - px, Z[h] - pz) + gps.f[h] + Math.hypot(gps.x - X[gps.node], gps.z - Z[gps.node]);
+  }
+  const chevC = canvas(64, 32), chx = chevC.getContext('2d');
+  chx.lineJoin = 'round';
+  chx.beginPath(); chx.moveTo(14, 5); chx.lineTo(36, 16); chx.lineTo(14, 27); chx.lineTo(26, 27); chx.lineTo(48, 16); chx.lineTo(26, 5); chx.closePath();
+  chx.fillStyle = '#ff4fb8'; chx.fill(); chx.lineWidth = 3; chx.strokeStyle = '#fff'; chx.stroke();
+  const chevTex = texture(chevC, true), routeMat = new THREE.MeshBasicMaterial({ map: chevTex, transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 });
+  const routeMesh = new THREE.Mesh(new THREE.BufferGeometry(), routeMat);
+  routeMesh.frustumCulled = false; routeMesh.renderOrder = 2; routeMesh.visible = false; scene.add(routeMesh);
+  let routeAt = 0;
+  function routeStep(dt) {
+    chevTex.offset.x -= dt * 1.3;
+    routeMesh.visible = !!gps && zone === 'city' && (state === 'play' || state === 'shop');
+    if (!routeMesh.visible || now < routeAt) return;
+    routeAt = now + .15;
+    const pts = [[player.pos.x, player.pos.z], ...gps.path.map(n => [nav.NX[n], nav.NZ[n]]), [gps.x, gps.z]], pos = [], uv = [], idx = [];
+    let walked = 0, carry = 0;
+    for (let i = 0; i < pts.length - 1 && walked < 420; i++) {
+      const [ax, az] = pts[i], [bx, bz] = pts[i + 1], len = Math.hypot(bx - ax, bz - az);
+      if (len < .01) continue;
+      const dx = (bx - ax) / len, dz = (bz - az) / len;
+      for (let t = carry; t <= len; t += 2.5) {
+        const x = ax + dx * t, z = az + dz * t, y = groundY(x, z) + .2, k = pos.length / 6;
+        pos.push(x - dz * .9, y, z + dx * .9, x + dz * .9, y, z - dx * .9);
+        uv.push((walked + t) / 3, 0, (walked + t) / 3, 1);
+        if (k) idx.push(2 * k - 2, 2 * k, 2 * k - 1, 2 * k - 1, 2 * k, 2 * k + 1);
+        carry = t + 2.5 - len;
+      }
+      walked += len;
+    }
+    const g = routeMesh.geometry;
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+  }
+  function goal() {
+    if (run.blockOpen) return { n: 5, icon: 'sunset', text: 'Гони к выезду из Добрянки', x: EX[0], z: EX[1] };
+    const docs = [['license', 'uschool', 'autoschool', 'Права: экзамен у Азиза', 'на права у Азиза', 1500], ['spravka', 'cross', 'hospital', 'Справка «Годен» в ЦРБ', 'на справку в ЦРБ', 2500], ['passport', 'ozon', 'ozon', 'Загранпаспорт на Ozon', 'на паспорт с Ozon', 4000]];
+    const i = docs.findIndex(([k]) => !run[k]);
+    if (i >= 0) { const [, icon, place, text, saving, price] = docs[i], p = P[place]; return { n: i + 1, icon, text: run.gold < price ? `Накопи ${price} ${saving}: дави пауков, работай на Триаду` : `${text} — ${price}`, route: text, price, x: p.x, z: p.z }; }
+    return { n: 4, icon: 'barrier', text: `Блокпост на мосту: документы и ${BRIBE}`, price: BRIBE, x: block.x, z: block.z };
+  }
+  function routeGoal() {
+    if (state !== 'play' || zone !== 'city') return;
+    const q = goal();
+    if (gps && gps.goal && gps.x === q.x && gps.z === q.z) { gps = null; return; }
+    setGps(q.x, q.z, q.icon, (q.route || q.text).split(':')[0], true);
   }
   function routeLine(x, to, unit) {
     if (!gps || !gps.path.length) return;
@@ -2257,11 +2461,21 @@ function create(data) {
       x.lineTo(...to(gps.x, gps.z)); x.stroke();
     }
   }
-  function arrow(x, px, py, r) {
-    x.save(); x.translate(px, py); x.rotate(Math.atan2(Math.cos(player.heading), Math.sin(player.heading)));
+  function arrow(x, px, py, r, ang) {
+    x.save(); x.translate(px, py); x.rotate(ang);
     x.fillStyle = '#fff'; x.strokeStyle = '#000'; x.lineWidth = r / 4.5;
     x.beginPath(); x.moveTo(r * 1.4, 0); x.lineTo(-r, r * .9); x.lineTo(-r * .4, 0); x.lineTo(-r, -r * .9); x.closePath(); x.fill(); x.stroke();
     x.restore();
+  }
+  function vectorRoads(x, to, x0, z0, x1, z1, scale, minW) {
+    const groups = new Map();
+    world.edgesIn(x0, z0, x1, z1, (ax, az, bx, bz, w) => { let g = groups.get(w); if (!g) groups.set(w, g = []); g.push(ax, az, bx, bz); });
+    x.lineCap = 'round'; x.strokeStyle = '#efe6cf';
+    for (const [w, l] of groups) {
+      x.lineWidth = Math.max(minW, w * scale); x.beginPath();
+      for (let i = 0; i < l.length; i += 4) { const [p1, q1] = to(l[i], l[i + 1]), [p2, q2] = to(l[i + 2], l[i + 3]); x.moveTo(p1, q1); x.lineTo(p2, q2); }
+      x.stroke();
+    }
   }
   const TMR = 320, tsc = MS / (2 * TMR), toTrack = (x, z) => [(TMR - (x - TR.ox)) * tsc, (TMR - (z - TR.oz)) * tsc];
   const trackBase = canvas(MS, MS), tb2 = trackBase.getContext('2d');
@@ -2276,12 +2490,15 @@ function create(data) {
       return;
     }
     if (zone !== 'city') return;
-    const R = 140 + Math.min(1, Math.abs(player.speed) / 40) * 110, k = MS / (2 * R), cx = player.pos.x, cz = player.pos.z, b = world.map;
-    const toMap = (x, z) => [(x - cx) * k + MS / 2, (z - cz) * k + MS / 2];
+    const R = 110 + Math.min(1, Math.abs(player.speed) / 40) * 90, k = MS / (2 * R), cx = player.pos.x, cz = player.pos.z, b = world.map;
+    camera.getWorldDirection(rd);
+    const th = Math.PI + Math.atan2(rd.x, rd.z), cs = Math.cos(th), sn = Math.sin(th);
+    const toMap = (x, z) => { const dx = (x - cx) * k, dz = (z - cz) * k; return [MS / 2 + dx * cs - dz * sn, MS / 2 + dx * sn + dz * cs]; };
     mx.fillStyle = '#2d5a8f'; mx.fillRect(0, 0, MS, MS);
-    mx.imageSmoothingEnabled = false;
-    const sx = (cx - R - b.x0) * b.s, sy = (cz - R - b.z0) * b.s, f = MS / (2 * R * b.s), x0 = Math.max(0, sx), y0 = Math.max(0, sy), x1 = Math.min(b.canvas.width, sx + 2 * R * b.s), y1 = Math.min(b.canvas.height, sy + 2 * R * b.s);
-    if (x1 > x0 && y1 > y0) mx.drawImage(b.canvas, x0, y0, x1 - x0, y1 - y0, (x0 - sx) * f, (y0 - sy) * f, (x1 - x0) * f, (y1 - y0) * f);
+    mx.save(); mx.translate(MS / 2, MS / 2); mx.rotate(th); mx.scale(k / b.s, k / b.s); mx.imageSmoothingEnabled = true;
+    mx.drawImage(b.canvas, (b.x0 - cx) * b.s, (b.z0 - cz) * b.s);
+    mx.restore();
+    vectorRoads(mx, toMap, cx - R * 1.45, cz - R * 1.45, cx + R * 1.45, cz + R * 1.45, k, 2);
     routeLine(mx, toMap, MS / 70);
     for (const m of marks) { const [x, y] = toMap(m.x, m.z); if (x > -20 && x < MS + 20 && y > -20 && y < MS + 20) drawIcon(mx, m.icon, x, y, 36); }
     const blink = now * 4 % 2 < 1;
@@ -2293,7 +2510,13 @@ function create(data) {
     }
     for (const c of cops) { const [x, y] = toMap(c.pos.x, c.pos.z); mx.fillStyle = blink ? '#ff2030' : '#2a6bff'; mx.beginPath(); mx.arc(x, y, MS / 45, 0, 7); mx.fill(); }
     if (beat.active) { const [x, y] = toMap(beat.pos.x, beat.pos.z); mx.fillStyle = '#8fd0ff'; mx.fillRect(x - MS / 60, y - MS / 60, MS / 30, MS / 30); }
-    arrow(mx, MS / 2, MS / 2, MS / 22);
+    const [hx, hy] = toMap(cx + Math.sin(player.heading), cz + Math.cos(player.heading));
+    arrow(mx, MS / 2, MS / 2, MS / 22, Math.atan2(hy - MS / 2, hx - MS / 2));
+    {
+      const [nx, ny] = toMap(cx, cz - 1e4), d = Math.hypot(nx - MS / 2, ny - MS / 2) || 1, lim = MS / 2 - 22, ex = MS / 2 + (nx - MS / 2) / d * lim, ey = MS / 2 + (ny - MS / 2) / d * lim;
+      mx.fillStyle = '#1a1030'; mx.fillRect(ex - 15, ey - 15, 30, 30); mx.strokeStyle = '#fff'; mx.lineWidth = 3; mx.strokeRect(ex - 15, ey - 15, 30, 30);
+      mx.font = '700 22px GCraft,monospace'; mx.textAlign = 'center'; mx.textBaseline = 'middle'; mx.fillStyle = '#fff'; mx.fillText('С', ex, ey + 1);
+    }
     if (gps) {
       mx.font = `700 ${Math.round(MS / 13)}px GCraft,monospace`; mx.textAlign = 'center'; mx.textBaseline = 'bottom'; mx.lineWidth = MS / 50; mx.strokeStyle = '#000'; mx.fillStyle = '#fff';
       const t = dist(gps.left), w = mx.measureText(t).width, x = MS / 2 + 20;
@@ -2301,70 +2524,148 @@ function create(data) {
       mx.strokeText(t, x, MS - 6); mx.fillText(t, x, MS - 6);
     }
   }
-  const fullEl = $('.g-full'), fullC = fullEl.firstElementChild, fx = fullC.getContext('2d');
+  const fullEl = $('.g-full'), fullC = fullEl.firstElementChild, fx = fullC.getContext('2d'), tipEl = $('.g-ftip');
   const G = world.game, VIEW = [G[0] - 120, G[1] - 120, Math.max(G[2], world.exit[0]) + 120, Math.max(G[3], world.exit[1]) + 120];
-  let mapOpen = false, fullView = null;
-  function drawFull() {
-    const dpr = Math.min(2, devicePixelRatio || 1), W = Math.round(fullC.clientWidth * dpr), Hh = Math.round(fullC.clientHeight * dpr), b = world.map;
-    if (fullC.width !== W || fullC.height !== Hh) { fullC.width = W; fullC.height = Hh; }
-    const k = Math.min(W / (VIEW[2] - VIEW[0]), (Hh - 70 * dpr) / (VIEW[3] - VIEW[1])), ox = (W - (VIEW[2] - VIEW[0]) * k) / 2 - VIEW[0] * k, oz = (Hh - (VIEW[3] - VIEW[1]) * k) / 2 - VIEW[1] * k + 10 * dpr;
-    const to = (x, z) => [x * k + ox, z * k + oz];
-    fullView = { k, ox, oz, dpr };
-    fx.fillStyle = '#2d5a8f'; fx.fillRect(0, 0, W, Hh);
-    fx.imageSmoothingEnabled = true;
-    fx.drawImage(b.canvas, ...to(b.x0, b.z0), b.canvas.width / b.s * k, b.canvas.height / b.s * k);
-    routeLine(fx, to, 3 * dpr);
-    for (const m of marks) drawIcon(fx, m.icon, ...to(m.x, m.z), 18 * Math.max(1, Math.round(dpr * 1.4)));
-    if (gps) { const [x, y] = to(gps.x, gps.z); fx.strokeStyle = '#ff4fb8'; fx.lineWidth = 3 * dpr; fx.beginPath(); fx.arc(x, y, 16 * dpr, 0, 7); fx.stroke(); }
-    arrow(fx, ...to(player.pos.x, player.pos.z), 9 * dpr);
-    fx.font = `700 ${Math.round(15 * dpr)}px GCraft,monospace`; fx.textAlign = 'left'; fx.textBaseline = 'top'; fx.lineWidth = 4 * dpr; fx.strokeStyle = '#000'; fx.fillStyle = '#fff';
-    const tx = gps ? 40 * dpr : 12 * dpr;
-    let head = gps ? `${gps.name} · ${dist(gps.left)} · тапни ещё раз — сбросить` : 'Тапни точку — проложу маршрут';
-    if (fx.measureText(head).width > W - tx - 64 * dpr) head = gps ? `${gps.name} · ${dist(gps.left)}` : 'Тапни точку на карте';
-    if (gps) drawIcon(fx, gps.icon, 22 * dpr, 24 * dpr, 18 * Math.max(1, Math.round(dpr * 1.4)));
-    fx.strokeText(head, tx, 16 * dpr); fx.fillText(head, tx, 16 * dpr);
-    fx.font = `${Math.round(11 * dpr)}px GCraft,monospace`; fx.textAlign = 'right'; fx.textBaseline = 'bottom'; fx.fillStyle = 'rgba(255,255,255,.75)';
-    fx.fillText('© OpenStreetMap', W - 10 * dpr, Hh - 8 * dpr);
+  let mapOpen = false;
+  const fv = { cx: 0, cz: 0, s: .55, dirty: true };
+  const fullSize = () => [fullC.clientWidth || 1, fullC.clientHeight || 1];
+  const minS = () => { const [w, h] = fullSize(); return Math.min(w / (VIEW[2] - VIEW[0]), h / (VIEW[3] - VIEW[1])) * .9; };
+  const fullTo = (x, z) => { const [w, h] = fullSize(); return [(x - fv.cx) * fv.s + w / 2, (z - fv.cz) * fv.s + h / 2]; };
+  const fullFrom = (px, py) => { const [w, h] = fullSize(); return [(px - w / 2) / fv.s + fv.cx, (py - h / 2) / fv.s + fv.cz]; };
+  const markSize = () => Math.round(clamp(18 + Math.log2(fv.s / minS()) * 4, 18, 34));
+  function markAt(px, py) {
+    let best = null, bd = (markSize() * .8) ** 2;
+    for (const m of marks) { const [x, y] = fullTo(m.x, m.z), d = (x - px) ** 2 + (y - py) ** 2; if (d < bd) { bd = d; best = m; } }
+    return best;
   }
+  function drawFull() {
+    fv.dirty = false;
+    const dpr = Math.min(2, devicePixelRatio || 1), [w, h] = fullSize(), b = world.map;
+    if (fullC.width !== Math.round(w * dpr) || fullC.height !== Math.round(h * dpr)) { fullC.width = Math.round(w * dpr); fullC.height = Math.round(h * dpr); }
+    fx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fx.fillStyle = '#2d5a8f'; fx.fillRect(0, 0, w, h);
+    const [bx, by] = fullTo(b.x0, b.z0);
+    fx.imageSmoothingEnabled = true;
+    fx.drawImage(b.canvas, bx, by, b.canvas.width / b.s * fv.s, b.canvas.height / b.s * fv.s);
+    const [x0, z0] = fullFrom(0, 0), [x1, z1] = fullFrom(w, h);
+    if (fv.s > .7) {
+      for (const B of world.vec.B) {
+        if (B.cx < x0 - 60 || B.cx > x1 + 60 || B.cz < z0 - 60 || B.cz > z1 + 60) continue;
+        fx.fillStyle = B.code === 'h' || B.code === 'g' ? '#8a6a5a' : '#6e667c'; fx.beginPath();
+        for (let i = 0; i < B.p.length; i += 2) { const [px, py] = fullTo(B.p[i], B.p[i + 1]); i ? fx.lineTo(px, py) : fx.moveTo(px, py); }
+        fx.closePath(); fx.fill();
+      }
+      vectorRoads(fx, fullTo, x0, z0, x1, z1, fv.s, 1.5);
+    }
+    routeLine(fx, fullTo, 3);
+    const size = markSize();
+    fx.font = '700 11px GCraft,monospace'; fx.textAlign = 'center'; fx.textBaseline = 'top'; fx.lineWidth = 3; fx.strokeStyle = '#000'; fx.fillStyle = '#fff';
+    for (const m of marks) {
+      const [px, py] = fullTo(m.x, m.z);
+      if (px < -40 || py < -40 || px > w + 40 || py > h + 40) continue;
+      drawIcon(fx, m.icon, px, py, size);
+      if (fv.s > 1.4) { fx.strokeText(m.name, px, py + size / 2 + 2); fx.fillText(m.name, px, py + size / 2 + 2); }
+    }
+    if (gps) { const [px, py] = fullTo(gps.x, gps.z); fx.strokeStyle = '#ff4fb8'; fx.lineWidth = 3; fx.beginPath(); fx.arc(px, py, size * .75, 0, 7); fx.stroke(); }
+    arrow(fx, ...fullTo(player.pos.x, player.pos.z), 9, Math.atan2(Math.cos(player.heading), Math.sin(player.heading)));
+    fx.font = '700 15px GCraft,monospace'; fx.textAlign = 'left'; fx.textBaseline = 'top'; fx.lineWidth = 4; fx.strokeStyle = '#000'; fx.fillStyle = '#fff';
+    const tx = gps ? 40 : 12;
+    let head = gps ? `${gps.name} · ${dist(gps.left)} · тапни ещё раз — сбросить` : 'Тапни точку — проложу маршрут. Колесо или щипок — зум';
+    if (fx.measureText(head).width > w - tx - 70) head = gps ? `${gps.name} · ${dist(gps.left)}` : 'Тапни точку на карте';
+    if (gps) drawIcon(fx, gps.icon, 22, 24, 18);
+    fx.strokeText(head, tx, 16); fx.fillText(head, tx, 16);
+    fx.font = '11px GCraft,monospace'; fx.textAlign = 'right'; fx.textBaseline = 'bottom'; fx.fillStyle = 'rgba(255,255,255,.75)';
+    fx.fillText('© OpenStreetMap', w - 10, h - 8);
+  }
+  function zoomAt(px, py, f) {
+    const [wx, wz] = fullFrom(px, py), [w, h] = fullSize();
+    fv.s = clamp(fv.s * f, minS(), 6); fv.cx = wx - (px - w / 2) / fv.s; fv.cz = wz - (py - h / 2) / fv.s; fv.dirty = true;
+  }
+  const ptrs = new Map();
+  let dragged = 0, pinch = 0;
+  const pinchInfo = () => { const [a, c] = [...ptrs.values()], r = fullC.getBoundingClientRect(); return { d: Math.hypot(a[0] - c[0], a[1] - c[1]), x: (a[0] + c[0]) / 2 - r.left, y: (a[1] + c[1]) / 2 - r.top }; };
+  fullC.addEventListener('pointerdown', e => { fullC.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]); if (ptrs.size === 1) dragged = 0; else pinch = pinchInfo().d; });
+  fullC.addEventListener('pointermove', e => {
+    const r = fullC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+    if (ptrs.has(e.pointerId)) {
+      const [ox, oy] = ptrs.get(e.pointerId);
+      ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+      if (ptrs.size === 1) { fv.cx -= (e.clientX - ox) / fv.s; fv.cz -= (e.clientY - oy) / fv.s; dragged += Math.abs(e.clientX - ox) + Math.abs(e.clientY - oy); fv.dirty = true; tipEl.hidden = true; }
+      else if (ptrs.size === 2) { const p2 = pinchInfo(); zoomAt(p2.x, p2.y, p2.d / (pinch || p2.d)); pinch = p2.d; dragged = 99; }
+      return;
+    }
+    const m = markAt(px, py);
+    tipEl.hidden = !m;
+    if (m) { tipEl.innerHTML = `${ico(m.icon)} ${m.name} · ${dist(Math.hypot(m.x - player.pos.x, m.z - player.pos.z))}`; tipEl.style.left = Math.min(px + 16, r.width - tipEl.offsetWidth - 8) + 'px'; tipEl.style.top = py + 18 + 'px'; }
+  });
+  const ptrEnd = e => {
+    const had = ptrs.delete(e.pointerId);
+    if (!had || ptrs.size || dragged > 8 || e.type === 'pointercancel') return;
+    const r = fullC.getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top, m = markAt(px, py);
+    if (m && gps && gps.name === m.name && gps.x === m.x) gps = null;
+    else if (m) setGps(m.x, m.z, m.icon, m.name);
+    else { const [wx, wz] = fullFrom(px, py), n = nav.nearest(wx, wz); setGps(nav.NX[n], nav.NZ[n], 'pin', 'Точка'); }
+    fv.dirty = true;
+  };
+  fullC.addEventListener('pointerup', ptrEnd); fullC.addEventListener('pointercancel', ptrEnd);
+  fullC.addEventListener('pointerleave', () => { tipEl.hidden = true; });
+  fullC.addEventListener('wheel', e => { e.preventDefault(); const r = fullC.getBoundingClientRect(); zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * .0016)); }, { passive: false });
+  fullEl.querySelector('.g-fz').addEventListener('click', e => {
+    const z = e.target.closest('[data-z]');
+    if (!z) return;
+    const [w, h] = fullSize();
+    if (z.dataset.z === 'me') { fv.cx = player.pos.x; fv.cz = player.pos.z; fv.dirty = true; } else zoomAt(w / 2, h / 2, z.dataset.z === 'in' ? 1.6 : 1 / 1.6);
+  });
   function openMap() {
     if (state !== 'play' || zone !== 'city' || menu || mapOpen) return;
-    mapOpen = true; fullEl.hidden = false;
+    unlock(); mapOpen = true; fullEl.hidden = false; fv.cx = player.pos.x; fv.cz = player.pos.z; fv.s = Math.max(fv.s, minS());
     for (const k in keys) keys[k] = false;
     drawFull();
   }
-  function closeMap() { if (!mapOpen) return; mapOpen = false; fullEl.hidden = true; dlg.focus(); }
-  fullC.addEventListener('pointerdown', e => {
-    const r = fullC.getBoundingClientRect(), v = fullView, px = (e.clientX - r.left) * v.dpr, py = (e.clientY - r.top) * v.dpr;
-    let best = null, bd = (32 * v.dpr) ** 2;
-    for (const m of marks) { const d = (m.x * v.k + v.ox - px) ** 2 + (m.z * v.k + v.oz - py) ** 2; if (d < bd) { bd = d; best = m; } }
-    if (best && gps && gps.name === best.name && gps.x === best.x) gps = null;
-    else if (best) setGps(best.x, best.z, best.icon, best.name);
-    else { const n = nav.nearest((px - v.ox) / v.k, (py - v.oz) / v.k); setGps(nav.NX[n], nav.NZ[n], 'pin', 'Точка'); }
-    drawFull();
-  });
+  function closeMap() { if (!mapOpen) return; mapOpen = false; fullEl.hidden = true; tipEl.hidden = true; dlg.focus(); lock(); }
   $('.g-fx').addEventListener('click', closeMap);
   mapC.addEventListener('click', openMap);
   const tip = () => site.loot.aegis ? '' : '<p class="g-tip">Аегис = вторая жизнь. Падает с Рошана: таймер слева внизу на сайте, дождись и бей.</p>';
-  let menu = false, menuBack = '';
-  const settingsHtml = () => `<p class="g-kicker">${ico('gear')} Настройки</p><div class="g-set">${[['vol', 'Общая громкость'], ['sfx', 'Стволы, удары, анонсер'], ['weather', 'Дождь и гром'], ['car', 'Мотор и сирены']].map(([k, t]) => `<label>${t}<input type="range" min="0" max="1" step="0.05" value="${prefs[k]}" data-pref="${k}"></label>`).join('')}<label>Обзор (FOV): <b>${prefs.fov}</b><input type="range" min="50" max="90" step="1" value="${prefs.fov}" data-pref="fov"></label><label class="g-check"><input type="checkbox" data-pref="speedFov"${prefs.speedFov ? ' checked' : ''}>FOV растёт на скорости</label><label class="g-check"><input type="checkbox" data-pref="radio"${prefs.radio ? ' checked' : ''}>Добрянка FM</label><label>Графика<select data-pref="quality">${[['low', 'Тапок'], ['mid', 'Норм'], ['high', 'Красиво']].map(([v, t]) => `<option value="${v}"${prefs.quality === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></div><div class="g-btns"><button type="button" data-go="settings-close">ГОТОВО</button></div>`;
-  function openSettings() {
-    if (menu || (state !== 'play' && state !== 'title')) return;
-    menu = true; menuBack = scr.hidden ? '' : scr.firstElementChild.innerHTML;
+  let menu = false;
+  const menuStack = [];
+  const settingsHtml = () => `<p class="g-kicker">${ico('gear')} Настройки</p><div class="g-set">${[['vol', 'Общая громкость'], ['sfx', 'Стволы, удары, анонсер'], ['weather', 'Дождь и гром'], ['car', 'Мотор и сирены']].map(([k, t]) => `<label>${t}<input type="range" min="0" max="1" step="0.05" value="${prefs[k]}" data-pref="${k}"></label>`).join('')}<label>Обзор (FOV): <b>${prefs.fov}</b><input type="range" min="50" max="90" step="1" value="${prefs.fov}" data-pref="fov"></label>${canLock ? `<label>Чувствительность мыши<input type="range" min="0.0006" max="0.006" step="0.0002" value="${prefs.sens}" data-pref="sens"></label>` : ''}<label class="g-check"><input type="checkbox" data-pref="speedFov"${prefs.speedFov ? ' checked' : ''}>FOV растёт на скорости</label><label class="g-check"><input type="checkbox" data-pref="post"${prefs.post ? ' checked' : ''}>Эффекты: зерно, блюр, свечение</label><label class="g-check"><input type="checkbox" data-pref="radio"${prefs.radio ? ' checked' : ''}>Добрянка FM</label><label>Графика<select data-pref="quality">${[['low', 'Тапок'], ['mid', 'Норм'], ['high', 'Красиво']].map(([v, t]) => `<option value="${v}"${prefs.quality === v ? ' selected' : ''}>${t}</option>`).join('')}</select></label></div><div class="g-btns"><button type="button" data-go="back">ГОТОВО</button></div>`;
+  const pauseHtml = () => `<p class="g-kicker">Пауза</p><h2 class="g-dead g-win">ПАУЗА</h2><p>Мышь отпущена. Жми «Дальше» — и снова в Добрянку.</p><div class="g-btns"><button type="button" data-go="back">ДАЛЬШЕ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button><button type="button" class="g-out" data-go="out">ВЫЙТИ</button></div>`;
+  const confirmHtml = () => `<p class="g-kicker">Выход</p><h2 class="g-dead">ТОЧНО ВЫЙТИ?</h2><p>${state === 'title' ? 'Вернёшься на сайт.' : 'Заезд не сохранится: золото, документы и розыск пропадут. Аегис и сыр останутся.'}</p><div class="g-btns"><button type="button" data-go="back">ОСТАТЬСЯ</button><button type="button" class="g-out" data-go="exit">ВЫЙТИ</button></div>`;
+  function overlay(html, focus) {
+    unlock();
+    menuStack.push({ html: scr.hidden ? '' : scr.firstElementChild.innerHTML, menu });
+    menu = true;
     for (const k in keys) keys[k] = false;
-    screen(settingsHtml(), '[data-pref]');
+    screen(html, focus);
   }
-  function closeSettings() {
-    if (!menu) return;
-    menu = false;
-    if (menuBack) { scr.firstElementChild.innerHTML = menuBack; const b = scr.querySelector('[data-go]'); if (b) b.focus(); }
-    else { screen(''); dlg.focus(); }
+  function back() {
+    const prev = menuStack.pop();
+    if (!prev) return;
+    menu = prev.menu;
+    if (prev.html) { scr.hidden = false; scr.firstElementChild.innerHTML = prev.html; const b = scr.querySelector('[data-go],[data-buy]:not(:disabled)'); if (b) b.focus(); }
+    else { screen(''); dlg.focus(); lock(); }
   }
-  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль и прыжок (в тачке — ручник), справа газ, тормоз (пешком — бег) и кнопка действия: выйти, угнать, стрелять. Тап по миникарте — карта и маршрут.' : 'WASD или стрелки, Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, M — карта и маршрут, Esc — на сайт.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: свалить из Добрянки в закат. Мост на Пермь перекрыл блокпост МВД ${ico('barrier')}. Собери документы — права в автошколе Азиза ${ico('uschool')}, справку в ЦРБ ${ico('cross')}, загранпаспорт на Ozon ${ico('ozon')} — и сунь сержанту ${BRIBE}. Или снеси шлагбаум на броне.</p><p>Магазины на карте — заходи пешком в кольцо. Триада ${ico('skull')} даёт работу, на ${ico('race')} — гонка с МВД.</p><p class="g-inv">${ico('aegis')} Аегис: ${site.loot.aegis} · ${ico('cheese')} Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд побега ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
+  function openSettings() { if (!scr.querySelector('.g-set')) overlay(settingsHtml(), '[data-pref]'); }
+  let pausedAt = -1e4;
+  function openPause() { if (!menu && state === 'play') { pausedAt = performance.now(); overlay(pauseHtml()); } }
+  function confirmExit() { if (!scr.querySelector('[data-go="exit"]')) overlay(confirmHtml()); }
+  function lock() { if (!canLock || locked || !opened || state !== 'play' || menu || mapOpen || !scr.hidden) return; try { const r = renderer.domElement.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
+  function unlock() { if (locked) { selfUnlock = true; document.exitPointerLock(); } }
+  document.addEventListener('pointerlockchange', () => {
+    const was = locked;
+    locked = document.pointerLockElement === renderer.domElement;
+    if (was && !locked && !selfUnlock && opened && state === 'play' && !menu && !mapOpen) openPause();
+    if (!locked) selfUnlock = false;
+  });
+  dlg.addEventListener('mousemove', e => { if (!locked) return; camYaw -= e.movementX * prefs.sens; camPitch = clamp(camPitch + e.movementY * prefs.sens, -.45, 1.05); lastLook = now; });
+  renderer.domElement.addEventListener('click', lock);
+  const titleHtml = () => `<p class="g-kicker">Триада Games представляет</p><h2 class="g-title">GTA VI<span>Добрянка</span></h2><p>Перенесли семь раз. Вышла только в Добрянке.</p><p>${touch ? 'Слева руль и прыжок (в тачке — ручник), справа газ, тормоз (пешком — бег) и кнопка действия: выйти, угнать, стрелять. Тап по миникарте — карта и маршрут.' : 'WASD или стрелки, мышь — камера (клик по игре захватывает курсор), Shift — бег, пробел — прыжок (в тачке — ручник), F — выйти или угнать тачку, клик или Ctrl — огонь, M — карта, G — маршрут к цели, Esc — пауза.'} Дави пауков и курьеров, от МВД уходи, в Каму не падай.</p><p class="g-goal">Цель: свалить из Добрянки в закат. Мост на Пермь перекрыл блокпост МВД ${ico('barrier')}. Собери документы — права в автошколе Азиза ${ico('uschool')}, справку в ЦРБ ${ico('cross')}, загранпаспорт на Ozon ${ico('ozon')} — и сунь сержанту ${BRIBE}. Или снеси шлагбаум на броне.</p><p>Магазины на карте — заходи пешком в кольцо. Триада ${ico('skull')} даёт работу, на ${ico('race')} — гонка с МВД.</p><p class="g-inv">${ico('aegis')} Аегис: ${site.loot.aegis} · ${ico('cheese')} Сыр: ${site.loot.cheese}${bestTime.get() ? ` · рекорд побега ${clockStr(bestTime.get())}` : ''}</p>${tip()}<div class="g-btns"><button type="button" data-go="play">ПОЕХАЛИ</button><button type="button" class="g-out" data-go="settings">НАСТРОЙКИ</button></div><p class="g-build">сборка ${BUILD}</p>`;
   const overHtml = record => {
     const [title, sub] = DEATHS[cause] || DEATHS.cop, m = Math.floor(run.time / 60), s = Math.floor(run.time % 60);
     return `<h2 class="g-dead">${title}</h2><p>${sub}</p><ul class="g-recap"><li>Золото: <b>${run.gold}</b>${record && run.gold ? ' — рекорд!' : ''}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Розыск: ${ico('star').repeat(run.stars) || 'не было'}</li><li>В игре: ${m}:${String(s).padStart(2, '0')}</li></ul>${tip()}<div class="g-btns"><button type="button" data-go="respawn">ВОСКРЕСНУТЬ</button><button type="button" class="g-out" data-go="play">ЗАНОВО</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
   };
   function screen(html, focus) {
+    if (html) unlock();
     scr.hidden = !html;
     scr.classList.toggle('g-shopping', state === 'shop');
     scr.classList.toggle('g-strip', state === 'shop' && shopDoor && shopDoor.kind === 'strip');
@@ -2373,11 +2674,11 @@ function create(data) {
     (focus && scr.querySelector(focus) || scr.querySelector('[data-go]')).focus();
   }
   function start() {
-    audio(); reset(); state = 'play'; screen(''); dlg.focus(); chase(0, true); ann('THE BATTLE BEGINS');
+    audio(); reset(); menuStack.length = 0; menu = false; state = 'play'; screen(''); dlg.focus(); chase(0, true); ann('THE BATTLE BEGINS'); lock();
   }
   function hide() {
     if (!opened) return;
-    opened = false; state = 'title';
+    unlock(); opened = false; state = 'title'; menuStack.length = 0; menu = false; mapOpen = false; fullEl.hidden = true;
     renderer.setAnimationLoop(null);
     if (ac) ac.suspend();
     document.body.classList.remove('gta');
@@ -2389,16 +2690,18 @@ function create(data) {
   scr.addEventListener('click', e => {
     const b = e.target.closest('[data-go],[data-buy],[data-spin]');
     if (!b) return;
+    const go = b.dataset.go;
     if (b.dataset.buy) buy(+b.dataset.buy);
-    else if (b.dataset.go === 'play') start();
     else if (b.dataset.spin) spin(+b.dataset.spin);
-    else if (b.dataset.go === 'leave') leaveShop();
-    else if (b.dataset.go === 'respawn') respawn();
-    else if (b.dataset.go === 'settings') openSettings();
-    else if (b.dataset.go === 'settings-close') closeSettings();
-    else hide();
+    else if (go === 'play') start();
+    else if (go === 'leave') leaveShop();
+    else if (go === 'respawn') { respawn(); lock(); }
+    else if (go === 'settings') openSettings();
+    else if (go === 'back') back();
+    else if (go === 'exit') hide();
+    else if (go === 'out') confirmExit();
   });
-  dlg.addEventListener('cancel', e => { if (mapOpen) { e.preventDefault(); closeMap(); } else if (menu) { e.preventDefault(); closeSettings(); } else if (state === 'shop') { e.preventDefault(); leaveShop(); } });
+  dlg.addEventListener('cancel', e => { e.preventDefault(); if (performance.now() - pausedAt < 400) return; if (mapOpen) closeMap(); else if (menu) back(); else if (state === 'shop') leaveShop(); else if (state === 'play') openPause(); else confirmExit(); });
   $('.g-gear').addEventListener('click', openSettings);
   scr.addEventListener('input', e => {
     const el = e.target.closest('[data-pref]');
@@ -2408,7 +2711,8 @@ function create(data) {
     if (b) b.textContent = el.value;
     applyPrefs();
   });
-  $('.g-x').addEventListener('click', hide);
+  $('.g-x').addEventListener('click', confirmExit);
+  questEl.addEventListener('click', routeGoal);
   dlg.addEventListener('close', hide);
   for (const t of ['click', 'pointerdown', 'pointermove', 'pointerup', 'mousemove']) dlg.addEventListener(t, e => e.stopPropagation());
   const pad = $('.g-pad');
@@ -2426,7 +2730,7 @@ function create(data) {
   const release = e => { for (const k in held) held[k].delete(e.pointerId); pad.querySelectorAll('[data-k]').forEach(b => b.classList.toggle('held', held[b.dataset.k].size > 0)); actEl.classList.toggle('held', held.fire.size > 0); };
   const switchGun = () => { const own = Object.keys(run.guns); if (own.length) run.gun = own[(own.indexOf(run.gun) + 1) % own.length]; };
   gunEl.addEventListener('click', switchGun);
-  dlg.firstElementChild.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0) keys.mouse = true; });
+  dlg.firstElementChild.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse' && e.button === 0 && (locked || !canLock)) keys.mouse = true; });
   dlg.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') keys.mouse = false; });
   for (const t of ['pointerup', 'pointercancel', 'lostpointercapture']) pad.addEventListener(t, release);
   pad.addEventListener('contextmenu', e => e.preventDefault());
@@ -2436,6 +2740,7 @@ function create(data) {
     if ((e.code === 'KeyF' || e.code === 'KeyE') && driving()) { e.preventDefault(); if (!e.repeat) act(); return; }
     if (e.code === 'KeyQ' && driving()) { e.preventDefault(); if (!e.repeat) switchGun(); return; }
     if (e.code === 'KeyM' && opened && !e.repeat && (mapOpen || driving())) { e.preventDefault(); mapOpen ? closeMap() : openMap(); return; }
+    if (e.code === 'KeyG' && driving() && !e.repeat) { e.preventDefault(); routeGoal(); return; }
     if (e.code === 'Space' && driving() && player.foot && !e.repeat) jump();
     const k = KEYS[e.code];
     if (k && driving()) { keys[k] = true; e.preventDefault(); }
@@ -2467,16 +2772,18 @@ body.gta{overflow:hidden}
 #gta::backdrop{background:#000}
 #gta [hidden]{display:none!important}
 #gta button{font-family:var(--px)}
-#gta .gi{display:inline-block;width:16px;height:16px;vertical-align:-3px;background:url(img/gta-icons.png?v=${BUILD}) 0 0/${ICONS.length * 100}% 100% no-repeat;image-rendering:pixelated;font-style:normal}
+#gta .gi{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.22em;background:url(img/gta-icons.png?v=${BUILD}) 0 0/${ICONS.length * 100}% 100% no-repeat;image-rendering:pixelated;font-style:normal}
 ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 1) * 100).toFixed(4)}% 0}`).join('\n')}
 #gta .g-reel .gi{width:48px;height:48px}
-#gta .g-gear .gi{width:32px;height:32px;vertical-align:middle}
+#gta .g-gear .gi{width:32px;height:32px;vertical-align:0;display:block}
+#gta .g-gold .gi{width:1em;height:1em;vertical-align:-.1em}
+#gta .g-hprow .gi{width:18px;height:18px;vertical-align:0}
 #gta>canvas{position:absolute;inset:0;width:100%;height:100%;display:block;transition:filter .4s}
 #gta.dying>canvas{filter:grayscale(1) brightness(.7)}
 .g-hud{position:absolute;inset:0;pointer-events:none;text-shadow:var(--o)}
 .g-x{pointer-events:auto;position:absolute;left:12px;top:calc(10px + env(safe-area-inset-top,0px));width:44px;height:44px;border:var(--box);background:var(--red);color:#fff;font:700 22px var(--px);text-shadow:var(--o);box-shadow:var(--sh);cursor:pointer}
 .g-stats{position:absolute;right:12px;top:calc(10px + env(safe-area-inset-top,0px));display:grid;justify-items:end;gap:6px}
-.g-stats>*:not(.g-wanted):not(.g-hp):not(.g-stam){background:var(--panel);border:var(--box);box-shadow:var(--sh);padding:3px 8px}
+.g-stats>*:not(.g-wanted):not(.g-hprow):not(.g-stam){background:var(--panel);border:var(--box);box-shadow:var(--sh);padding:3px 8px}
 .g-wanted span{font-size:18px;opacity:.2;filter:grayscale(1)}
 .g-wanted span.on{opacity:1;filter:none}
 .g-wanted.cool span.on{animation:gBlink .5s steps(2) infinite}
@@ -2485,7 +2792,24 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-hp i{display:block;height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--green) 0 10px,#1d8a2d 10px 12px)}
 .g-stam{width:156px;height:8px;border:var(--box);background:#0d1e3b}
 .g-stam i{display:block;height:100%;background:var(--cyan)}
-.g-loot,.g-weather,.g-goals{font-size:15px}
+.g-loot{font-size:15px}
+.g-hprow{display:flex;align-items:center;gap:6px;filter:drop-shadow(2px 2px 0 #000)}
+.g-quest{pointer-events:auto;cursor:pointer;position:absolute;left:12px;top:calc(64px + env(safe-area-inset-top,0px));width:min(300px,calc(100% - 210px));box-sizing:border-box;padding:6px 9px;background:var(--panel);border:var(--box);box-shadow:var(--sh);display:grid;gap:4px;font-size:14px;line-height:1.25}
+.g-quest b{font:700 12px var(--px);letter-spacing:.08em;color:var(--gold)}
+.g-quest .g-steps{display:flex;gap:6px;font-size:16px}
+.g-quest .g-bar{display:block;height:6px;border:2px solid #000;background:#2a1a40}
+.g-quest .g-bar u{display:block;height:100%;background:var(--gold)}
+.g-quest small{color:#b9a8d8;font-size:11px}
+.g-quest:hover{border-color:var(--pink)}
+.g-hurt,.g-flash{position:absolute;inset:0;pointer-events:none;opacity:0}
+.g-hurt{background:radial-gradient(ellipse at center,transparent 38%,rgba(200,0,24,.8) 100%)}
+.g-flash{background:radial-gradient(ellipse at center,rgba(255,240,170,.2) 25%,rgba(255,210,74,.85) 100%)}
+.g-mapbox{position:absolute;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));width:200px;display:grid;gap:6px;justify-items:end}
+.g-weather{background:var(--panel);border:var(--box);box-shadow:var(--sh);padding:3px 8px;font-size:15px}
+.g-ftip{position:absolute;pointer-events:none;padding:4px 8px;background:var(--panel);border:var(--box);box-shadow:var(--sh);font-size:14px;white-space:nowrap;text-shadow:var(--o)}
+.g-fz{position:absolute;right:12px;bottom:calc(30px + env(safe-area-inset-bottom,0px));display:grid;gap:8px}
+.g-fz button{width:44px;height:44px;border:var(--box);background:var(--panel);color:#fff;font:700 24px var(--px);box-shadow:var(--sh);cursor:pointer;display:grid;place-items:center;padding:0}
+#gta .g-fz .gi{width:24px;height:24px;vertical-align:0}
 #gta .g-off{opacity:.35;filter:grayscale(1)}
 .g-job{font-size:15px;color:var(--gold)}
 .g-job:empty,.g-gun:empty,.g-race:empty{display:none}
@@ -2495,14 +2819,13 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-race span{font-size:.92em;color:#e9dcff}
 .g-race i{display:block;height:10px;border:2px solid #000;background:#2a1a40}
 .g-race u{display:block;height:100%;background:repeating-linear-gradient(90deg,var(--pink) 0 8px,var(--gold) 8px 16px)}
-.g-map{pointer-events:auto;cursor:pointer;position:absolute;left:12px;top:calc(64px + env(safe-area-inset-top,0px));width:150px;height:150px;border:var(--box);box-shadow:var(--sh);image-rendering:pixelated}
+.g-map{pointer-events:auto;cursor:pointer;display:block;width:200px;height:200px;border:var(--box);box-shadow:var(--sh)}
 .g-full{position:absolute;inset:0;background:#2d5a8f;touch-action:none}
 .g-full canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
 .g-fx{position:absolute;right:12px;top:calc(10px + env(safe-area-inset-top,0px));width:44px;height:44px;border:var(--box);background:var(--red);color:#fff;font:700 22px var(--px);text-shadow:var(--o);box-shadow:var(--sh);cursor:pointer}
 .g-speed{position:absolute;left:50%;translate:-50% 0;top:calc(10px + env(safe-area-inset-top,0px));min-width:84px;padding:6px 8px;text-align:center;line-height:1;background:var(--panel);border:var(--box);box-shadow:var(--sh)}
 .g-speed b{display:block;font:700 28px var(--pp);color:#fff}
 .g-speed small{display:block;margin-top:4px;font:700 11px var(--px);color:var(--cyan)}
-@media (max-width:560px){.g-speed{left:12px;translate:none;top:calc(226px + env(safe-area-inset-top,0px));min-width:72px}}
 .g-radio{position:absolute;left:50%;translate:-50% 0;bottom:calc(196px + env(safe-area-inset-bottom,0px));max-width:min(640px,calc(100% - 24px));box-sizing:border-box;padding:6px 10px;background:var(--panel);border:var(--box);box-shadow:var(--sh);font-size:14px;color:#f4e9ff;text-align:center}
 .g-radio.on{animation:gRadio .4s steps(4)}
 .g-ann{position:absolute;left:12px;right:12px;top:max(24%,236px);text-align:center;font:700 clamp(1.8rem,8vw,4.2rem)/1.05 var(--px);text-transform:uppercase;color:var(--pink);opacity:0;text-shadow:3px 0 0 #000,-3px 0 0 #000,0 3px 0 #000,0 -3px 0 #000,4px 4px 0 #000}
@@ -2518,7 +2841,11 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-pad .g-act,.g-pad .g-jump{position:absolute;bottom:calc(112px + env(safe-area-inset-bottom,0px));width:68px;height:52px}
 .g-pad .g-act{right:24px;background:rgba(110,80,10,.88)}
 .g-pad .g-jump{left:12px;background:rgba(20,70,110,.88)}
-@media (hover:hover) and (pointer:fine){.g-pad{display:none}.g-radio{bottom:14px}.g-hint{bottom:64px}}
+@media (hover:hover) and (pointer:fine){.g-pad{display:none}.g-radio{bottom:14px;max-width:min(640px,calc(100% - 500px))}.g-hint{bottom:64px;left:240px;right:240px}}
+@media (max-width:560px) and (pointer:fine){.g-mapbox{width:150px}.g-map{width:150px;height:150px}.g-speed{left:12px;translate:none;top:auto;bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:72px}.g-radio{bottom:calc(230px + env(safe-area-inset-bottom,0px))}.g-hint{left:12px;right:12px;bottom:calc(290px + env(safe-area-inset-bottom,0px))}.g-quest{width:calc(100% - 190px)}}
+@media (pointer:coarse){.g-mapbox{bottom:calc(178px + env(safe-area-inset-bottom,0px));width:150px}.g-map{width:150px;height:150px}.g-speed{left:12px;translate:none;top:auto;bottom:calc(178px + env(safe-area-inset-bottom,0px));min-width:72px}.g-radio{bottom:calc(445px + env(safe-area-inset-bottom,0px))}.g-hint{bottom:calc(400px + env(safe-area-inset-bottom,0px))}}
+@media (pointer:coarse) and (max-height:760px) and (orientation:portrait){.g-radio{display:none}.g-hint{left:12px;right:172px;bottom:calc(256px + env(safe-area-inset-bottom,0px));text-align:left;font-size:15px}}
+@media (pointer:coarse) and (max-height:520px){.g-mapbox{bottom:calc(12px + env(safe-area-inset-bottom,0px));right:196px;width:110px}.g-map{width:110px;height:110px}.g-weather{display:none}.g-speed{bottom:auto;top:calc(10px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0}.g-radio{display:none}.g-hint{bottom:calc(104px + env(safe-area-inset-bottom,0px))}}
 .g-screen{position:absolute;inset:0;display:flex;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));background:rgba(14,7,30,.72);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 2px,transparent 2px 4px);text-align:center;overflow:auto;touch-action:pan-y}
 .g-screen>div{margin:auto;width:min(540px,100%);box-sizing:border-box;display:grid;gap:12px;justify-items:center;padding:20px 16px;background:var(--panel);border:var(--box);box-shadow:inset 0 0 0 3px var(--pink),8px 8px 0 #000}
 .g-screen p{margin:0;color:#f4e9ff;max-width:46ch}
@@ -2529,7 +2856,7 @@ ${ICONS.map((k, i) => `#gta .gi-${k}{background-position:${(i / (ICONS.length - 
 .g-tip.g-tip{color:var(--cyan);font-size:15px}
 .g-goal.g-goal{color:#fff}
 .g-build.g-build{font-size:12px;color:#8a7aa8}
-.g-gear{pointer-events:auto;position:absolute;left:64px;top:calc(10px + env(safe-area-inset-top,0px));width:44px;height:44px;border:var(--box);background:#2a1a40;color:#fff;font:700 22px var(--px);box-shadow:var(--sh);cursor:pointer}
+.g-gear{pointer-events:auto;display:grid;place-items:center;padding:0;position:absolute;left:64px;top:calc(10px + env(safe-area-inset-top,0px));width:44px;height:44px;border:var(--box);background:#2a1a40;color:#fff;font:700 22px var(--px);box-shadow:var(--sh);cursor:pointer}
 .g-aim{position:absolute;width:26px;height:26px;translate:-50% -50%;border:3px solid #fff;box-shadow:0 0 0 2px #000,inset 0 0 0 2px #000}
 .g-aim::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;translate:-50% -50%;background:#fff;box-shadow:0 0 0 2px #000}
 .g-aim.lock{border-color:var(--red);width:34px;height:34px}
