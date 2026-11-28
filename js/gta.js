@@ -971,7 +971,7 @@ function create(data) {
     for (const m of world.winMats) m.emissiveIntensity = .2 + 1.6 * wn + .7 * wd;
     const gk = 1 + 1.5 * wn, lk = .3 + 2.8 * wn;
     for (const m of GLOW) m.color.copy(m.userData.base).multiplyScalar(m.userData.lamp ? lk : gk);
-    world.pools.material.opacity = .3 * wn;
+    world.pools.material.opacity = .3 * wn; world.pools.visible = wn > .02;
     const lights = !player.foot && zone !== 'inside' && state !== 'title' && (wn > .3 || L < .7);
     headLight.intensity = lights ? 160 * Math.max(wn, 1 - L) : 0;
     if (lights) { const h = player.heading; headLight.position.set(player.pos.x + Math.sin(h) * 2.2, player.y + 1, player.pos.z + Math.cos(h) * 2.2); headLight.target.position.set(player.pos.x + Math.sin(h) * 22, player.y, player.pos.z + Math.cos(h) * 22); }
@@ -1706,7 +1706,7 @@ function create(data) {
     state = 'over';
     const record = run.gold > best.get();
     if (record) best.set(run.gold);
-    setTimeout(() => { if (state === 'over' && opened) screen(overHtml(record)); }, 1300);
+    setTimeout(() => { if (state === 'over' && opened) baseScreen(overHtml(record)); }, 1300);
   }
   function respawn() {
     if (exam) examEnd(false, 'Азиз: «Экзамен окончен. В ЦРБ передачки не носим»');
@@ -1756,10 +1756,10 @@ function create(data) {
   }
   function rayTargets(g) {
     camera.getWorldDirection(rd);
-    const o = camera.position, found = [];
+    const o = camera.position, found = [], tp = (player.pos.x - o.x) * rd.x + (player.y + 1.2 - o.y) * rd.y + (player.pos.z - o.z) * rd.z;
     const look = (e, kind, rad, y) => {
       const ex = e.pos.x - o.x, ey = y - o.y, ez = e.pos.z - o.z, t = ex * rd.x + ey * rd.y + ez * rd.z;
-      if (t <= 0) return;
+      if (t <= tp + .5) return;
       const miss = Math.hypot(ex - rd.x * t, ey - rd.y * t, ez - rd.z * t), d = Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z);
       if (miss < rad * (g.spread ? 2 : 1) && d < g.range && clear(player.pos, e.pos)) found.push({ e, kind, score: t });
     };
@@ -2066,7 +2066,7 @@ function create(data) {
     last = t; now += dt;
     const w = dlg.clientWidth, h = dlg.clientHeight;
     if (w !== shown.w || h !== shown.h) {
-      shown.w = w; shown.h = h; renderer.setSize(w, h, false);
+      shown.w = w; shown.h = h; renderer.setSize(w, h, false); fv.dirty = true;
       camera.aspect = w / h; camera.updateProjectionMatrix();
     }
     const fovT = prefs.fov + (camera.aspect < .9 ? 18 : 0) + (prefs.speedFov && state === 'play' && !player.foot ? Math.min(1, Math.abs(player.speed) / 46) * 14 : 0);
@@ -2106,7 +2106,7 @@ function create(data) {
     const opt = { type: THREE.HalfFloatType }, main = new THREE.WebGLRenderTarget(1, 1, { ...opt, samples: 4 }), a = new THREE.WebGLRenderTarget(1, 1, opt), b = new THREE.WebGLRenderTarget(1, 1, opt);
     const bright = mk('uniform sampler2D t; uniform float th; uniform vec2 px; varying vec2 vUv;\nvoid main() {\n vec3 c = (texture2D(t, vUv + px).rgb + texture2D(t, vUv - px).rgb + texture2D(t, vUv + vec2(px.x, -px.y)).rgb + texture2D(t, vUv - vec2(px.x, -px.y)).rgb) * .25;\n float l = max(c.r, max(c.g, c.b));\n gl_FragColor = vec4(c * smoothstep(th, th + .35, l), 1.0);\n}', { t: { value: null }, th: { value: .8 }, px: { value: new THREE.Vector2() } });
     const blur = mk('uniform sampler2D t; uniform vec2 d; varying vec2 vUv;\nvoid main() {\n vec3 c = texture2D(t, vUv).rgb * .227;\n c += (texture2D(t, vUv + d).rgb + texture2D(t, vUv - d).rgb) * .195;\n c += (texture2D(t, vUv + d * 2.0).rgb + texture2D(t, vUv - d * 2.0).rgb) * .122;\n c += (texture2D(t, vUv + d * 3.0).rgb + texture2D(t, vUv - d * 3.0).rgb) * .054;\n c += (texture2D(t, vUv + d * 4.0).rgb + texture2D(t, vUv - d * 4.0).rgb) * .016;\n gl_FragColor = vec4(c, 1.0);\n}', { t: { value: null }, d: { value: new THREE.Vector2() } });
-    const final = mk('uniform sampler2D t, b; uniform float time, grain, ca, blur, bloom, vig; uniform vec2 res; varying vec2 vUv;\nfloat hash(vec2 p) { p = fract(p * vec2(443.897, 441.423)); p += dot(p, p.yx + 19.19); return fract((p.x + p.y) * p.x); }\nvoid main() {\n vec2 d = vUv - .5; float r = length(d);\n vec2 o = d * ca * (.5 + r * 2.0);\n vec3 c = vec3(0.0);\n for (int i = 0; i < 6; i++) {\n  vec2 uv = vUv - d * blur * float(i) / 5.0;\n  c += vec3(texture2D(t, uv + o).r, texture2D(t, uv).g, texture2D(t, uv - o).b);\n }\n c = c / 6.0 + texture2D(b, vUv).rgb * bloom;\n c *= 1.0 - vig * dot(d, d) * 1.8;\n c += (hash(vUv * res + fract(time * 7.3) * 91.0) - .5) * grain;\n gl_FragColor = vec4(max(c, 0.0), 1.0);\n #include <colorspace_fragment>\n}', { t: { value: null }, b: { value: null }, time: { value: 0 }, grain: { value: .018 }, ca: { value: .002 }, blur: { value: 0 }, bloom: { value: .5 }, vig: { value: .35 }, res: { value: new THREE.Vector2() } });
+    const final = mk('uniform sampler2D t, b; uniform float time, grain, ca, blur, bloom, vig; uniform vec2 res; varying vec2 vUv;\nfloat hash(vec2 p) { p = fract(p * vec2(443.897, 441.423)); p += dot(p, p.yx + 19.19); return fract((p.x + p.y) * p.x); }\nvoid main() {\n vec2 d = vUv - .5; float r = length(d);\n vec2 o = d * ca * (.5 + r * 2.0);\n vec3 c = vec3(0.0);\n for (int i = 0; i < 6; i++) {\n  vec2 uv = vUv - d * blur * float(i) / 5.0;\n  c += vec3(texture2D(t, uv + o).r, texture2D(t, uv).g, texture2D(t, uv - o).b);\n }\n c = c / 6.0 + texture2D(b, vUv).rgb * bloom;\n c *= 1.0 - vig * dot(d, d) * 1.8;\n gl_FragColor = vec4(max(c, 0.0), 1.0);\n #include <colorspace_fragment>\n gl_FragColor.rgb += (hash(vUv * res + fract(time * 7.3) * 91.0) - .5) * grain;\n}', { t: { value: null }, b: { value: null }, time: { value: 0 }, grain: { value: .035 }, ca: { value: .002 }, blur: { value: 0 }, bloom: { value: .5 }, vig: { value: .35 }, res: { value: new THREE.Vector2() } });
     const size = new THREE.Vector2(), pass = (m, target) => { quad.material = m; renderer.setRenderTarget(target); renderer.render(sc, cam); };
     return {
       final, bright,
@@ -2372,7 +2372,7 @@ function create(data) {
     ann('УЕХАЛ В ЗАКАТ', 'gold');
     const prev = bestTime.get(), record = !prev || run.time < prev;
     if (record) bestTime.set(run.time);
-    setTimeout(() => { if (state === 'win' && opened) screen(winHtml(record, prev)); }, 5200);
+    setTimeout(() => { if (state === 'win' && opened) baseScreen(winHtml(record, prev)); }, 5200);
   }
   const winHtml = (record, prev) => `<p class="g-kicker">${ico('sunset')} Конец</p><h2 class="g-dead g-win">УЕХАЛ ИЗ ДОБРЯНКИ</h2><p>${{ docs: 'Документы в порядке, сержант козырнул и пересчитал.', bribe: `Сержант пересчитал ${NO_DOCS} и отдал честь.`, ram: 'Шлагбаум снесён, МВД до сих пор ищет его в Каме.' }[run.blockOpen] || ''} Добрянка в зеркале, впереди Пермь и закат. Через неделю вернёшься: в Перми шаурма хуже.</p><ul class="g-recap"><li>Время: <b>${clockStr(run.time)}</b>${record ? ' — рекорд!' : ` · рекорд ${clockStr(prev)}`}</li><li>Пауков раздавлено: <b>${run.spiders}</b></li><li>Курьеров: <b>${run.couriers}</b></li><li>Золота с собой: <b>${run.gold}</b></li><li>Смертей по дороге: <b>${run.deaths}</b></li></ul><div class="g-btns"><button type="button" data-go="play">ЕЩЁ РАЗ</button><button type="button" class="g-out" data-go="out">НА САЙТ</button></div>`;
   const mapC = $('.g-map'), mx = mapC.getContext('2d'), MS = mapC.width;
@@ -2427,13 +2427,14 @@ function create(data) {
       const [ax, az] = pts[i], [bx, bz] = pts[i + 1], len = Math.hypot(bx - ax, bz - az);
       if (len < .01) continue;
       const dx = (bx - ax) / len, dz = (bz - az) / len;
-      for (let t = carry; t <= len; t += 2.5) {
+      let t = carry;
+      for (; t <= len; t += 2.5) {
         const x = ax + dx * t, z = az + dz * t, y = groundY(x, z) + .2, k = pos.length / 6;
         pos.push(x - dz * .9, y, z + dx * .9, x + dz * .9, y, z - dx * .9);
         uv.push((walked + t) / 3, 0, (walked + t) / 3, 1);
         if (k) idx.push(2 * k - 2, 2 * k, 2 * k - 1, 2 * k - 1, 2 * k, 2 * k + 1);
-        carry = t + 2.5 - len;
       }
+      carry = t - len;
       walked += len;
     }
     const g = routeMesh.geometry;
@@ -2643,12 +2644,14 @@ function create(data) {
     if (!prev) return;
     menu = prev.menu;
     if (prev.html) { scr.hidden = false; scr.firstElementChild.innerHTML = prev.html; const b = scr.querySelector('[data-go],[data-buy]:not(:disabled)'); if (b) b.focus(); }
-    else { screen(''); dlg.focus(); lock(); }
+    else { screen(''); dlg.focus(); lock(); setTimeout(() => { if (canLock && !locked && state === 'play' && !menu && !mapOpen) hint('Клик по игре — вернуть мышь', 2.5); }, 250); }
   }
-  function openSettings() { if (!scr.querySelector('.g-set')) overlay(settingsHtml(), '[data-pref]'); }
+  function baseScreen(html) { if (menuStack.length) { menuStack[0].html = html; menuStack[0].menu = false; } else screen(html); }
+  function openSettings() { if (scr.hidden || !scr.querySelector('.g-set')) overlay(settingsHtml(), '[data-pref]'); }
   let pausedAt = -1e4;
   function openPause() { if (!menu && state === 'play') { pausedAt = performance.now(); overlay(pauseHtml()); } }
-  function confirmExit() { if (!scr.querySelector('[data-go="exit"]')) overlay(confirmHtml()); }
+  function confirmExit() { if (scr.hidden || !scr.querySelector('[data-go="exit"]')) overlay(confirmHtml()); }
+  function onEsc() { if (performance.now() - pausedAt < 400) return; if (mapOpen) closeMap(); else if (menu) back(); else if (state === 'shop') leaveShop(); else if (state === 'play') openPause(); else confirmExit(); }
   function lock() { if (!canLock || locked || !opened || state !== 'play' || menu || mapOpen || !scr.hidden) return; try { const r = renderer.domElement.requestPointerLock(); if (r && r.catch) r.catch(() => {}); } catch (e) {} }
   function unlock() { if (locked) { selfUnlock = true; document.exitPointerLock(); } }
   document.addEventListener('pointerlockchange', () => {
@@ -2701,7 +2704,7 @@ function create(data) {
     else if (go === 'exit') hide();
     else if (go === 'out') confirmExit();
   });
-  dlg.addEventListener('cancel', e => { e.preventDefault(); if (performance.now() - pausedAt < 400) return; if (mapOpen) closeMap(); else if (menu) back(); else if (state === 'shop') leaveShop(); else if (state === 'play') openPause(); else confirmExit(); });
+  dlg.addEventListener('cancel', e => { e.preventDefault(); onEsc(); });
   $('.g-gear').addEventListener('click', openSettings);
   scr.addEventListener('input', e => {
     const el = e.target.closest('[data-pref]');
@@ -2737,6 +2740,7 @@ function create(data) {
   const KEYS = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', Space: 'hand', ShiftLeft: 'sprint', ShiftRight: 'sprint', ControlLeft: 'fire', ControlRight: 'fire', KeyX: 'fire' };
   const driving = () => opened && !menu && !mapOpen && (state === 'play' || state === 'dying');
   addEventListener('keydown', e => {
+    if (e.key === 'Escape' && opened) { e.preventDefault(); if (!e.repeat) onEsc(); return; }
     if ((e.code === 'KeyF' || e.code === 'KeyE') && driving()) { e.preventDefault(); if (!e.repeat) act(); return; }
     if (e.code === 'KeyQ' && driving()) { e.preventDefault(); if (!e.repeat) switchGun(); return; }
     if (e.code === 'KeyM' && opened && !e.repeat && (mapOpen || driving())) { e.preventDefault(); mapOpen ? closeMap() : openMap(); return; }
